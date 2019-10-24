@@ -26,7 +26,7 @@
 
 #include <windows.h>
 
-#else defined(MR_SHARING_ANDROID)
+#elif defined(MR_SHARING_ANDROID)
 
 #define WEBRTC_POSIX 1
 
