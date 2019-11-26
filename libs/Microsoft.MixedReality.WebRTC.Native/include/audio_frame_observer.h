@@ -6,8 +6,6 @@
 
 #include <mutex>
 
-#include "api/mediastreaminterface.h"
-
 #include "callback.h"
 
 namespace Microsoft::MixedReality::WebRTC {

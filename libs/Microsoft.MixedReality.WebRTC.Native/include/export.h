@@ -13,4 +13,6 @@
 #elif defined(MR_SHARING_ANDROID)
 	#define MRS_API __attribute__((visibility("default")))
 	#define MRS_CALL __attribute__((stdcall))
+#else
+	#error Unknown Mixed Reality Sharing platform
 #endif
