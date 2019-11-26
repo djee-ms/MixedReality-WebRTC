@@ -3,21 +3,8 @@
 
 #pragma once
 
-#include "callback.h"
-#include "interop/interop_api.h"
-#include "str.h"
 #include "tracked_object.h"
-#include "video_frame_observer.h"
-
-namespace rtc {
-template <typename T>
-class scoped_refptr;
-}
-
-namespace webrtc {
-class RtpSenderInterface;
-class VideoTrackInterface;
-}  // namespace webrtc
+#include "video_frame.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -35,52 +22,26 @@ class PeerConnection;
 /// typically a video capture device (e.g. webcam), but can	also be a source
 /// producing programmatically generated frames. The local video track itself
 /// has no knowledge about how the source produces the frames.
-class LocalVideoTrack : public VideoFrameObserver, public TrackedObject {
+class LocalVideoTrack : public TrackedObject {
  public:
-  LocalVideoTrack(PeerConnection& owner,
-                  rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
-                  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
-                  mrsLocalVideoTrackInteropHandle interop_handle) noexcept;
-  MRS_API ~LocalVideoTrack() override;
-
-  /// Get the name of the local video track.
-  MRS_API std::string GetName() const noexcept override;
-
   /// Enable or disable the video track. An enabled track streams its content
   /// from its source to the remote peer. A disabled video track only sends
   /// black frames.
-  MRS_API void SetEnabled(bool enabled) const noexcept;
+  virtual void SetEnabled(bool enabled) const noexcept = 0;
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
-  MRS_API [[nodiscard]] bool IsEnabled() const noexcept;
+  [[nodiscard]] virtual bool IsEnabled() const noexcept = 0;
 
-  //
-  // Advanced use
-  //
+  /// Register a callback to get notified on frame available,
+  /// and received that frame as a I420-encoded buffer.
+  /// This is not exclusive and can be used along another ARGB callback.
+  virtual void SetCallback(I420AFrameReadyCallback callback) noexcept = 0;
 
-  [[nodiscard]] webrtc::VideoTrackInterface* impl() const;
-  [[nodiscard]] webrtc::RtpSenderInterface* sender() const;
-
-  [[nodiscard]] mrsLocalVideoTrackInteropHandle GetInteropHandle() const
-      noexcept {
-    return interop_handle_;
-  }
-
-  void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
-
- private:
-  /// Weak reference to the PeerConnection object owning this track.
-  PeerConnection* owner_{};
-
-  /// Underlying core implementation.
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
-
-  /// RTP sender this track is associated with.
-  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender_;
-
-  /// Optional interop handle, if associated with an interop wrapper.
-  mrsLocalVideoTrackInteropHandle interop_handle_{};
+  /// Register a callback to get notified on frame available,
+  /// and received that frame as a raw decoded ARGB buffer.
+  /// This is not exclusive and can be used along another I420 callback.
+  virtual void SetCallback(ARGBFrameReadyCallback callback) noexcept = 0;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

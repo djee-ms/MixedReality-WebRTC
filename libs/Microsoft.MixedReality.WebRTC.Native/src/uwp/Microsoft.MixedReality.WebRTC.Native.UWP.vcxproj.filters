@@ -26,6 +26,7 @@
       <Filter>interop</Filter>
     </ClCompile>
     <ClCompile Include="..\mrs_errors.cpp" />
+    <ClCompile Include="..\mrs_rtc_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../../include/audio_frame_observer.h" />
@@ -59,6 +60,19 @@
     <ClInclude Include="..\..\include\ref_counted_base.h" />
     <ClInclude Include="..\..\include\refptr.h" />
     <ClInclude Include="..\..\include\mrs_errors.h" />
+    <ClInclude Include="..\media\data_channel_impl.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\media\local_video_track_impl.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\video_frame.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\audio_frame.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mrs_rtc_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../docs/design.md" />

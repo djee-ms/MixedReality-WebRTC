@@ -391,6 +391,14 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public mrsBool EnableMRCRecordingIndicator;
         }
 
+        /// <summary>
+        /// Helper structure to pass audio capture device configuration to the underlying C++ library.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        internal struct AudioDeviceConfiguration
+        {
+        }
+
 
         #region Unmanaged delegates
 
@@ -555,11 +563,12 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddLocalVideoTrack")]
         public static extern uint PeerConnection_AddLocalVideoTrack(PeerConnectionHandle peerHandle,
-            string trackName, VideoDeviceConfiguration config, out IntPtr trackHandle);
+            string trackName, in VideoDeviceConfiguration config, out IntPtr trackHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddLocalAudioTrack")]
-        public static extern uint PeerConnection_AddLocalAudioTrack(PeerConnectionHandle peerHandle);
+        public static extern uint PeerConnection_AddLocalAudioTrack(PeerConnectionHandle peerHandle,
+            string trackName, in AudioDeviceConfiguration config);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddDataChannel")]

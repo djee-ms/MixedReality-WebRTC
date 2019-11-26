@@ -1,16 +1,18 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license
-// information.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 #include "pch.h"
 
-#include "data_channel.h"
+#include "media/data_channel_impl.h"
 #include "peer_connection.h"
+#include "interop/global_factory.h"
 
 namespace {
 
+using namespace Microsoft::MixedReality::WebRTC;
+
 using RtcDataState = webrtc::DataChannelInterface::DataState;
-using ApiDataState = Microsoft::MixedReality::WebRTC::DataChannel::State;
+using ApiDataState = DataChannel::State;
 
 inline ApiDataState apiStateFromRtcState(RtcDataState rtcState) {
   // API values have been chosen to match the current WebRTC values. If the
@@ -22,12 +24,11 @@ inline ApiDataState apiStateFromRtcState(RtcDataState rtcState) {
   static_assert((int)RtcDataState::kClosed == (int)ApiDataState::kClosed);
   return (ApiDataState)rtcState;
 }
-
 }  // namespace
 
-namespace Microsoft::MixedReality::WebRTC {
+namespace Microsoft::MixedReality::WebRTC::impl {
 
-DataChannel::DataChannel(
+DataChannelImpl::DataChannelImpl(
     PeerConnection* owner,
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
     mrsDataChannelInteropHandle interop_handle) noexcept
@@ -36,43 +37,46 @@ DataChannel::DataChannel(
       interop_handle_(interop_handle) {
   RTC_CHECK(owner_);
   data_channel_->RegisterObserver(this);
+  GlobalFactory::Instance()->AddObject(ObjectType::kDataChannel, this);
 }
 
-DataChannel::~DataChannel() {
+DataChannelImpl::~DataChannelImpl() {
   data_channel_->UnregisterObserver();
   if (owner_) {
     owner_->RemoveDataChannel(*this);
   }
   RTC_CHECK(!owner_);
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kDataChannel, this);
 }
 
-str DataChannel::label() const {
+str DataChannelImpl::label() const {
   return str{data_channel_->label()};
 }
 
-void DataChannel::SetMessageCallback(MessageCallback callback) noexcept {
+void DataChannelImpl::SetMessageCallback(MessageCallback callback) noexcept {
   auto lock = std::scoped_lock{mutex_};
   message_callback_ = callback;
 }
 
-void DataChannel::SetBufferingCallback(BufferingCallback callback) noexcept {
+void DataChannelImpl::SetBufferingCallback(
+    BufferingCallback callback) noexcept {
   auto lock = std::scoped_lock{mutex_};
   buffering_callback_ = callback;
 }
 
-void DataChannel::SetStateCallback(StateCallback callback) noexcept {
+void DataChannelImpl::SetStateCallback(StateCallback callback) noexcept {
   auto lock = std::scoped_lock{mutex_};
   state_callback_ = callback;
 }
 
-size_t DataChannel::GetMaxBufferingSize() const noexcept {
+size_t DataChannelImpl::GetMaxBufferingSize() const noexcept {
   // See BufferingCallback; current WebRTC implementation has a limit of 16MB
   // for the internal data track buffer capacity.
   static constexpr size_t kMaxBufferingSize = 0x1000000uLL;  // 16 MB
   return kMaxBufferingSize;
 }
 
-bool DataChannel::Send(const void* data, size_t size) noexcept {
+bool DataChannelImpl::Send(const void* data, size_t size) noexcept {
   if (data_channel_->buffered_amount() + size > GetMaxBufferingSize()) {
     return false;
   }
@@ -81,7 +85,7 @@ bool DataChannel::Send(const void* data, size_t size) noexcept {
   return data_channel_->Send(buffer);
 }
 
-void DataChannel::OnStateChange() noexcept {
+void DataChannelImpl::OnStateChange() noexcept {
   const webrtc::DataChannelInterface::DataState state = data_channel_->state();
   switch (state) {
     case webrtc::DataChannelInterface::DataState::kOpen:
@@ -104,14 +108,15 @@ void DataChannel::OnStateChange() noexcept {
   }
 }
 
-void DataChannel::OnMessage(const webrtc::DataBuffer& buffer) noexcept {
+void DataChannelImpl::OnMessage(const webrtc::DataBuffer& buffer) noexcept {
   auto lock = std::scoped_lock{mutex_};
   if (message_callback_) {
     message_callback_(buffer.data.data(), buffer.data.size());
   }
 }
 
-void DataChannel::OnBufferedAmountChange(uint64_t previous_amount) noexcept {
+void DataChannelImpl::OnBufferedAmountChange(
+    uint64_t previous_amount) noexcept {
   auto lock = std::scoped_lock{mutex_};
   if (buffering_callback_) {
     uint64_t current_amount = data_channel_->buffered_amount();
@@ -121,4 +126,4 @@ void DataChannel::OnBufferedAmountChange(uint64_t previous_amount) noexcept {
   }
 }
 
-}  // namespace Microsoft::MixedReality::WebRTC
+}  // namespace Microsoft::MixedReality::WebRTC::impl

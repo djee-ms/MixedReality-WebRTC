@@ -12,6 +12,7 @@ rtc::Thread* UnsafeGetWorkerThread();
 
 #include "export.h"
 #include "mrs_errors.h"
+#include "peer_connection.h"
 
 extern "C" {
 
@@ -132,44 +133,27 @@ using PeerConnectionIceCandidateReadytoSendCallback =
                     int sdpMlineindex,
                     const char* sdpMid);
 
-/// State of the ICE connection.
-/// See https://www.w3.org/TR/webrtc/#rtciceconnectionstate-enum.
-/// Note that there is a mismatch currently due to the m71 implementation.
-enum IceConnectionState : int32_t {
-  kNew = 0,
-  kChecking = 1,
-  kConnected = 2,
-  kCompleted = 3,
-  kFailed = 4,
-  kDisconnected = 5,
-  kClosed = 6,
-};
+using mrsIceConnectionState =
+    Microsoft::MixedReality::WebRTC::IceConnectionState;
 
 /// Callback fired when the state of the ICE connection changed.
 using PeerConnectionIceStateChangedCallback =
-    void(MRS_CALL*)(void* user_data, IceConnectionState new_state);
+    void(MRS_CALL*)(void* user_data, mrsIceConnectionState new_state);
 
 /// Callback fired when a renegotiation of the current session needs to occur to
 /// account for new parameters (e.g. added or removed tracks).
 using PeerConnectionRenegotiationNeededCallback =
     void(MRS_CALL*)(void* user_data);
 
-/// Kind of media track. Equivalent to
-/// webrtc::MediaStreamTrackInterface::kind().
-enum class TrackKind : uint32_t {
-  kUnknownTrack = 0,
-  kAudioTrack = 1,
-  kVideoTrack = 2,
-  kDataTrack = 3,
-};
+using mrsTrackKind = Microsoft::MixedReality::WebRTC::TrackKind;
 
 /// Callback fired when a remote track is added to a connection.
-using PeerConnectionTrackAddedCallback = void(MRS_CALL*)(void* user_data,
-                                                         TrackKind track_kind);
+using PeerConnectionTrackAddedCallback =
+    void(MRS_CALL*)(void* user_data, mrsTrackKind track_kind);
 
 /// Callback fired when a remote track is removed from a connection.
 using PeerConnectionTrackRemovedCallback =
-    void(MRS_CALL*)(void* user_data, TrackKind track_kind);
+    void(MRS_CALL*)(void* user_data, mrsTrackKind track_kind);
 
 /// Callback fired when a data channel is added to the peer connection after
 /// being negotiated with the remote peer.
@@ -240,50 +224,24 @@ using mrsDataChannelStateCallback = void(MRS_CALL*)(void* user_data,
                                                     int32_t state,
                                                     int32_t id);
 
-/// ICE transport type. See webrtc::PeerConnectionInterface::IceTransportsType.
-/// Currently values are aligned, but kept as a separate structure to allow
-/// backward compatilibity in case of changes in WebRTC.
-enum class IceTransportType : int32_t {
-  kNone = 0,
-  kRelay = 1,
-  kNoHost = 2,
-  kAll = 3
-};
-
-/// Bundle policy. See webrtc::PeerConnectionInterface::BundlePolicy.
-/// Currently values are aligned, but kept as a separate structure to allow
-/// backward compatilibity in case of changes in WebRTC.
-enum class BundlePolicy : int32_t {
-  kBalanced = 0,
-  kMaxBundle = 1,
-  kMaxCompat = 2
-};
-
-/// SDP semantic (protocol dialect) for (re)negotiating a peer connection.
-/// This cannot be changed after the connection is established.
-enum class SdpSemantic : int32_t {
-  /// Unified Plan - default and recommended. Standardized in WebRTC 1.0.
-  kUnifiedPlan = 0,
-  /// Plan B - deprecated and soon to be removed. Do not use unless for
-  /// compability with an older implementation. This is non-standard.
-  kPlanB = 1
-};
-
 /// Configuration to intialize a peer connection object.
-struct PeerConnectionConfiguration {
+struct mrsPeerConnectionConfiguration {
   /// ICE servers, encoded as a single string buffer.
   /// See |EncodeIceServers| and |DecodeIceServers|.
   const char* encoded_ice_servers = nullptr;
 
   /// ICE transport type for the connection.
-  IceTransportType ice_transport_type = IceTransportType::kAll;
+  Microsoft::MixedReality::WebRTC::IceTransportType ice_transport_type =
+      Microsoft::MixedReality::WebRTC::IceTransportType::kAll;
 
   /// Bundle policy for the connection.
-  BundlePolicy bundle_policy = BundlePolicy::kBalanced;
+  Microsoft::MixedReality::WebRTC::BundlePolicy bundle_policy =
+      Microsoft::MixedReality::WebRTC::BundlePolicy::kBalanced;
 
   /// SDP semantic for connection negotiation.
   /// Do not use Plan B unless there is a problem with Unified Plan.
-  SdpSemantic sdp_semantic = SdpSemantic::kUnifiedPlan;
+  Microsoft::MixedReality::WebRTC::SdpSemantic sdp_semantic =
+      Microsoft::MixedReality::WebRTC::SdpSemantic::kUnifiedPlan;
 };
 
 /// Create a peer connection and return a handle to it.
@@ -294,7 +252,7 @@ struct PeerConnectionConfiguration {
 /// |mrsPeerConnectionRemoveRef|. When the last reference is removed, the native
 /// object is destroyed.
 MRS_API mrsResult MRS_CALL
-mrsPeerConnectionCreate(PeerConnectionConfiguration config,
+mrsPeerConnectionCreate(mrsPeerConnectionConfiguration config,
                         mrsPeerConnectionInteropHandle interop_handle,
                         PeerConnectionHandle* peerHandleOut) noexcept;
 
@@ -383,21 +341,6 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterARGBRemoteVideoFrameCallback(
     PeerConnectionARGBVideoFrameCallback callback,
     void* user_data) noexcept;
 
-/// Kind of video profile. Equivalent to org::webRtc::VideoProfileKind.
-enum class VideoProfileKind : int32_t {
-  kUnspecified,
-  kVideoRecording,
-  kHighQualityPhoto,
-  kBalancedVideoAndPhoto,
-  kVideoConferencing,
-  kPhotoSequence,
-  kHighFrameRate,
-  kVariablePhotoSequence,
-  kHdrWithWcgVideo,
-  kHdrWithWcgPhoto,
-  kVideoHdr8,
-};
-
 /// Register a callback fired when an audio frame is available from a local
 /// audio track, usually from a local audio capture device (local microphone).
 ///
@@ -417,8 +360,10 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterRemoteAudioFrameCallback(
     PeerConnectionAudioFrameCallback callback,
     void* user_data) noexcept;
 
+using mrsVideoProfileKind = Microsoft::MixedReality::WebRTC::VideoProfileKind;
+
 /// Configuration for opening a local video capture device.
-struct VideoDeviceConfiguration {
+struct mrsVideoDeviceConfiguration {
   /// Unique identifier of the video capture device to select, as returned by
   /// |mrsEnumVideoCaptureDevicesAsync|, or a null or empty string to select the
   /// default device.
@@ -432,7 +377,7 @@ struct VideoDeviceConfiguration {
   /// If a video profile ID is specified with |video_profile_id| it is
   /// recommended to leave this as kUnspecified to avoid over-constraining the
   /// video capture format selection.
-  VideoProfileKind video_profile_kind = VideoProfileKind::kUnspecified;
+  mrsVideoProfileKind video_profile_kind = mrsVideoProfileKind::kUnspecified;
 
   /// Optional preferred capture resolution width, in pixels, or zero for
   /// unconstrained.
@@ -464,6 +409,23 @@ struct VideoDeviceConfiguration {
   mrsBool enable_mrc_recording_indicator = mrsBool::kTrue;
 };
 
+/// Optional boolean.
+enum class mrsOptBool : int32_t {
+  kUnspecified = -1,
+  kFalse = 0,
+  kTrue = 1
+};
+
+/// Configuration for opening a local audio capture device.
+struct mrsAudioDeviceConfiguration {
+  mrsOptBool echo_cancellation = mrsOptBool::kUnspecified;
+  mrsOptBool auto_gain_control = mrsOptBool::kUnspecified;
+  mrsOptBool noise_suppression = mrsOptBool::kUnspecified;
+  mrsOptBool highpass_filter = mrsOptBool::kUnspecified;
+  mrsOptBool typing_detection = mrsOptBool::kUnspecified;
+  mrsOptBool aecm_generate_comfort_noise = mrsOptBool::kUnspecified;
+};
+
 /// Add a local video track from a local video capture device (webcam) to
 /// the collection of tracks to send to the remote peer.
 /// |video_device_id| specifies the unique identifier of a video capture
@@ -475,7 +437,7 @@ struct VideoDeviceConfiguration {
 MRS_API mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
     PeerConnectionHandle peerHandle,
     const char* track_name,
-    VideoDeviceConfiguration config,
+    mrsVideoDeviceConfiguration config,
     LocalVideoTrackHandle* trackHandle) noexcept;
 
 /// Add a local audio track from a local audio capture device (microphone) to

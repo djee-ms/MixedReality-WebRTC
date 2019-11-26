@@ -131,10 +131,15 @@
     <ClInclude Include="../interop/peer_connection_interop.h" />
     <ClInclude Include="../../include/local_video_track.h" />
     <ClInclude Include="../interop/local_video_track_interop.h" />
+    <ClInclude Include="..\..\include\audio_frame.h" />
     <ClInclude Include="..\..\include\mrs_errors.h" />
     <ClInclude Include="..\..\include\refptr.h" />
     <ClInclude Include="..\..\include\ref_counted_base.h" />
     <ClInclude Include="..\..\include\tracked_object.h" />
+    <ClInclude Include="..\..\include\video_frame.h" />
+    <ClInclude Include="..\media\data_channel_impl.h" />
+    <ClInclude Include="..\media\local_video_track_impl.h" />
+    <ClInclude Include="..\mrs_rtc_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../interop/interop_api.cpp" />
@@ -152,6 +157,7 @@
     <ClCompile Include="../interop/local_video_track_interop.cpp" />
     <ClCompile Include="../media/local_video_track.cpp" />
     <ClCompile Include="..\mrs_errors.cpp" />
+    <ClCompile Include="..\mrs_rtc_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../docs/design.md" />

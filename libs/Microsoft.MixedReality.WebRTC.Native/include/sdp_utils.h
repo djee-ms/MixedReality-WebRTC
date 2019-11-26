@@ -10,6 +10,8 @@
 
 namespace Microsoft::MixedReality::WebRTC {
 
+struct IceServer;
+
 /// Parse a list of semicolon-separated pairs of "key=value" arguments into a
 /// map of (key, value) pairs.
 void SdpParseCodecParameters(const std::string& param_string,
@@ -42,17 +44,14 @@ std::string SdpForceCodecs(
 ///   block = lines
 ///   lines = line [ "\n" lines ]
 ///   line = key ":" value
-webrtc::PeerConnectionInterface::IceServers DecodeIceServers(
-    const std::string& str);
+std::vector<IceServer> DecodeIceServers(const str& str);
 
 /// Encode a single URL of a single ICE server into a marshalled ICE server
 /// string.
-std::string EncodeIceServers(const std::string& url);
+str EncodeIceServers(const str& url);
 
 /// Encode a single URL of a single ICE server into a marshalled ICE server
 /// string, with optional username and password for a TURN server.
-std::string EncodeIceServers(const std::string& url,
-                             const std::string& username,
-                             const std::string& password);
+str EncodeIceServers(const str& url, const str& username, const str& password);
 
 }  // namespace Microsoft::MixedReality::WebRTC

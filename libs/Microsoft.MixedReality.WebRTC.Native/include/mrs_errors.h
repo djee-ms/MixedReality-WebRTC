@@ -3,9 +3,11 @@
 
 #pragma once
 
+#include <cassert>
 #include <string>
 
 #include "export.h"
+#include "str.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -53,7 +55,7 @@ class Error {
   /// Create an error object from a result code, with an additional
   /// informational message associated with the error. Generally it makes no
   /// sense to use this with the kSuccess result.
-  Error(Result result, std::string message)
+  explicit Error(Result result, str message)
       : result_(result), message_(std::move(message)) {}
 
   Error(const Error& other) = delete;
@@ -71,14 +73,14 @@ class Error {
 
   /// Explicitly set the informational message associated with the error, often
   /// to provide more context than the default one.
-  MRS_API void set_message(std::string message);
+  MRS_API void set_message(str message);
 
   /// Return |true| if the Error instance does not currently represent an error.
   bool ok() const { return result_ == Result::kSuccess; }
 
  private:
   Result result_ = Result::kSuccess;
-  std::string message_;
+  str message_;
 };
 
 /// Container holding either an Error or a value of the given type.

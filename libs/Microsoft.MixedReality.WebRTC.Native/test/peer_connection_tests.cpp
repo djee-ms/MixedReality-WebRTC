@@ -8,7 +8,7 @@
 TEST(PeerConnection, LocalNoIce) {
   for (int i = 0; i < 3; ++i) {
     // Create PC
-    PeerConnectionConfiguration config{};  // local connection only
+    mrsPeerConnectionConfiguration config{};  // local connection only
     PCRaii pc1(config);
     ASSERT_NE(nullptr, pc1.handle());
     PCRaii pc2(config);
@@ -46,7 +46,7 @@ TEST(PeerConnection, LocalNoIce) {
 TEST(PeerConnection, LocalIce) {
   for (int i = 0; i < 3; ++i) {
     // Create PC
-    PeerConnectionConfiguration config{};  // local connection only
+    mrsPeerConnectionConfiguration config{};  // local connection only
     PCRaii pc1(config);
     ASSERT_NE(nullptr, pc1.handle());
     PCRaii pc2(config);

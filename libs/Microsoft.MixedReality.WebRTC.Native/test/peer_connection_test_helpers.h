@@ -96,7 +96,7 @@ class PCRaii {
  public:
   /// Create a peer connection with a default public STUN server.
   PCRaii() {
-    PeerConnectionConfiguration config{};
+    mrsPeerConnectionConfiguration config{};
     config.encoded_ice_servers = "stun:stun.l.google.com:19302";
     mrsPeerConnectionInteropHandle interop_handle = (void*)0x1;
     mrsPeerConnectionCreate(config, interop_handle, &handle_);
@@ -104,7 +104,7 @@ class PCRaii {
   /// Create a peer connection with a specific configuration.
   /// Use this constructor with a default-constructed configuration object to
   /// create a local-only peer connection without STUN/TURN capability.
-  PCRaii(const PeerConnectionConfiguration& config,
+  PCRaii(const mrsPeerConnectionConfiguration& config,
          mrsPeerConnectionInteropHandle interop_handle = (void*)0x1) {
     mrsPeerConnectionCreate(config, interop_handle, &handle_);
   }
@@ -182,7 +182,7 @@ class LocalPeerPairRaii {
       : sdp1_cb_(pc1()), sdp2_cb_(pc2()), ice1_cb_(pc1()), ice2_cb_(pc2()) {
     setup();
   }
-  LocalPeerPairRaii(const PeerConnectionConfiguration& config)
+  LocalPeerPairRaii(const mrsPeerConnectionConfiguration& config)
       : pc1_(config),
         pc2_(config),
         sdp1_cb_(pc1()),

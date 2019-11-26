@@ -19,7 +19,7 @@ const char* Error::message() const {
   return message_.c_str();
 }
 
-void Error::set_message(std::string message) {
+void Error::set_message(str message) {
   message_ = std::move(message);
 }
 

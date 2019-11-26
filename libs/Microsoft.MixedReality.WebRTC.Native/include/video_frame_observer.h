@@ -1,6 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license
-// information.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 #pragma once
 
@@ -9,28 +8,9 @@
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 
-#include "callback.h"
+#include "video_frame.h"
 
 namespace Microsoft::MixedReality::WebRTC {
-
-/// Callback fired on newly available video frame, encoded as I420.
-/// The first 4 pointers are buffers for the YUVA planes (in that order),
-/// followed by the 4 byte strides, and the width and height of the frame.
-using I420AFrameReadyCallback = Callback<const void*,
-                                         const void*,
-                                         const void*,
-                                         const void*,
-                                         int,
-                                         int,
-                                         int,
-                                         int,
-                                         int,
-                                         int>;
-
-/// Callback fired on newly available video frame, encoded as ARGB.
-/// The first parameters are the buffer pointer and byte stride of the
-/// packed ARGB data, followed by the width and height of the frame.
-using ARGBFrameReadyCallback = Callback<const void*, int, int, int>;
 
 constexpr inline size_t ArgbDataSize(int height, int stride) {
   return static_cast<size_t>(height) * stride * 4;

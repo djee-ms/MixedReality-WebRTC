@@ -1,19 +1,16 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license
-// information.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 #pragma once
 
 #include <mutex>
 
-#include "api/datachannelinterface.h"
-
 #include "callback.h"
 #include "data_channel.h"
 #include "str.h"
+#include "tracked_object.h"
 
-// Internal
-#include "interop/interop_api.h"
+using mrsDataChannelInteropHandle = void*;
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -30,7 +27,7 @@ class PeerConnection;
 /// re-sending lost packets as many times as needed.
 /// - ordered: data is received by the remote peer in the same order as it is
 /// sent by the local peer.
-class DataChannel : public webrtc::DataChannelObserver {
+class DataChannel : public TrackedObject {
  public:
   /// Data channel state as marshaled through the public API.
   enum class State : int {
@@ -64,73 +61,24 @@ class DataChannel : public webrtc::DataChannelObserver {
   /// Callback fired when the data channel state changed.
   using StateCallback = Callback</*DataChannelState*/ int, int>;
 
-  DataChannel(PeerConnection* owner,
-              rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
-              mrsDataChannelInteropHandle interop_handle = nullptr) noexcept;
-
-  /// Remove the data channel from its parent PeerConnection and close it.
-  ~DataChannel() override;
-
   /// Get the unique channel identifier.
-  [[nodiscard]] int id() const { return data_channel_->id(); }
+  [[nodiscard]] MRS_API virtual int id() const = 0;
 
   /// Get the friendly channel name.
-  [[nodiscard]] MRS_API str label() const;
+  [[nodiscard]] MRS_API virtual str label() const = 0;
 
-  void SetMessageCallback(MessageCallback callback) noexcept;
-  void SetBufferingCallback(BufferingCallback callback) noexcept;
-  void SetStateCallback(StateCallback callback) noexcept;
+  MRS_API virtual void SetMessageCallback(
+      MessageCallback callback) noexcept = 0;
+  MRS_API virtual void SetBufferingCallback(
+      BufferingCallback callback) noexcept = 0;
+  MRS_API virtual void SetStateCallback(StateCallback callback) noexcept = 0;
 
   /// Get the maximum buffering size, in bytes, before |Send()| stops accepting
   /// data.
-  [[nodiscard]] MRS_API size_t GetMaxBufferingSize() const noexcept;
+  [[nodiscard]] MRS_API virtual size_t GetMaxBufferingSize() const noexcept = 0;
 
   /// Send a blob of data through the data channel.
-  MRS_API bool Send(const void* data, size_t size) noexcept;
-
-  //
-  // Advanced use
-  //
-
-  [[nodiscard]] webrtc::DataChannelInterface* impl() const {
-    return data_channel_.get();
-  }
-
-  mrsDataChannelInteropHandle GetInteropHandle() const noexcept {
-    return interop_handle_;
-  }
-
-  /// This is invoked automatically by PeerConnection::RemoveDataChannel().
-  /// Do not call it manually.
-  void OnRemovedFromPeerConnection() noexcept { owner_ = nullptr; }
-
- protected:
-  // DataChannelObserver interface
-
-  // The data channel state have changed.
-  void OnStateChange() noexcept override;
-  //  A data buffer was successfully received.
-  void OnMessage(const webrtc::DataBuffer& buffer) noexcept override;
-  // The data channel's buffered_amount has changed.
-  void OnBufferedAmountChange(uint64_t previous_amount) noexcept override;
-
- private:
-  /// PeerConnection object owning this data channel. This is only valid from
-  /// creation until the data channel is removed from the peer connection with
-  /// RemoveDataChannel(), at which point the data channel is removed from its
-  /// parent's collection and |owner_| is set to nullptr.
-  PeerConnection* owner_{};
-
-  /// Underlying core implementation.
-  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
-
-  MessageCallback message_callback_ RTC_GUARDED_BY(mutex_);
-  BufferingCallback buffering_callback_ RTC_GUARDED_BY(mutex_);
-  StateCallback state_callback_ RTC_GUARDED_BY(mutex_);
-  std::mutex mutex_;
-
-  /// Optional interop handle, if associated with an interop wrapper.
-  mrsDataChannelInteropHandle interop_handle_{};
+  MRS_API virtual bool Send(const void* data, size_t size) noexcept = 0;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

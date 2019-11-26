@@ -4,13 +4,17 @@
 
 #include "pch.h"
 
+#include "peer_connection.h"
 #include "sdp_utils.h"
+#include "str.h"
 
 #include "api/jsepsessiondescription.h"
 #include "pc/sessiondescription.h"
 #include "pc/webrtcsdp.h"
 
 namespace {
+
+using namespace Microsoft::MixedReality::WebRTC;
 
 /// Assign a preferred audio or video codec to the media content description,
 /// and optionally add some extra codec parameters on top of the default one,
@@ -47,14 +51,12 @@ bool SetPreferredCodec(
   return true;
 }
 
-bool TryExtractSuffix(const std::string& str,
-                      const std::string& prefix,
-                      std::string& suffixOut) {
-  if (prefix.size() > str.size()) {
+bool TryExtractSuffix(const str& s, const str& prefix, str& suffixOut) {
+  if (prefix.size() > s.size()) {
     return false;
   }
-  if (memcmp(str.data(), prefix.data(), prefix.size()) == 0) {
-    suffixOut = str.substr(prefix.size());
+  if (memcmp(s.data(), prefix.data(), prefix.size()) == 0) {
+    suffixOut = s.substr(prefix.size());
     return true;
   }
   return false;
@@ -132,23 +134,23 @@ std::string SdpForceCodecs(
   return webrtc::SdpSerialize(jdesc);
 }
 
-webrtc::PeerConnectionInterface::IceServers DecodeIceServers(
-    const std::string& str) {
-  if (str.empty())
+std::vector<IceServer> DecodeIceServers(const str& encoded) {
+  if (encoded.empty()) {
     return {};
+  }
 
-  webrtc::PeerConnectionInterface::IceServers serverList;
+  std::vector<IceServer> serverList;
 
-  webrtc::PeerConnectionInterface::IceServer server;
-  size_t offset = 0;
+  IceServer server;
+  str::size_type offset = 0;
   constexpr char lineSep = '\n';
-  size_t idx = str.find_first_of(lineSep);
+  str::size_type idx = encoded.find_first_of(lineSep);
   bool blockHasData = false;
   while (true) {
     if (idx > offset) {
       blockHasData = true;
       // Parse line
-      std::string line = str.substr(offset, idx - offset);
+      str line = encoded.substr(offset, idx - offset);
       if (!TryExtractSuffix(line, "username:", server.username) &&
           !TryExtractSuffix(line, "password:", server.password)) {
         server.urls.emplace_back(std::move(line));
@@ -157,25 +159,17 @@ webrtc::PeerConnectionInterface::IceServers DecodeIceServers(
       // block end
       if (blockHasData) {
         serverList.emplace_back(std::move(server));
-        // webrtc::PeerConnectionInterface::IceServer missing move operators
-        server.urls.clear();
-        server.username.clear();
-        server.password.clear();
         blockHasData = false;
       }
     }
-    if (idx < std::string::npos) {
+    if (idx < str::npos) {
       offset = idx + 1;
-      idx = str.find_first_of(lineSep, offset);
+      idx = encoded.find_first_of(lineSep, offset);
       continue;
     }
     // last block end
     if (blockHasData) {
       serverList.emplace_back(std::move(server));
-      // webrtc::PeerConnectionInterface::IceServer missing move operators
-      server.urls.clear();
-      server.username.clear();
-      server.password.clear();
     }
     break;
   }
@@ -183,14 +177,13 @@ webrtc::PeerConnectionInterface::IceServers DecodeIceServers(
   return serverList;
 }
 
-std::string EncodeIceServers(const std::string& url) {
+str EncodeIceServers(const str& url) {
   return url;
 }
 
-std::string EncodeIceServers(const std::string& url,
-                             const std::string& username,
-                             const std::string& password) {
-  return url + "\nusername:" + username + "\npassword:" + password;
+str EncodeIceServers(const str& url, const str& username, const str& password) {
+  return str(url.std_str() + "\nusername:" + username.std_str() +
+             "\npassword:" + password.std_str());
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

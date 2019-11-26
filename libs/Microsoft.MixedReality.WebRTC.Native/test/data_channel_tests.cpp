@@ -42,7 +42,7 @@ TEST(DataChannel, AddChannelBeforeInit) {
 
 TEST(DataChannel, InBand) {
   // Create PC
-  PeerConnectionConfiguration config{};  // local connection only
+  mrsPeerConnectionConfiguration config{};  // local connection only
   PCRaii pc1(config);
   ASSERT_NE(nullptr, pc1.handle());
   PCRaii pc2(config);

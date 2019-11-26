@@ -4,6 +4,7 @@
 #pragma once
 
 #include "export.h"
+#include "mrs_errors.h"
 #include "peer_connection.h"
 
 namespace Microsoft::MixedReality::WebRTC {
@@ -11,6 +12,7 @@ namespace Microsoft::MixedReality::WebRTC {
 enum class ObjectType : int {
   kPeerConnection,
   kLocalVideoTrack,
+  kDataChannel,
 };
 
 /// Global factory wrapper adding thread safety to all global objects, including
@@ -27,7 +29,7 @@ class GlobalFactory {
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> GetOrCreate();
 
   /// Get or create the peer connection factory.
-  mrsResult GetOrCreate(
+  Result GetOrCreate(
       rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>& factory);
 
   /// Get the existing peer connection factory, or NULL if not created.
@@ -50,11 +52,11 @@ class GlobalFactory {
   using WebRtcFactoryPtr =
       std::shared_ptr<wrapper::impl::org::webRtc::WebRtcFactory>;
   WebRtcFactoryPtr get();
-  mrsResult GetOrCreateWebRtcFactory(WebRtcFactoryPtr& factory);
+  Result GetOrCreateWebRtcFactory(WebRtcFactoryPtr& factory);
 #endif  // defined(WINUWP)
 
  private:
-  mrsResult Initialize();
+  Result Initialize();
   void ShutdownNoLock();
 
  private:

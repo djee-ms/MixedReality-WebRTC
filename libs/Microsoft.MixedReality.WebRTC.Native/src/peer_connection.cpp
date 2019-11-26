@@ -6,48 +6,203 @@
 #include "pch.h"
 
 #include "audio_frame_observer.h"
-#include "data_channel.h"
+#include "interop/global_factory.h"
+#include "interop/interop_api.h"
 #include "local_video_track.h"
+#include "media/data_channel_impl.h"
+#include "media/local_video_track_impl.h"
+#include "mrs_rtc_utils.h"
 #include "peer_connection.h"
 #include "sdp_utils.h"
 #include "video_frame_observer.h"
-
-// Internal
-#include "interop/global_factory.h"
-#include "interop/interop_api.h"
-
-#include <functional>
 
 namespace {
 
 using namespace Microsoft::MixedReality::WebRTC;
 
-Result ResultFromRTCErrorType(webrtc::RTCErrorType type) {
-  using namespace webrtc;
-  switch (type) {
-    case RTCErrorType::NONE:
-      return Result::kSuccess;
-    case RTCErrorType::UNSUPPORTED_OPERATION:
-    case RTCErrorType::UNSUPPORTED_PARAMETER:
-      return Result::kUnsupported;
-    case RTCErrorType::INVALID_PARAMETER:
-    case RTCErrorType::INVALID_RANGE:
-      return Result::kInvalidParameter;
-    case RTCErrorType::INVALID_STATE:
-      return Result::kNotInitialized;
-    default:
-      return Result::kUnknownError;
+/// Simple implementation of the MediaConstraintsInterface.
+class SimpleMediaConstraints : public webrtc::MediaConstraintsInterface {
+ public:
+  using webrtc::MediaConstraintsInterface::Constraint;
+  using webrtc::MediaConstraintsInterface::Constraints;
+  static Constraint MinWidth(uint32_t min_width) {
+    return Constraint(webrtc::MediaConstraintsInterface::kMinWidth,
+                      std::to_string(min_width));
   }
-}
+  static Constraint MaxWidth(uint32_t max_width) {
+    return Constraint(webrtc::MediaConstraintsInterface::kMaxWidth,
+                      std::to_string(max_width));
+  }
+  static Constraint MinHeight(uint32_t min_height) {
+    return Constraint(webrtc::MediaConstraintsInterface::kMinHeight,
+                      std::to_string(min_height));
+  }
+  static Constraint MaxHeight(uint32_t max_height) {
+    return Constraint(webrtc::MediaConstraintsInterface::kMaxHeight,
+                      std::to_string(max_height));
+  }
+  static Constraint MinFrameRate(double min_framerate) {
+    // Note: kMinFrameRate is read back as an int
+    const int min_int = (int)std::floor(min_framerate);
+    return Constraint(webrtc::MediaConstraintsInterface::kMinFrameRate,
+                      std::to_string(min_int));
+  }
+  static Constraint MaxFrameRate(double max_framerate) {
+    // Note: kMinFrameRate is read back as an int
+    const int max_int = (int)std::ceil(max_framerate);
+    return Constraint(webrtc::MediaConstraintsInterface::kMaxFrameRate,
+                      std::to_string(max_int));
+  }
+  const Constraints& GetMandatory() const override { return mandatory_; }
+  const Constraints& GetOptional() const override { return optional_; }
+  Constraints mandatory_;
+  Constraints optional_;
+};
 
-Error ErrorFromRTCError(const webrtc::RTCError& error) {
-  return Error(ResultFromRTCErrorType(error.type()), error.message());
-}
+/// Helper to open a video capture device.
+Result OpenVideoCaptureDevice(
+    const VideoDeviceConfiguration& config,
+    std::unique_ptr<cricket::VideoCapturer>& capturer_out) noexcept {
+  capturer_out.reset();
+#if defined(WINUWP)
+  WebRtcFactoryPtr uwp_factory;
+  {
+    Result res =
+        GlobalFactory::Instance()->GetOrCreateWebRtcFactory(uwp_factory);
+    if (res != Result::kSuccess) {
+      RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
+      return res;
+    }
+  }
 
-Error ErrorFromRTCError(webrtc::RTCError&& error) {
-  // Ideally would move the std::string out of |error|, but doesn't look
-  // possible at the moment.
-  return Error(ResultFromRTCErrorType(error.type()), error.message());
+  // Check for calls from main UI thread; this is not supported (will deadlock)
+  auto mw = winrt::Windows::ApplicationModel::Core::CoreApplication::MainView();
+  auto cw = mw.CoreWindow();
+  auto dispatcher = cw.Dispatcher();
+  if (dispatcher.HasThreadAccess()) {
+    return Result::kWrongThread;
+  }
+
+  // Get devices synchronously (wait for UI thread to retrieve them for us)
+  rtc::Event blockOnDevicesEvent(true, false);
+  auto vci = wrapper::impl::org::webRtc::VideoCapturer::getDevices();
+  vci->thenClosure([&blockOnDevicesEvent] { blockOnDevicesEvent.Set(); });
+  blockOnDevicesEvent.Wait(rtc::Event::kForever);
+  auto deviceList = vci->value();
+
+  std::wstring video_device_id_str;
+  if (!detail::IsStringNullOrEmpty(config.video_device_id)) {
+    video_device_id_str =
+        rtc::ToUtf16(config.video_device_id, strlen(config.video_device_id));
+  }
+
+  for (auto&& vdi : *deviceList) {
+    auto devInfo =
+        wrapper::impl::org::webRtc::VideoDeviceInfo::toNative_winrt(vdi);
+    const winrt::hstring& id = devInfo.Id();
+    if (!video_device_id_str.empty() && (video_device_id_str != id)) {
+      continue;
+    }
+
+    auto createParams = std::make_shared<
+        wrapper::impl::org::webRtc::VideoCapturerCreationParameters>();
+    createParams->factory = uwp_factory;
+    createParams->name = devInfo.Name().c_str();
+    createParams->id = id.c_str();
+    if (config.video_profile_id) {
+      createParams->videoProfileId = config.video_profile_id;
+    }
+    createParams->videoProfileKind =
+        (wrapper::org::webRtc::VideoProfileKind)config.video_profile_kind;
+    createParams->enableMrc = (config.enable_mrc != mrsBool::kFalse);
+    createParams->enableMrcRecordingIndicator =
+        (config.enable_mrc_recording_indicator != mrsBool::kFalse);
+    createParams->width = config.width;
+    createParams->height = config.height;
+    createParams->framerate = config.framerate;
+
+    auto vcd = wrapper::impl::org::webRtc::VideoCapturer::create(createParams);
+
+    if (vcd != nullptr) {
+      auto nativeVcd = wrapper::impl::org::webRtc::VideoCapturer::toNative(vcd);
+
+      RTC_LOG(LS_INFO) << "Using video capture device '"
+                       << createParams->name.c_str()
+                       << "' (id=" << createParams->id.c_str() << ")";
+
+      if (auto supportedFormats = nativeVcd->GetSupportedFormats()) {
+        RTC_LOG(LS_INFO) << "Supported video formats:";
+        for (auto&& format : *supportedFormats) {
+          auto str = format.ToString();
+          RTC_LOG(LS_INFO) << "- " << str.c_str();
+        }
+      }
+
+      capturer_out = std::move(nativeVcd);
+      return Result::kSuccess;
+    }
+  }
+#else
+  // List all available video capture devices, or match by ID if specified.
+  std::vector<std::string> device_names;
+  {
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+        webrtc::VideoCaptureFactory::CreateDeviceInfo());
+    if (!info) {
+      return Result::kUnknownError;
+    }
+
+    const int num_devices = info->NumberOfDevices();
+    constexpr uint32_t kSize = 256;
+    if (config.video_device_id.empty()) {
+      // Look for the one specific device the user asked for
+      for (int i = 0; i < num_devices; ++i) {
+        char name[kSize] = {};
+        char id[kSize] = {};
+        if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
+          if (config.video_device_id == id) {
+            // Keep only the device the user selected
+            device_names.push_back(name);
+            break;
+          }
+        }
+      }
+      if (device_names.empty()) {
+        RTC_LOG(LS_ERROR)
+            << "Could not find video capture device by unique ID: "
+            << config.video_device_id;
+        return Result::kNotFound;
+      }
+    } else {
+      // List all available devices
+      for (int i = 0; i < num_devices; ++i) {
+        char name[kSize] = {};
+        char id[kSize] = {};
+        if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
+          device_names.push_back(name);
+        }
+      }
+      if (device_names.empty()) {
+        RTC_LOG(LS_ERROR) << "Could not find any video catpure device.";
+        return Result::kInvalidOperation;
+      }
+    }
+  }
+
+  // Open the specified capture device, or the first one available if none
+  // specified.
+  cricket::WebRtcVideoDeviceCapturerFactory factory;
+  for (const auto& name : device_names) {
+    // cricket::Device identifies devices by (friendly) name, not unique ID
+    capturer_out = factory.Create(cricket::Device(name, 0));
+    if (capturer_out) {
+      return Result::kSuccess;
+    }
+  }
+
+#endif
+
+  return Result::kUnknownError;
 }
 
 /// Implementation of PeerConnection, which also implements
@@ -77,7 +232,7 @@ class PeerConnectionImpl : public PeerConnection,
 
   void SetName(std::string_view name) { name_ = name; }
 
-  std::string GetName() const override { return name_; }
+  str GetName() const override { return str(name_); }
 
   void RegisterLocalSdpReadytoSendCallback(
       LocalSdpReadytoSendCallback&& callback) noexcept override {
@@ -115,12 +270,12 @@ class PeerConnectionImpl : public PeerConnection,
     connected_callback_ = std::move(callback);
   }
 
-  mrsResult SetBitrate(const BitrateSettings& settings) noexcept override {
+  Result SetBitrate(const BitrateSettings& settings) noexcept override {
     webrtc::BitrateSettings bitrate;
     bitrate.start_bitrate_bps = settings.start_bitrate_bps;
     bitrate.min_bitrate_bps = settings.min_bitrate_bps;
     bitrate.max_bitrate_bps = settings.max_bitrate_bps;
-    return ResultFromRTCErrorType(peer_->SetBitrate(bitrate).type());
+    return detail::ResultFromRTCErrorType(peer_->SetBitrate(bitrate).type());
   }
 
   bool CreateOffer() noexcept override;
@@ -155,10 +310,9 @@ class PeerConnectionImpl : public PeerConnection,
   }
 
   ErrorOr<RefPtr<LocalVideoTrack>> AddLocalVideoTrack(
-      rtc::scoped_refptr<webrtc::VideoTrackInterface>
-          video_track) noexcept override;
-  webrtc::RTCError RemoveLocalVideoTrack(
-      LocalVideoTrack& video_track) noexcept override;
+      std::string_view track_name,
+      const VideoDeviceConfiguration& config) noexcept override;
+  Error RemoveLocalVideoTrack(LocalVideoTrack& video_track) noexcept override;
 
   void RegisterLocalAudioFrameCallback(
       AudioFrameReadyCallback callback) noexcept override {
@@ -174,8 +328,9 @@ class PeerConnectionImpl : public PeerConnection,
     }
   }
 
-  bool AddLocalAudioTrack(rtc::scoped_refptr<webrtc::AudioTrackInterface>
-                              audio_track) noexcept override;
+  Result AddLocalAudioTrack(
+      std::string_view track_name,
+      const AudioDeviceConfiguration& config) noexcept override;
   void RemoveLocalAudioTrack() noexcept override;
   void SetLocalAudioTrackEnabled(bool enabled = true) noexcept override;
   bool IsLocalAudioTrackEnabled() const noexcept override;
@@ -192,17 +347,17 @@ class PeerConnectionImpl : public PeerConnection,
     data_channel_removed_callback_ = std::move(callback);
   }
 
-  webrtc::RTCErrorOr<std::shared_ptr<DataChannel>> AddDataChannel(
+  ErrorOr<RefPtr<DataChannel>> AddDataChannel(
       int id,
       std::string_view label,
       bool ordered,
       bool reliable,
       mrsDataChannelInteropHandle dataChannelInteropHandle) noexcept override;
-  void RemoveDataChannel(const DataChannel& data_channel) noexcept override;
+  void RemoveDataChannel(DataChannel& data_channel) noexcept override;
   void RemoveAllDataChannels() noexcept override;
   void OnDataChannelAdded(const DataChannel& data_channel) noexcept override;
 
-  mrsResult RegisterInteropCallbacks(
+  Result RegisterInteropCallbacks(
       const mrsPeerConnectionInteropCallbacks& callbacks) noexcept override {
     // Make a full copy of all callbacks
     interop_callbacks_ = callbacks;
@@ -341,18 +496,18 @@ class PeerConnectionImpl : public PeerConnection,
   rtc::CriticalSection tracks_mutex_;
 
   /// Collection of all data channels associated with this peer connection.
-  std::vector<std::shared_ptr<DataChannel>> data_channels_
+  std::vector<RefPtr<impl::DataChannelImpl>> data_channels_
       RTC_GUARDED_BY(data_channel_mutex_);
 
   /// Collection of data channels from their unique ID.
   /// This contains only data channels pre-negotiated or opened by the remote
   /// peer, as data channels opened locally won't have immediately a unique ID.
-  std::unordered_map<int, std::shared_ptr<DataChannel>> data_channel_from_id_
+  std::unordered_map<int, RefPtr<impl::DataChannelImpl>> data_channel_from_id_
       RTC_GUARDED_BY(data_channel_mutex_);
 
   /// Collection of data channels from their label.
   /// This contains only data channels with a non-empty label.
-  std::unordered_multimap<str, std::shared_ptr<DataChannel>>
+  std::unordered_multimap<str, RefPtr<impl::DataChannelImpl>>
       data_channel_from_label_ RTC_GUARDED_BY(data_channel_mutex_);
 
   /// Mutex for data structures related to data channels.
@@ -467,13 +622,66 @@ IceConnectionState IceStateFromImpl(
 }
 
 ErrorOr<RefPtr<LocalVideoTrack>> PeerConnectionImpl::AddLocalVideoTrack(
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) noexcept {
+    std::string_view track_name,
+    const VideoDeviceConfiguration& config) noexcept {
   if (IsClosed()) {
     return Error(Result::kInvalidOperation, "The peer connection is closed.");
   }
+  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  if (!pc_factory) {
+    return Error(Result::kUnknownError, "Cannot retrieve the global factory.");
+  }
+
+  // Open the video capture device
+  std::unique_ptr<cricket::VideoCapturer> video_capturer;
+  auto res = OpenVideoCaptureDevice(config, video_capturer);
+  if (res != Result::kSuccess) {
+    return Error(res);
+  }
+  RTC_CHECK(video_capturer.get());
+
+  // Apply the same constraints used for opening the video capturer
+  auto videoConstraints = std::make_unique<SimpleMediaConstraints>();
+  if (config.width.has_value()) {
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MinWidth(config.width.value()));
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MaxWidth(config.width.value()));
+  }
+  if (config.height.has_value()) {
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MinHeight(config.height.value()));
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MaxHeight(config.height.value()));
+  }
+  if (config.framerate.has_value()) {
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MinFrameRate(config.framerate.value()));
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MaxFrameRate(config.framerate.value()));
+  }
+
+  // Create the video track source
+  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
+      pc_factory->CreateVideoSource(std::move(video_capturer),
+                                    videoConstraints.get());
+  if (!video_source) {
+    return Error(Result::kUnknownError);
+  }
+
+  // Create the video track
+  const std::string track_name_str{track_name};  // unfortunate copy
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
+      pc_factory->CreateVideoTrack(track_name_str, video_source);
+  if (!video_track) {
+    return Error(Result::kUnknownError);
+  }
+
+  // Add the track to the peer connection
   auto result = peer_->AddTrack(video_track, {kAudioVideoStreamId});
   if (result.ok()) {
-    RefPtr<LocalVideoTrack> track = new rtc::RefCountedObject<LocalVideoTrack>(
+    // Create the wrapper implementation
+    RefPtr<LocalVideoTrack> track = new impl::LocalVideoTrackImpl(
         *this, std::move(video_track), std::move(result.MoveValue()), nullptr);
     {
       rtc::CritScope lock(&tracks_mutex_);
@@ -481,10 +689,10 @@ ErrorOr<RefPtr<LocalVideoTrack>> PeerConnectionImpl::AddLocalVideoTrack(
     }
     return track;
   }
-  return ErrorFromRTCError(result.MoveError());
+  return detail::ErrorFromRTCError(result.MoveError());
 }
 
-webrtc::RTCError PeerConnectionImpl::RemoveLocalVideoTrack(
+Error PeerConnectionImpl::RemoveLocalVideoTrack(
     LocalVideoTrack& video_track) noexcept {
   rtc::CritScope lock(&tracks_mutex_);
   auto it = std::find_if(local_video_tracks_.begin(), local_video_tracks_.end(),
@@ -492,15 +700,15 @@ webrtc::RTCError PeerConnectionImpl::RemoveLocalVideoTrack(
                            return track.get() == &video_track;
                          });
   if (it == local_video_tracks_.end()) {
-    return webrtc::RTCError(
-        webrtc::RTCErrorType::INVALID_PARAMETER,
-        "The video track is not associated with the peer connection.");
+    return Error(Result::kInvalidParameter,
+                 "The video track is not associated with the peer connection.");
   }
   if (peer_) {
-    video_track.RemoveFromPeerConnection(*peer_);
+    static_cast<impl::LocalVideoTrackImpl*>(&video_track)
+        ->RemoveFromPeerConnection(*peer_);
   }
   local_video_tracks_.erase(it);
-  return webrtc::RTCError::OK();
+  return Error::OK();
 }
 
 void PeerConnectionImpl::SetLocalAudioTrackEnabled(bool enabled) noexcept {
@@ -516,13 +724,47 @@ bool PeerConnectionImpl::IsLocalAudioTrackEnabled() const noexcept {
   return false;
 }
 
-bool PeerConnectionImpl::AddLocalAudioTrack(
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track) noexcept {
+Result PeerConnectionImpl::AddLocalAudioTrack(
+    std::string_view track_name,
+    const AudioDeviceConfiguration& config) noexcept {
   if (local_audio_track_) {
-    return false;
+    return Result::kInvalidOperation;
   }
+  if (!peer_) {
+    return Result::kNotInitialized;
+  }
+
+  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  if (!pc_factory) {
+    return Result::kUnknownError;
+  }
+
+  // Create the audio track source
+  cricket::AudioOptions audio_options{};
+  audio_options.echo_cancellation = config.echo_cancellation;
+  audio_options.auto_gain_control = config.auto_gain_control;
+  audio_options.noise_suppression = config.noise_suppression;
+  audio_options.highpass_filter = config.highpass_filter;
+  audio_options.typing_detection = config.typing_detection;
+  audio_options.aecm_generate_comfort_noise =
+      config.aecm_generate_comfort_noise;
+  rtc::scoped_refptr<webrtc::AudioSourceInterface> audio_source =
+      pc_factory->CreateAudioSource(audio_options);
+  if (!audio_source) {
+    return Result::kUnknownError;
+  }
+
+  // Create the audio track
+  const std::string track_name_str{track_name};  // unfortunate copy
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track =
+      pc_factory->CreateAudioTrack(track_name_str, audio_source);
+  if (!audio_track) {
+    return Result::kUnknownError;
+  }
+
+  // Try to add the audio track to the peer connection by reusing an existing
+  // RTP sender.
   if (local_audio_sender_) {
-    // Reuse the existing sender.
     if (local_audio_sender_->SetTrack(audio_track.get())) {
       if (auto* sink = local_audio_observer_.get()) {
         // FIXME - Current implementation of AddSink() for the local audio
@@ -530,23 +772,24 @@ bool PeerConnectionImpl::AddLocalAudioTrack(
         audio_track->AddSink(sink);
       }
       local_audio_track_ = std::move(audio_track);
-      return true;
+      return Result::kSuccess;
     }
-  } else if (peer_) {
-    // Create a new sender.
-    auto result = peer_->AddTrack(audio_track, {kAudioVideoStreamId});
-    if (result.ok()) {
-      if (auto* sink = local_audio_observer_.get()) {
-        // FIXME - Current implementation of AddSink() for the local audio
-        // capture device is no-op. So this callback is never fired.
-        audio_track->AddSink(sink);
-      }
-      local_audio_sender_ = result.value();
-      local_audio_track_ = std::move(audio_track);
-      return true;
-    }
+    return Result::kUnknownError;
   }
-  return false;
+
+  // Create a new RTP sender to add the track to the peer connection.
+  auto result = peer_->AddTrack(audio_track, {kAudioVideoStreamId});
+  if (result.ok()) {
+    if (auto* sink = local_audio_observer_.get()) {
+      // FIXME - Current implementation of AddSink() for the local audio
+      // capture device is no-op. So this callback is never fired.
+      audio_track->AddSink(sink);
+    }
+    local_audio_sender_ = result.value();
+    local_audio_track_ = std::move(audio_track);
+    return Result::kSuccess;
+  }
+  return detail::ResultFromRTCErrorType(result.error().type());
 }
 
 void PeerConnectionImpl::RemoveLocalAudioTrack() noexcept {
@@ -559,22 +802,19 @@ void PeerConnectionImpl::RemoveLocalAudioTrack() noexcept {
   local_audio_track_ = nullptr;
 }
 
-webrtc::RTCErrorOr<std::shared_ptr<DataChannel>>
-PeerConnectionImpl::AddDataChannel(
+ErrorOr<RefPtr<DataChannel>> PeerConnectionImpl::AddDataChannel(
     int id,
     std::string_view label,
     bool ordered,
     bool reliable,
     mrsDataChannelInteropHandle dataChannelInteropHandle) noexcept {
   if (IsClosed()) {
-    return webrtc::RTCError(webrtc::RTCErrorType::UNSUPPORTED_OPERATION,
-                            "The peer connection is closed.");
+    return Error(Result::kInvalidOperation, "The peer connection is closed.");
   }
   if (!sctp_negotiated_) {
     // Don't try to create a data channel without SCTP negotiation, it will get
     // stuck in the kConnecting state forever.
-    return webrtc::RTCError(webrtc::RTCErrorType::INVALID_STATE,
-                            "SCTP not negotiated");
+    return Error(Result::kInvalidOperation, "SCTP not negotiated");
   }
   webrtc::DataChannelInit config{};
   config.ordered = ordered;
@@ -587,14 +827,15 @@ PeerConnectionImpl::AddDataChannel(
     config.id = id;
   } else {
     // Valid IDs are 0-65535 (16 bits)
-    return webrtc::RTCError(webrtc::RTCErrorType::INVALID_RANGE);
+    return Error(Result::kInvalidParameter);
   }
   std::string labelString{label};
   if (rtc::scoped_refptr<webrtc::DataChannelInterface> impl =
           peer_->CreateDataChannel(labelString, &config)) {
     // Create the native object
-    auto data_channel = std::make_shared<DataChannel>(this, std::move(impl),
-                                                      dataChannelInteropHandle);
+    auto data_channel =
+        new Microsoft::MixedReality::WebRTC::impl::DataChannelImpl(
+            this, std::move(impl), dataChannelInteropHandle);
     {
       auto lock = std::scoped_lock{data_channel_mutex_};
       data_channels_.push_back(data_channel);
@@ -609,33 +850,34 @@ PeerConnectionImpl::AddDataChannel(
     // For in-band channels, the creating side (here) doesn't receive an
     // OnDataChannel() message, so invoke the DataChannelAdded event right now.
     if (!data_channel->impl()->negotiated()) {
-      OnDataChannelAdded(*data_channel.get());
+      OnDataChannelAdded(*data_channel);
     }
 
-    return data_channel;
+    return RefPtr<DataChannel>(data_channel);
   }
-  return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+  return Error(Result::kUnknownError);
 }
 
-void PeerConnectionImpl::RemoveDataChannel(
-    const DataChannel& data_channel) noexcept {
+void PeerConnectionImpl::RemoveDataChannel(DataChannel& data_channel) noexcept {
+  auto data_channel_impl = static_cast<impl::DataChannelImpl*>(&data_channel);
+
   // Cache variables which require a dispatch to the signaling thread
   // to minimize the risk of a deadlock with the data channel lock below.
-  const int id = data_channel.id();
-  const str label = data_channel.label();
+  const int id = data_channel_impl->id();
+  const str label = data_channel_impl->label();
 
   // Move the channel to destroy out of the internal data structures
-  std::shared_ptr<DataChannel> data_channel_ptr;
+  RefPtr<DataChannel> data_channel_ptr;
   {
     auto lock = std::scoped_lock{data_channel_mutex_};
 
     // The channel must be owned by this PeerConnection, so must be known
     // already
-    auto const it = std::find_if(
-        std::begin(data_channels_), std::end(data_channels_),
-        [&data_channel](const std::shared_ptr<DataChannel>& other) {
-          return other.get() == &data_channel;
-        });
+    auto const it =
+        std::find_if(std::begin(data_channels_), std::end(data_channels_),
+                     [data_channel_impl](const RefPtr<DataChannel>& other) {
+                       return other.get() == data_channel_impl;
+                     });
     RTC_DCHECK(it != data_channels_.end());
     // Be sure a reference is kept. This should not be a problem in theory
     // because the caller should have a reference to it, but this is safer.
@@ -656,12 +898,12 @@ void PeerConnectionImpl::RemoveDataChannel(
   }
 
   // Close the WebRTC data channel
-  webrtc::DataChannelInterface* const impl = data_channel.impl();
+  webrtc::DataChannelInterface* const impl = data_channel_impl->impl();
   impl->UnregisterObserver();  // force here, as ~DataChannel() didn't run yet
   impl->Close();
 
   // Invoke the DataChannelRemoved callback on the wrapper if any
-  if (auto interop_handle = data_channel.GetInteropHandle()) {
+  if (auto interop_handle = data_channel_impl->GetInteropHandle()) {
     auto lock = std::scoped_lock{data_channel_removed_callback_mutex_};
     auto removed_cb = data_channel_removed_callback_;
     if (removed_cb) {
@@ -672,7 +914,7 @@ void PeerConnectionImpl::RemoveDataChannel(
 
   // Clear the back pointer to the peer connection, and let the shared pointer
   // go out of scope and destroy the object if that was the last reference.
-  data_channel_ptr->OnRemovedFromPeerConnection();
+  data_channel_impl->OnRemovedFromPeerConnection();
 }
 
 void PeerConnectionImpl::RemoveAllDataChannels() noexcept {
@@ -703,21 +945,23 @@ void PeerConnectionImpl::RemoveAllDataChannels() noexcept {
 
 void PeerConnectionImpl::OnDataChannelAdded(
     const DataChannel& data_channel) noexcept {
+  auto data_channel_impl =
+      static_cast<const impl::DataChannelImpl*>(&data_channel);
   // The channel must be owned by this PeerConnection, so must be known already.
   // It was added in AddDataChannel() when the DataChannel object was created.
 #if RTC_DCHECK_IS_ON
   {
     auto lock = std::scoped_lock{data_channel_mutex_};
-    RTC_DCHECK(std::find_if(
-                   data_channels_.begin(), data_channels_.end(),
-                   [&data_channel](const std::shared_ptr<DataChannel>& other) {
-                     return other.get() == &data_channel;
-                   }) != data_channels_.end());
+    RTC_DCHECK(std::find_if(data_channels_.begin(), data_channels_.end(),
+                            [data_channel_impl](
+                                const RefPtr<impl::DataChannelImpl>& other) {
+                              return other.get() == data_channel_impl;
+                            }) != data_channels_.end());
   }
 #endif  // RTC_DCHECK_IS_ON
 
   // Invoke the DataChannelAdded callback on the wrapper if any
-  if (auto interop_handle = data_channel.GetInteropHandle()) {
+  if (auto interop_handle = data_channel_impl->GetInteropHandle()) {
     auto lock = std::scoped_lock{data_channel_added_callback_mutex_};
     auto added_cb = data_channel_added_callback_;
     if (added_cb) {
@@ -939,20 +1183,21 @@ void PeerConnectionImpl::OnDataChannel(
   }
 
   // Create a new native object
-  auto data_channel =
-      std::make_shared<DataChannel>(this, impl, data_channel_interop_handle);
+  auto data_channel_impl =
+      new impl::DataChannelImpl(this, impl, data_channel_interop_handle);
   {
     auto lock = std::scoped_lock{data_channel_mutex_};
-    data_channels_.push_back(data_channel);
+    data_channels_.push_back(data_channel_impl);
     if (!label.empty()) {
       // Move |label| into the map to avoid copy
       auto it =
-          data_channel_from_label_.emplace(std::move(label), data_channel);
+          data_channel_from_label_.emplace(std::move(label), data_channel_impl);
       // Update the address to the moved item in case it changed
       config.label = it->first.c_str();
     }
-    if (data_channel->id() >= 0) {
-      data_channel_from_id_.try_emplace(data_channel->id(), data_channel);
+    if (data_channel_impl->id() >= 0) {
+      data_channel_from_id_.try_emplace(data_channel_impl->id(),
+                                        data_channel_impl);
     }
   }
 
@@ -960,11 +1205,11 @@ void PeerConnectionImpl::OnDataChannel(
 
   if (data_channel_interop_handle) {
     // Register the interop callbacks
-    data_channel->SetMessageCallback(DataChannel::MessageCallback{
+    data_channel_impl->SetMessageCallback(DataChannel::MessageCallback{
         callbacks.message_callback, callbacks.message_user_data});
-    data_channel->SetBufferingCallback(DataChannel::BufferingCallback{
+    data_channel_impl->SetBufferingCallback(DataChannel::BufferingCallback{
         callbacks.buffering_callback, callbacks.buffering_user_data});
-    data_channel->SetStateCallback(DataChannel::StateCallback{
+    data_channel_impl->SetStateCallback(DataChannel::StateCallback{
         callbacks.state_callback, callbacks.state_user_data});
 
     // Invoke the DataChannelAdded callback on the wrapper
@@ -972,7 +1217,7 @@ void PeerConnectionImpl::OnDataChannel(
       auto lock = std::scoped_lock{data_channel_added_callback_mutex_};
       auto added_cb = data_channel_added_callback_;
       if (added_cb) {
-        const DataChannelHandle data_native_handle = data_channel.get();
+        const DataChannelHandle data_native_handle = data_channel_impl;
         added_cb(data_channel_interop_handle, data_native_handle);
       }
     }
@@ -1148,13 +1393,26 @@ webrtc::PeerConnectionInterface::BundlePolicy BundlePolicyToNative(
 
 namespace Microsoft::MixedReality::WebRTC {
 
-ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
-    const PeerConnectionConfiguration& config,
-    mrsPeerConnectionInteropHandle interop_handle) {
+PeerConnectionConfiguration::PeerConnectionConfiguration() = default;
+PeerConnectionConfiguration::~PeerConnectionConfiguration() = default;
+void PeerConnectionConfiguration::AddIceServer(const IceServer& server) {
+  ice_servers.push_back(server);
+}
+void PeerConnectionConfiguration::AddIceServer(IceServer&& server) {
+  ice_servers.emplace_back(std::move(server));
+}
+void PeerConnectionConfiguration::AddIceServersFromEncodedString(
+    const str& encoded) {
+  ice_servers = DecodeIceServers(encoded);
+}
+
+ErrorOr<RefPtr<PeerConnection>> MRS_CALL
+PeerConnection::create(const PeerConnectionConfiguration& config,
+                       mrsPeerConnectionInteropHandle interop_handle) {
   // Ensure the factory exists
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory;
   {
-    mrsResult res = GlobalFactory::Instance()->GetOrCreate(factory);
+    Result res = GlobalFactory::Instance()->GetOrCreate(factory);
     if (res != Result::kSuccess) {
       RTC_LOG(LS_ERROR) << "Failed to initialize the peer connection factory.";
       return Error(res);
@@ -1166,9 +1424,15 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
 
   // Setup the connection configuration
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
-  if (config.encoded_ice_servers != nullptr) {
-    std::string encoded_ice_servers{config.encoded_ice_servers};
-    rtc_config.servers = DecodeIceServers(encoded_ice_servers);
+  for (auto&& ice_server : config.ice_servers) {
+    webrtc::PeerConnectionInterface::IceServer server;
+    server.urls.reserve(ice_server.urls.size());
+    for (auto&& url : ice_server.urls) {
+      server.urls.emplace_back(url.std_str());
+    }
+    server.username = ice_server.username.std_str();
+    server.password = ice_server.password.std_str();
+    rtc_config.servers.emplace_back(std::move(server));
   }
   rtc_config.enable_rtp_data_channel = false;  // Always false for security
   rtc_config.enable_dtls_srtp = true;          // Always true for security

@@ -3,13 +3,23 @@
 
 #pragma once
 
-#include "audio_frame_observer.h"
+#include <optional>
+#include <string_view>
+
+#include "audio_frame.h"
 #include "callback.h"
 #include "data_channel.h"
 #include "mrs_errors.h"
 #include "refptr.h"
 #include "tracked_object.h"
-#include "video_frame_observer.h"
+#include "video_frame.h"
+
+struct mrsPeerConnectionInteropCallbacks;
+
+using mrsPeerConnectionInteropHandle = void*;
+using mrsDataChannelInteropHandle = void*;
+
+using DataChannelHandle = void*;
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -21,6 +31,167 @@ struct BitrateSettings {
   std::optional<int> start_bitrate_bps;
   std::optional<int> min_bitrate_bps;
   std::optional<int> max_bitrate_bps;
+};
+
+/// ICE transport type. See webrtc::PeerConnectionInterface::IceTransportsType.
+/// Currently values are aligned, but kept as a separate structure to allow
+/// backward compatilibity in case of changes in WebRTC.
+enum class IceTransportType : int32_t {
+  kNone = 0,
+  kRelay = 1,
+  kNoHost = 2,
+  kAll = 3
+};
+
+/// Bundle policy. See webrtc::PeerConnectionInterface::BundlePolicy.
+/// Currently values are aligned, but kept as a separate structure to allow
+/// backward compatilibity in case of changes in WebRTC.
+enum class BundlePolicy : int32_t {
+  kBalanced = 0,
+  kMaxBundle = 1,
+  kMaxCompat = 2
+};
+
+/// SDP semantic (protocol dialect) for (re)negotiating a peer connection.
+/// This cannot be changed after the connection is established.
+enum class SdpSemantic : int32_t {
+  /// Unified Plan - default and recommended. Standardized in WebRTC 1.0.
+  kUnifiedPlan = 0,
+  /// Plan B - deprecated and soon to be removed. Do not use unless for
+  /// compability with an older implementation. This is non-standard.
+  kPlanB = 1
+};
+
+/// Single STUN/TURN server for Interactive Connectivity Establishment (ICE).
+/// The ICE protocol enables NAT traversal.
+struct IceServer {
+  /// List of URLs for the server, often a single one.
+  std::vector<str> urls;
+
+  /// Optional username for non-anonymous connection.
+  str username;
+
+  /// Optional password for non-anonymous connection.
+  str password;
+};
+
+/// Configuration to intialize a peer connection object.
+class PeerConnectionConfiguration final {
+ public:
+  /// ICE transport type for the connection.
+  IceTransportType ice_transport_type = IceTransportType::kAll;
+
+  /// Bundle policy for the connection.
+  BundlePolicy bundle_policy = BundlePolicy::kBalanced;
+
+  /// SDP semantic for connection negotiation.
+  /// Do not use Plan B unless there is a problem with Unified Plan.
+  SdpSemantic sdp_semantic = SdpSemantic::kUnifiedPlan;
+
+  MRS_API PeerConnectionConfiguration();
+  MRS_API ~PeerConnectionConfiguration();
+  MRS_API void AddIceServer(const IceServer& server);
+  MRS_API void AddIceServer(IceServer&& server);
+  MRS_API void AddIceServersFromEncodedString(const str& encoded);
+
+ private:
+  /// List of ICE servers for NAT traversal. This can be empty, in which case
+  /// only direct connections will be possible.
+  std::vector<IceServer> ice_servers;
+};
+
+/// State of the ICE connection.
+/// See https://www.w3.org/TR/webrtc/#rtciceconnectionstate-enum.
+/// Note that there is a mismatch currently due to the m71 implementation.
+enum IceConnectionState : int32_t {
+  kNew = 0,
+  kChecking = 1,
+  kConnected = 2,
+  kCompleted = 3,
+  kFailed = 4,
+  kDisconnected = 5,
+  kClosed = 6,
+};
+
+/// Kind of media track. Equivalent to
+/// webrtc::MediaStreamTrackInterface::kind().
+enum class TrackKind : uint32_t {
+  kUnknownTrack = 0,
+  kAudioTrack = 1,
+  kVideoTrack = 2,
+  kDataTrack = 3,
+};
+
+/// Kind of video profile. Equivalent to org::webRtc::VideoProfileKind.
+enum class VideoProfileKind : int32_t {
+  kUnspecified,
+  kVideoRecording,
+  kHighQualityPhoto,
+  kBalancedVideoAndPhoto,
+  kVideoConferencing,
+  kPhotoSequence,
+  kHighFrameRate,
+  kVariablePhotoSequence,
+  kHdrWithWcgVideo,
+  kHdrWithWcgPhoto,
+  kVideoHdr8,
+};
+
+/// Configuration for opening a local video capture device.
+struct VideoDeviceConfiguration {
+  /// Unique identifier of the video capture device to select, as returned by
+  /// |mrsEnumVideoCaptureDevicesAsync|, or a null or empty string to select the
+  /// default device.
+  std::string_view video_device_id;
+
+  /// Optional name of a video profile, if the platform supports it, or null to
+  /// no use video profiles.
+  std::string_view video_profile_id;
+
+  /// Optional kind of video profile to select, if the platform supports it.
+  /// If a video profile ID is specified with |video_profile_id| it is
+  /// recommended to leave this as kUnspecified to avoid over-constraining the
+  /// video capture format selection.
+  VideoProfileKind video_profile_kind = VideoProfileKind::kUnspecified;
+
+  /// Optional preferred capture resolution width, in pixels, or zero for
+  /// unconstrained.
+  std::optional<uint32_t> width;
+
+  /// Optional preferred capture resolution height, in pixels, or zero for
+  /// unconstrained.
+  std::optional<uint32_t> height;
+
+  /// Optional preferred capture framerate, in frame per second (FPS), or zero
+  /// for unconstrained.
+  /// This framerate is compared exactly to the one reported by the video
+  /// capture device (webcam), so should be queried rather than hard-coded to
+  /// avoid mismatches with video formats reporting e.g. 29.99 instead of 30.0.
+  std::optional<double> framerate;
+
+  /// On platforms supporting Mixed Reality Capture (MRC) like HoloLens, enable
+  /// this feature. This produces a video track where the holograms rendering is
+  /// overlaid over the webcam frame. This parameter is ignored on platforms not
+  /// supporting MRC.
+  /// Note that MRC is only available in exclusive-mode applications, or in
+  /// shared apps with the restricted capability "rescap:screenDuplication". In
+  /// any other case the capability will not be granted and MRC will silently
+  /// fail, falling back to a simple webcam video feed without holograms.
+  bool enable_mrc{true};
+
+  /// When Mixed Reality Capture is enabled, enable or disable the recording
+  /// indicator shown on screen.
+  bool enable_mrc_recording_indicator{true};
+};
+
+/// Configuration for opening a local audio capture device.
+struct AudioDeviceConfiguration {
+  std::optional<bool> echo_cancellation;
+  std::optional<bool> auto_gain_control;
+  std::optional<bool> noise_suppression;
+  std::optional<bool> highpass_filter;
+  std::optional<bool> typing_detection;
+  std::optional<bool> aecm_generate_comfort_noise;
 };
 
 /// The PeerConnection class is the entry point to most of WebRTC.
@@ -57,9 +228,9 @@ class PeerConnection : public TrackedObject {
  public:
   /// Create a new PeerConnection based on the given |config|.
   /// This serves as the constructor for PeerConnection.
-  static MRS_API ErrorOr<RefPtr<PeerConnection>> create(
-      const PeerConnectionConfiguration& config,
-      mrsPeerConnectionInteropHandle interop_handle);
+  static MRS_API ErrorOr<RefPtr<PeerConnection>> MRS_CALL
+  create(const PeerConnectionConfiguration& config,
+         mrsPeerConnectionInteropHandle interop_handle);
 
   /// Set the name of the peer connection.
   MRS_API virtual void SetName(std::string_view name) = 0;
@@ -134,7 +305,7 @@ class PeerConnection : public TrackedObject {
   virtual void RegisterConnectedCallback(
       ConnectedCallback&& callback) noexcept = 0;
 
-  virtual mrsResult SetBitrate(const BitrateSettings& settings) noexcept = 0;
+  virtual Result SetBitrate(const BitrateSettings& settings) noexcept = 0;
 
   /// Create an SDP offer to attempt to establish a connection with the remote
   /// peer. Once the offer message is ready, the LocalSdpReadytoSendCallback
@@ -187,14 +358,16 @@ class PeerConnection : public TrackedObject {
   virtual void RegisterRemoteVideoFrameCallback(
       ARGBFrameReadyCallback callback) noexcept = 0;
 
-  /// Add a video track to the peer connection. If no RTP sender/transceiver
-  /// exist, create a new one for that track.
-  virtual ErrorOr<RefPtr<LocalVideoTrack>> MRS_API AddLocalVideoTrack(
-      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) noexcept = 0;
+  /// Add to the peer connection a video track backed by a local video capture
+  /// device (webcam). If no RTP sender/transceiver exist, create a new one for
+  /// that track.
+  virtual ErrorOr<RefPtr<LocalVideoTrack>> MRS_API
+  AddLocalVideoTrack(std::string_view track_name,
+                     const VideoDeviceConfiguration& config) noexcept = 0;
 
   /// Remove a local video track from the peer connection.
   /// The underlying RTP sender/transceiver are kept alive but inactive.
-  virtual webrtc::RTCError MRS_API
+  virtual Error MRS_API
   RemoveLocalVideoTrack(LocalVideoTrack& video_track) noexcept = 0;
 
   //
@@ -220,8 +393,9 @@ class PeerConnection : public TrackedObject {
   ///
   /// Note: currently a single local video track is supported per peer
   /// connection.
-  virtual bool MRS_API AddLocalAudioTrack(
-      rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track) noexcept = 0;
+  virtual Result MRS_API
+  AddLocalAudioTrack(std::string_view track_name,
+                     const AudioDeviceConfiguration& config) noexcept = 0;
 
   /// Remove the existing local audio track from the peer connection.
   /// The underlying RTP sender/transceiver are kept alive but inactive.
@@ -273,18 +447,17 @@ class PeerConnection : public TrackedObject {
 
   /// Create a new data channel and add it to the peer connection.
   /// This invokes the DataChannelAdded callback.
-  webrtc::RTCErrorOr<std::shared_ptr<DataChannel>>
-      MRS_API virtual AddDataChannel(
-          int id,
-          std::string_view label,
-          bool ordered,
-          bool reliable,
-          mrsDataChannelInteropHandle dataChannelInteropHandle) noexcept = 0;
+  ErrorOr<RefPtr<DataChannel>> MRS_API virtual AddDataChannel(
+      int id,
+      std::string_view label,
+      bool ordered,
+      bool reliable,
+      mrsDataChannelInteropHandle dataChannelInteropHandle) noexcept = 0;
 
   /// Close and remove a given data channel.
   /// This invokes the DataChannelRemoved callback.
   virtual void MRS_API
-  RemoveDataChannel(const DataChannel& data_channel) noexcept = 0;
+  RemoveDataChannel(DataChannel& data_channel) noexcept = 0;
 
   /// Close and remove all data channels at once.
   /// This invokes the DataChannelRemoved callback for each data channel.
@@ -300,7 +473,7 @@ class PeerConnection : public TrackedObject {
   // Advanced use
   //
 
-  virtual mrsResult RegisterInteropCallbacks(
+  virtual Result RegisterInteropCallbacks(
       const mrsPeerConnectionInteropCallbacks& callbacks) noexcept = 0;
 };
 

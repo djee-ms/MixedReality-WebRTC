@@ -6,6 +6,7 @@
 #include "pch.h"
 
 #include "interop/global_factory.h"
+#include "interop/interop_api.h"
 #include "local_video_track.h"
 #include "peer_connection.h"
 
@@ -25,8 +26,9 @@ std::unique_ptr<GlobalFactory> g_factory = std::make_unique<GlobalFactory>();
 std::string_view ObjectTypeToString(ObjectType type) {
   static_assert((int)ObjectType::kPeerConnection == 0, "");
   static_assert((int)ObjectType::kLocalVideoTrack == 1, "");
-  constexpr const std::string_view s_types[] = {"PeerConnection",
-                                                "LocalVideoTrack"};
+  static_assert((int)ObjectType::kDataChannel == 2, "");
+  constexpr const std::string_view s_types[] = {
+      "PeerConnection", "LocalVideoTrack", "DataChannel"};
   return s_types[(int)type];
 }
 
@@ -42,7 +44,7 @@ std::string ObjectToString(ObjectType type, TrackedObject* obj) {
   std::string_view sv = ObjectTypeToString(type);
   builder.Append(sv.data(), sv.length());
   if (obj) {
-    builder << ") " << obj->GetName();
+    builder << ") " << obj->GetName().std_str();
   } else {
     builder << ") NULL";
   }
