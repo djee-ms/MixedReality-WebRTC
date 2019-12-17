@@ -70,7 +70,8 @@ namespace TestAppUwp
         private MediaSource localMediaSource = null;
         private MediaPlayer localVideoPlayer = new MediaPlayer();
         private bool _isLocalVideoPlaying = false;
-        private object _isLocalVideoPlayingLock = new object();
+        private object _isLocalMediaPlayingLock = new object();
+        private LocalAudioTrack _localAudioTrack = null;
         private LocalVideoTrack _localVideoTrack = null;
 
         private MediaStreamSource remoteVideoSource = null;
@@ -79,7 +80,9 @@ namespace TestAppUwp
         private bool _isRemoteVideoPlaying = false;
         private uint _remoteVideoWidth = 0;
         private uint _remoteVideoHeight = 0;
-        private object _isRemoteVideoPlayingLock = new object();
+        private object _isRemoteMediaPlayingLock = new object();
+        private RemoteAudioTrack _remoteAudioTrack = null;
+        private RemoteVideoTrack _remoteVideoTrack = null;
 
         private uint _remoteAudioChannelCount = 0;
         private uint _remoteAudioSampleRate = 0;
@@ -288,11 +291,10 @@ namespace TestAppUwp
             _peerConnection.IceStateChanged += OnIceStateChanged;
             _peerConnection.IceGatheringStateChanged += OnIceGatheringStateChanged;
             _peerConnection.RenegotiationNeeded += OnPeerRenegotiationNeeded;
-            _peerConnection.TrackAdded += Peer_RemoteTrackAdded;
-            _peerConnection.TrackRemoved += Peer_RemoteTrackRemoved;
-            _peerConnection.I420ARemoteVideoFrameReady += Peer_RemoteI420AFrameReady;
-            _peerConnection.LocalAudioFrameReady += Peer_LocalAudioFrameReady;
-            _peerConnection.RemoteAudioFrameReady += Peer_RemoteAudioFrameReady;
+            _peerConnection.AudioTrackAdded += Peer_RemoteAudioTrackAdded;
+            _peerConnection.AudioTrackRemoved += Peer_RemoteAudioTrackRemoved;
+            _peerConnection.VideoTrackAdded += Peer_RemoteVideoTrackAdded;
+            _peerConnection.VideoTrackRemoved += Peer_RemoteVideoTrackRemoved;
 
             //Window.Current.Closed += Shutdown; // doesn't work
 
@@ -616,7 +618,7 @@ namespace TestAppUwp
                     ? SdpSemantic.UnifiedPlan : SdpSemantic.PlanB);
                 await _peerConnection.InitializeAsync(config);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LogMessage($"WebRTC native plugin init failed: {ex.Message}");
                 return;
@@ -1098,7 +1100,7 @@ namespace TestAppUwp
                 {
                     //< TODO - This should never happen. But what to do with
                     //         local channels if it happens?
-                    lock (_isLocalVideoPlayingLock)
+                    lock (_isLocalMediaPlayingLock)
                     {
                         _isLocalVideoPlaying = false;
                     }
@@ -1113,7 +1115,7 @@ namespace TestAppUwp
         /// </summary>
         private async void StopLocalMedia()
         {
-            lock (_isLocalVideoPlayingLock)
+            lock (_isLocalMediaPlayingLock)
             {
                 if (_isLocalVideoPlaying)
                 {
@@ -1125,6 +1127,7 @@ namespace TestAppUwp
                     localMediaSource.Dispose();
                     localMediaSource = null;
                     _isLocalVideoPlaying = false;
+                    _localAudioTrack.AudioFrameReady -= LocalAudioTrack_FrameReady;
                     _localVideoTrack.I420AVideoFrameReady -= LocalVideoTrack_I420AFrameReady;
                 }
             }
@@ -1133,15 +1136,17 @@ namespace TestAppUwp
             // signaling thread (and will block the caller thread), and audio processing will
             // delegate to the UI thread for UWP operations (and will block the signaling thread).
             await RunOnWorkerThread(() => {
-                lock (_isLocalVideoPlayingLock)
+                lock (_isLocalMediaPlayingLock)
                 {
-                    _peerConnection.RemoveLocalAudioTrack();
-                    _peerConnection.RemoveLocalVideoTrack(_localVideoTrack); // TODO - this doesn't unregister the callbacks...
+                    _peerConnection.RemoveLocalAudioTrack(_localAudioTrack);
+                    _peerConnection.RemoveLocalVideoTrack(_localVideoTrack);
                     _renegotiationOfferEnabled = true;
                     if (_peerConnection.IsConnected)
                     {
                         _peerConnection.CreateOffer();
                     }
+                    _localAudioTrack.Dispose();
+                    _localAudioTrack = null;
                     _localVideoTrack.Dispose();
                     _localVideoTrack = null;
                 }
@@ -1155,53 +1160,123 @@ namespace TestAppUwp
         /// Currently does nothing, as starting the media pipeline is done lazily in the
         /// per-frame callback.
         /// </summary>
-        /// <param name="trackKind">The kind of media track added (audio or video only).</param>
-        /// <seealso cref="Peer_RemoteI420AFrameReady"/>
-        private void Peer_RemoteTrackAdded(PeerConnection.TrackKind trackKind)
+        /// <param name="track">The audio track added.</param>
+        /// <seealso cref="RemoteAudioTrack_FrameReady"/>
+        private void Peer_RemoteAudioTrackAdded(RemoteAudioTrack track)
         {
-            LogMessage($"Added remote {trackKind} track.");
-            RunOnMainThread(() =>
+            LogMessage($"Added remote audio track {track.Name}.");
+            lock (_isRemoteMediaPlayingLock)
             {
-                remoteVideoStatsTimer.Interval = TimeSpan.FromSeconds(1.0);
-                remoteVideoStatsTimer.Start();
-            });
+                if ((_remoteAudioTrack == null) && !_isRemoteAudioPlaying)
+                {
+                    _remoteAudioTrack = track;
+                    _remoteAudioTrack.AudioFrameReady += RemoteAudioTrack_FrameReady;
+
+                    // _isRemoteAudioPlaying will change to true once the first frame is received
+                }
+            }
+        }
+
+        /// <summary>
+        /// Callback on remote media (audio or video) track added.
+        /// Currently does nothing, as starting the media pipeline is done lazily in the
+        /// per-frame callback.
+        /// </summary>
+        /// <param name="track">The video track added.</param>
+        /// <seealso cref="RemoteVideoTrack_I420AFrameReady"/>
+        private void Peer_RemoteVideoTrackAdded(RemoteVideoTrack track)
+        {
+            LogMessage($"Added remote video track {track.Name}.");
+            lock (_isRemoteMediaPlayingLock)
+            {
+                if ((_remoteVideoTrack == null) && !_isRemoteVideoPlaying)
+                {
+                    _remoteVideoTrack = track;
+                    _remoteVideoTrack.I420AVideoFrameReady += RemoteVideoTrack_I420AFrameReady;
+
+                    // _isRemoteVideoPlaying will change to true once the first frame is received
+
+                    RunOnMainThread(() => {
+                        remoteVideoStatsTimer.Interval = TimeSpan.FromSeconds(1.0);
+                        remoteVideoStatsTimer.Start();
+                    });
+                }
+            }
         }
 
         /// <summary>
         /// Callback on remote media (audio or video) track removed.
         /// </summary>
-        /// <param name="trackKind">The kind of media track added (audio or video only).</param>
-        private void Peer_RemoteTrackRemoved(PeerConnection.TrackKind trackKind)
+        /// <param name="track">The audio track removed.</param>
+        private void Peer_RemoteAudioTrackRemoved(RemoteAudioTrack track)
         {
-            LogMessage($"Removed remote {trackKind} track.");
+            LogMessage($"Removed remote audio track {track.Name}.");
 
-            if (trackKind == PeerConnection.TrackKind.Video)
+            // Just double-check that the remote audio track is indeed playing
+            // before scheduling a task to stop it. Currently the remote audio
+            // playback is exclusively controlled by the remote track being present
+            // or not, so these should be always in sync.
+            lock (_isRemoteMediaPlayingLock)
             {
-                // Just double-check that the remote video track is indeed playing
-                // before scheduling a task to stop it. Currently the remote video
-                // playback is exclusively controlled by the remote track being present
-                // or not, so these should be always in sync.
-                lock (_isRemoteVideoPlayingLock)
+                if ((_remoteAudioTrack == track) && _isRemoteAudioPlaying)
                 {
-                    if (_isRemoteVideoPlaying)
-                    {
-                        // Schedule on the main UI thread to access STA objects.
-                        RunOnMainThread(() => {
-                            remoteVideoStatsTimer.Stop();
-                            // Check that the remote video is still playing.
-                            // This ensures that rapid calls to add/remove the video track
-                            // are serialized, and an earlier remove call doesn't remove the
-                            // track added by a later call, due to delays in scheduling the task.
-                            lock (_isRemoteVideoPlayingLock)
+                    _remoteAudioTrack.AudioFrameReady -= RemoteAudioTrack_FrameReady;
+                    _remoteAudioTrack = null;
+
+                    // Schedule on the main UI thread to access STA objects.
+                    RunOnMainThread(() => {
+                        ClearRemoteAudioStats();
+                        // Check that the remote audio is still playing.
+                        // This ensures that rapid calls to add/remove the audio track
+                        // are serialized, and an earlier remove call doesn't remove the
+                        // track added by a later call, due to delays in scheduling the task.
+                        lock (_isRemoteMediaPlayingLock)
+                        {
+                            if (_isRemoteAudioPlaying)
                             {
-                                if (_isRemoteVideoPlaying)
-                                {
-                                    remoteVideo.MediaPlayer.Pause();
-                                    _isRemoteVideoPlaying = false;
-                                }
+                                _isRemoteAudioPlaying = false;
                             }
-                        });
-                    }
+                        }
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Callback on remote media (audio or video) track removed.
+        /// </summary>
+        /// <param name="track">The video track removed.</param>
+        private void Peer_RemoteVideoTrackRemoved(RemoteVideoTrack track)
+        {
+            LogMessage($"Removed remote video track {track.Name}.");
+
+            // Just double-check that the remote video track is indeed playing
+            // before scheduling a task to stop it. Currently the remote video
+            // playback is exclusively controlled by the remote track being present
+            // or not, so these should be always in sync.
+            lock (_isRemoteMediaPlayingLock)
+            {
+                if ((_remoteVideoTrack == track) && _isRemoteVideoPlaying)
+                {
+                    _remoteVideoTrack.I420AVideoFrameReady -= RemoteVideoTrack_I420AFrameReady;
+                    _remoteVideoTrack = null;
+
+                    // Schedule on the main UI thread to access STA objects.
+                    RunOnMainThread(() => {
+                        remoteVideoStatsTimer.Stop();
+                        // Check that the remote video is still playing.
+                        // This ensures that rapid calls to add/remove the video track
+                        // are serialized, and an earlier remove call doesn't remove the
+                        // track added by a later call, due to delays in scheduling the task.
+                        lock (_isRemoteMediaPlayingLock)
+                        {
+                            if (_isRemoteVideoPlaying)
+                            {
+                                remoteVideo.MediaPlayer.Pause();
+                                _isRemoteVideoPlaying = false;
+                            }
+                        }
+                    });
                 }
             }
         }
@@ -1221,7 +1296,7 @@ namespace TestAppUwp
         /// (or any other use).
         /// </summary>
         /// <param name="frame">The newly received video frame.</param>
-        private void Peer_RemoteI420AFrameReady(I420AVideoFrame frame)
+        private void RemoteVideoTrack_I420AFrameReady(I420AVideoFrame frame)
         {
             // Lazily start the remote video media player when receiving
             // the first video frame from the remote peer. Currently there
@@ -1232,7 +1307,7 @@ namespace TestAppUwp
             bool needNewSource = false;
             uint width = frame.width;
             uint height = frame.height;
-            lock (_isRemoteVideoPlayingLock)
+            lock (_isRemoteMediaPlayingLock)
             {
                 if (!_isRemoteVideoPlaying)
                 {
@@ -1267,17 +1342,11 @@ namespace TestAppUwp
         }
 
         /// <summary>
-        /// Callback on audio frame received from the local audio capture device (microphone),
-        /// for local output before (or in parallel of) being sent to the remote peer.
+        /// Callback on audio frame produced by the local peer.
         /// </summary>
-        /// <param name="frame">The newly captured audio frame.</param>
-        /// <remarks>This is currently never called due to implementation limitations.</remarks>
-        private void Peer_LocalAudioFrameReady(AudioFrame frame)
+        /// <param name="frame">The newly produced audio frame.</param>
+        private void LocalAudioTrack_FrameReady(AudioFrame frame)
         {
-            // The current underlying WebRTC implementation does not support
-            // local audio frame callbacks, so THIS WILL NEVER BE CALLED until
-            // that implementation is changed.
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -1285,7 +1354,7 @@ namespace TestAppUwp
         /// (or any other use).
         /// </summary>
         /// <param name="frame">The newly received audio frame.</param>
-        private void Peer_RemoteAudioFrameReady(AudioFrame frame)
+        private void RemoteAudioTrack_FrameReady(AudioFrame frame)
         {
             lock (_isRemoteAudioPlayingLock)
             {
@@ -1303,6 +1372,12 @@ namespace TestAppUwp
                     RunOnMainThread(() => UpdateRemoteAudioStats(channelCount, sampleRate));
                 }
             }
+        }
+
+        private void ClearRemoteAudioStats()
+        {
+            remoteAudioChannelCount.Text = "-";
+            remoteAudioSampleRate.Text = "-";
         }
 
         private void UpdateRemoteAudioStats(uint channelCount, uint sampleRate)
@@ -1327,14 +1402,14 @@ namespace TestAppUwp
 
         private void MuteLocalAudioClicked(object sender, RoutedEventArgs e)
         {
-            if (_peerConnection.IsLocalAudioTrackEnabled())
+            if (_localAudioTrack.Enabled)
             {
-                _peerConnection.SetLocalAudioTrackEnabled(false);
+                _localAudioTrack.Enabled = false;
                 muteLocalAudioStroke.Visibility = Visibility.Visible;
             }
             else
             {
-                _peerConnection.SetLocalAudioTrackEnabled(true);
+                _localAudioTrack.Enabled = true;
                 muteLocalAudioStroke.Visibility = Visibility.Collapsed;
             }
         }
@@ -1428,10 +1503,11 @@ namespace TestAppUwp
                     _peerConnection.SetBitrate(startBitrateBps: (uint)(width * height * framerate / 20));
 
                     // Add the local audio track captured from the local microphone
-                    await _peerConnection.AddLocalAudioTrackAsync();
+                    _localAudioTrack = await _peerConnection.AddLocalAudioTrackAsync();
+                    _localAudioTrack.AudioFrameReady += LocalAudioTrack_FrameReady;
 
                     // Add the local video track captured from the local webcam
-                    var trackConfig = new PeerConnection.LocalVideoTrackSettings
+                    var videoConfig = new PeerConnection.LocalVideoTrackSettings
                     {
                         trackName = "local_video",
                         videoDevice = captureDeviceInfo,
@@ -1442,7 +1518,7 @@ namespace TestAppUwp
                         framerate = framerate,
                         enableMrc = false // TestAppUWP is a shared app, MRC will not get permission anyway
                     };
-                    _localVideoTrack = await _peerConnection.AddLocalVideoTrackAsync(trackConfig);
+                    _localVideoTrack = await _peerConnection.AddLocalVideoTrackAsync(videoConfig);
                     _localVideoTrack.I420AVideoFrameReady += LocalVideoTrack_I420AFrameReady;
                 }
                 catch (Exception ex)
@@ -1461,7 +1537,7 @@ namespace TestAppUwp
                 muteLocalVideoStroke.Visibility = Visibility.Collapsed;
 
                 localVideoSourceName.Text = $"({SelectedVideoCaptureDevice?.DisplayName})";
-                lock (_isLocalVideoPlayingLock)
+                lock (_isLocalMediaPlayingLock)
                 {
                     _isLocalVideoPlaying = true;
                 }

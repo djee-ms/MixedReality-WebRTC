@@ -39,6 +39,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public bool IsPlaying { get; private set; }
 
         /// <summary>
+        /// Name of the track this component should pair with.
+        /// When a remote track with that name is added to the peer connection, this
+        /// component will automatically pair with the added track.
+        /// </summary>
+        public string TargetTrackName;
+
+        public RemoteVideoTrack Track { get; private set; } = null;
+
+        /// <summary>
         /// Frame queue holding the pending frames enqueued by the video source itself,
         /// which a video renderer needs to read and display.
         /// </summary>
@@ -75,7 +84,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (!IsPlaying)
             {
                 IsPlaying = true;
-                PeerConnection.Peer.I420ARemoteVideoFrameReady += I420ARemoteVideoFrameReady;
             }
         }
 
@@ -94,7 +102,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (IsPlaying)
             {
                 IsPlaying = false;
-                PeerConnection.Peer.I420ARemoteVideoFrameReady -= I420ARemoteVideoFrameReady;
             }
         }
 
@@ -141,8 +148,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         private void OnPeerInitialized()
         {
-            PeerConnection.Peer.TrackAdded += TrackAdded;
-            PeerConnection.Peer.TrackRemoved += TrackRemoved;
+            PeerConnection.Peer.VideoTrackAdded += TrackAdded;
+            PeerConnection.Peer.VideoTrackRemoved += TrackRemoved;
 
             if (AutoPlayOnAdded)
             {
@@ -157,8 +164,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private void OnPeerShutdown()
         {
             Stop();
-            PeerConnection.Peer.TrackAdded -= TrackAdded;
-            PeerConnection.Peer.TrackRemoved -= TrackRemoved;
+            PeerConnection.Peer.VideoTrackAdded -= TrackAdded;
+            PeerConnection.Peer.VideoTrackRemoved -= TrackRemoved;
         }
 
         /// <summary>
@@ -166,10 +173,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <see cref="VideoSource.VideoStreamStarted"/> event to be fired from the main
         /// Unity thread.
         /// </summary>
-        private void TrackAdded(WebRTC.PeerConnection.TrackKind trackKind)
+        private void TrackAdded(RemoteVideoTrack track)
         {
-            if (trackKind == WebRTC.PeerConnection.TrackKind.Video)
+            if ((Track == null) && (track.Name == TargetTrackName))
             {
+                Track = track;
+                Track.I420AVideoFrameReady += I420ARemoteVideoFrameReady;
+
                 // Enqueue invoking the unity event from the main Unity thread, so that listeners
                 // can directly access Unity objects from their handler function.
                 _mainThreadWorkQueue.Enqueue(() => VideoStreamStarted.Invoke());
@@ -181,10 +191,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <see cref="VideoSource.VideoStreamStopped"/> event to be fired from the main
         /// Unity thread.
         /// </summary>
-        private void TrackRemoved(WebRTC.PeerConnection.TrackKind trackKind)
+        private void TrackRemoved(RemoteVideoTrack track)
         {
-            if (trackKind == WebRTC.PeerConnection.TrackKind.Video)
+            if (Track == track)
             {
+                Track.I420AVideoFrameReady -= I420ARemoteVideoFrameReady;
+                Track = null;
+
                 // Enqueue invoking the unity event from the main Unity thread, so that listeners
                 // can directly access Unity objects from their handler function.
                 _mainThreadWorkQueue.Enqueue(() => VideoStreamStopped.Invoke());

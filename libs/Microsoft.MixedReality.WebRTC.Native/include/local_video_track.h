@@ -5,6 +5,7 @@
 
 #include "callback.h"
 #include "interop/interop_api.h"
+#include "media/media_track.h"
 #include "str.h"
 #include "tracked_object.h"
 #include "video_frame_observer.h"
@@ -35,7 +36,7 @@ class PeerConnection;
 /// typically a video capture device (e.g. webcam), but can	also be a source
 /// producing programmatically generated frames. The local video track itself
 /// has no knowledge about how the source produces the frames.
-class LocalVideoTrack : public VideoFrameObserver, public TrackedObject {
+class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
  public:
   LocalVideoTrack(PeerConnection& owner,
                   rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
@@ -70,9 +71,6 @@ class LocalVideoTrack : public VideoFrameObserver, public TrackedObject {
   void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
 
  private:
-  /// Weak reference to the PeerConnection object owning this track.
-  PeerConnection* owner_{};
-
   /// Underlying core implementation.
   rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
 

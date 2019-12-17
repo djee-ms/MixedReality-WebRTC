@@ -5,7 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Microsoft.MixedReality.WebRTC.Unity.Examples/VideoChatDemo/VideoChatDemo.unity
     guid: d3b2f1f0ebd44dc4aaf677c227320d9c
+  - enabled: 1
+    path: Assets/Microsoft.MixedReality.WebRTC.Unity.Examples/MultiTrackDemo/MultiTrackDemo.unity
+    guid: a87d18c47042d1e4181b70d5d14d5bf5
   m_configObjects: {}

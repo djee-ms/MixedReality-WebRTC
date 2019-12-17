@@ -58,6 +58,7 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="peer_connection_test_helpers.h" />
+    <ClInclude Include="simple_interop.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="audio_track_tests.cpp" />
@@ -69,6 +70,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="data_channel_tests.cpp" />
+    <ClCompile Include="simple_interop.cpp" />
     <ClCompile Include="video_track_tests.cpp" />
   </ItemGroup>
   <ItemGroup>

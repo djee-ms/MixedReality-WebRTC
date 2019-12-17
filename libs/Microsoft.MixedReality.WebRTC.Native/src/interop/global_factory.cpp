@@ -24,10 +24,17 @@ std::unique_ptr<GlobalFactory> g_factory = std::make_unique<GlobalFactory>();
 /// always valid, never deallocated.
 std::string_view ObjectTypeToString(ObjectType type) {
   static_assert((int)ObjectType::kPeerConnection == 0, "");
-  static_assert((int)ObjectType::kLocalVideoTrack == 1, "");
-  static_assert((int)ObjectType::kExternalVideoTrackSource == 2, "");
+  static_assert((int)ObjectType::kLocalAudioTrack == 1, "");
+  static_assert((int)ObjectType::kLocalVideoTrack == 2, "");
+  static_assert((int)ObjectType::kExternalVideoTrackSource == 3, "");
+  static_assert((int)ObjectType::kRemoteAudioTrack == 4, "");
+  static_assert((int)ObjectType::kRemoteVideoTrack == 5, "");
+  static_assert((int)ObjectType::kDataChannel == 6, "");
   constexpr const std::string_view s_types[] = {
-      "PeerConnection", "LocalVideoTrack", "ExternalVideoTrackSource"};
+      "PeerConnection",   "LocalAudioTrack",
+      "LocalVideoTrack",  "ExternalVideoTrackSource",
+      "RemoteAudioTrack", "RemoteVideoTrack",
+      "DataChannel"};
   return s_types[(int)type];
 }
 

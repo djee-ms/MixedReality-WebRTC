@@ -41,6 +41,38 @@ struct Event {
   bool signaled_{false};
 };
 
+/// Simple semaphore.
+struct Semaphore {
+  void Acquire(int64_t count = 1) {
+    std::unique_lock<std::mutex> lk(m_);
+    while (value_ < count) {
+      cv_.wait(lk);
+    }
+    value_ -= count;
+  }
+  bool TryAcquireFor(std::chrono::seconds seconds, int64_t count = 1) {
+    std::unique_lock<std::mutex> lk(m_);
+    while (value_ < count) {
+      if (cv_.wait_for(lk, seconds) == std::cv_status::timeout) {
+        return false;
+      }
+    }
+    value_ -= count;
+    return true;
+  }
+  void Release(int64_t count = 1) {
+    std::unique_lock<std::mutex> lk(m_);
+    const int64_t old_value = value_;
+    value_ += count;
+    if (old_value <= 0) {
+      cv_.notify_all();
+    }
+  }
+  std::mutex m_;
+  std::condition_variable cv_;
+  int64_t value_{0};
+};
+
 /// Wrapper around an interop callback taking an extra raw pointer argument, to
 /// trampoline its call to a generic std::function for convenience (including
 /// lambda functions).
@@ -193,6 +225,17 @@ class LocalPeerPairRaii {
   LocalPeerPairRaii(const PeerConnectionConfiguration& config)
       : pc1_(config),
         pc2_(config),
+        sdp1_cb_(pc1()),
+        sdp2_cb_(pc2()),
+        ice1_cb_(pc1()),
+        ice2_cb_(pc2()) {
+    setup();
+  }
+  LocalPeerPairRaii(const PeerConnectionConfiguration& config,
+                    mrsPeerConnectionInteropHandle h1,
+                    mrsPeerConnectionInteropHandle h2)
+      : pc1_(config, h1),
+        pc2_(config, h2),
         sdp1_cb_(pc1()),
         sdp2_cb_(pc2()),
         ice1_cb_(pc1()),

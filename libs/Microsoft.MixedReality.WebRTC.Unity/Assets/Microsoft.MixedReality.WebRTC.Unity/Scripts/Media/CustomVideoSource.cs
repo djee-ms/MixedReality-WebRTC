@@ -64,7 +64,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             // Ensure the track has a valid name
             string trackName = TrackName;
-            if (trackName.Length == 0)
+            if (string.IsNullOrEmpty(trackName))
             {
                 // Generate a unique name (GUID)
                 trackName = Guid.NewGuid().ToString();

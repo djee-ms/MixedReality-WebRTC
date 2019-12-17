@@ -190,7 +190,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         protected void OnDisable()
         {
             var nativePeer = PeerConnection.Peer;
-            if ((nativePeer != null) && nativePeer.Initialized)
+            if ((Track != null) && (nativePeer != null) && nativePeer.Initialized)
             {
                 VideoStreamStopped.Invoke();
                 Track.I420AVideoFrameReady -= I420ALocalVideoFrameReady;
@@ -306,11 +306,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         private void OnPeerShutdown()
         {
-            var nativePeer = PeerConnection.Peer;
             if (Track != null)
             {
                 VideoStreamStopped.Invoke();
                 Track.I420AVideoFrameReady -= I420ALocalVideoFrameReady;
+                var nativePeer = PeerConnection.Peer;
                 nativePeer.RemoveLocalVideoTrack(Track);
                 Track.Dispose();
                 Track = null;

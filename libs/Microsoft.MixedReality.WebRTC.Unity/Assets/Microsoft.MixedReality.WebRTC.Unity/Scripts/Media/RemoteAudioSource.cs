@@ -123,8 +123,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         private void OnPeerInitialized()
         {
-            PeerConnection.Peer.TrackAdded += TrackAdded;
-            PeerConnection.Peer.TrackRemoved += TrackRemoved;
+            PeerConnection.Peer.AudioTrackAdded += TrackAdded;
+            PeerConnection.Peer.AudioTrackRemoved += TrackRemoved;
 
             if (AutoPlayOnAdded)
             {
@@ -139,8 +139,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private void OnPeerShutdown()
         {
             Stop();
-            PeerConnection.Peer.TrackAdded -= TrackAdded;
-            PeerConnection.Peer.TrackRemoved -= TrackRemoved;
+            PeerConnection.Peer.AudioTrackAdded -= TrackAdded;
+            PeerConnection.Peer.AudioTrackRemoved -= TrackRemoved;
         }
 
         /// <summary>
@@ -148,14 +148,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <see cref="VideoSource.VideoStreamStarted"/> event to be fired from the main
         /// Unity thread.
         /// </summary>
-        private void TrackAdded(WebRTC.PeerConnection.TrackKind trackKind)
+        private void TrackAdded(RemoteAudioTrack track)
         {
-            if (trackKind == WebRTC.PeerConnection.TrackKind.Audio)
-            {
-                // Enqueue invoking the unity event from the main Unity thread, so that listeners
-                // can directly access Unity objects from their handler function.
-                _mainThreadWorkQueue.Enqueue(() => AudioStreamStarted.Invoke());
-            }
+            // Enqueue invoking the unity event from the main Unity thread, so that listeners
+            // can directly access Unity objects from their handler function.
+            _mainThreadWorkQueue.Enqueue(() => AudioStreamStarted.Invoke());
         }
 
         /// <summary>
@@ -163,14 +160,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <see cref="VideoSource.VideoStreamStopped"/> event to be fired from the main
         /// Unity thread.
         /// </summary>
-        private void TrackRemoved(WebRTC.PeerConnection.TrackKind trackKind)
+        private void TrackRemoved(RemoteAudioTrack track)
         {
-            if (trackKind == WebRTC.PeerConnection.TrackKind.Audio)
-            {
-                // Enqueue invoking the unity event from the main Unity thread, so that listeners
-                // can directly access Unity objects from their handler function.
-                _mainThreadWorkQueue.Enqueue(() => AudioStreamStopped.Invoke());
-            }
+            // Enqueue invoking the unity event from the main Unity thread, so that listeners
+            // can directly access Unity objects from their handler function.
+            _mainThreadWorkQueue.Enqueue(() => AudioStreamStopped.Invoke());
         }
 
         //private void RemoteAudioFrameReady(AudioFrame frame)

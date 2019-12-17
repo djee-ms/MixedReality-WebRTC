@@ -57,12 +57,12 @@ namespace Microsoft.MixedReality.WebRTC.Interop
     {
         #region Unmanaged delegates
 
-        // Note: Unity IL2CPP doesn't support reverse-P/Invoke of SafeHandle
+        // Note - none of those method arguments can be SafeHandle; use IntPtr instead.
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public unsafe delegate void RequestExternalI420AVideoFrameCallback(IntPtr userData,
             /*ExternalVideoTrackSourceHandle*/IntPtr sourceHandle, uint requestId, long timestampMs);
 
-        // Note: Unity IL2CPP doesn't support reverse-P/Invoke of SafeHandle
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public unsafe delegate void RequestExternalArgb32VideoFrameCallback(IntPtr userData,
             /*ExternalVideoTrackSourceHandle*/IntPtr sourceHandle, uint requestId, long timestampMs);
@@ -103,7 +103,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         public class VideoFrameRequestCallbackArgs
         {
-            public PeerConnection Peer;
             public ExternalVideoTrackSource Source;
         }
 
@@ -165,7 +164,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             // Create some static callback args which keep the sourceDelegate alive
             var args = new I420AVideoFrameRequestCallbackArgs
             {
-                Peer = null, // set when track added
                 Source = null, // set below
                 FrameRequestCallback = frameRequestCallback,
                 // This wraps the method into a temporary System.Delegate object, which is then assigned to
@@ -202,7 +200,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             // Create some static callback args which keep the sourceDelegate alive
             var args = new Argb32VideoFrameRequestCallbackArgs
             {
-                Peer = null, // set when track added
                 Source = null, // set below
                 FrameRequestCallback = frameRequestCallback,
                 // This wraps the method into a temporary System.Delegate object, which is then assigned to

@@ -3,12 +3,29 @@
 
 #include "pch.h"
 
-#include "interop/interop_api.h"
 #include "audio_frame.h"
+#include "interop/interop_api.h"
+#include "interop/local_audio_track_interop.h"
+#include "interop/remote_audio_track_interop.h"
 
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
 
 namespace {
+
+const mrsPeerConnectionInteropHandle kFakeInteropPeerConnectionHandle =
+    (void*)0x1;
+const mrsRemoteAudioTrackInteropHandle kFakeInteropRemoteAudioTrackHandle =
+    (void*)0x2;
+
+mrsRemoteAudioTrackInteropHandle MRS_CALL
+FakeIterop_RemoteAudioTrackCreate(mrsPeerConnectionInteropHandle /*parent*/,
+                                  const mrsRemoteAudioTrackConfig& /*config*/) noexcept {
+  return kFakeInteropRemoteAudioTrackHandle;
+}
+
+// PeerConnectionAudioTrackAddedCallback
+using AudioTrackAddedCallback =
+    InteropCallback<mrsRemoteVideoTrackInteropHandle, RemoteAudioTrackHandle>;
 
 // PeerConnectionAudioFrameCallback
 using AudioFrameCallback = InteropCallback<const AudioFrame&>;
@@ -63,7 +80,7 @@ bool IsSilent_int16(const int16_t* data,
 // errors in subsequent processing, or other... in any case it is not exactly
 // zero like for video. (NB: voice activation doesn't seem to have much effect).
 //
-// Note however that using headphones and microphone, we can clearly ear the
+// Note however that using headphones and microphone, one can clearly hear the
 // first test (Simple) having the microphone enabled, and audio played back in
 // the earphones speakers, while in the second test (Muted) the audio is clearly
 // silent from a perceptual point of view.
@@ -72,13 +89,46 @@ bool IsSilent_int16(const int16_t* data,
 TEST(AudioTrack, Simple) {
   LocalPeerPairRaii pair;
 
+  // In order to allow creating interop wrappers from native code, register the
+  // necessary interop callbacks.
+  mrsPeerConnectionInteropCallbacks interop{};
+  interop.remote_audio_track_create_object = &FakeIterop_RemoteAudioTrackCreate;
   ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalAudioTrack(pair.pc1()));
-  ASSERT_NE(mrsBool::kFalse,
-            mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
+            mrsPeerConnectionRegisterInteropCallbacks(pair.pc2(), &interop));
 
+  // Grab the handle of the remote track from the remote peer (#2) via the
+  // AudioTrackAdded callback.
+  RemoteAudioTrackHandle audio_track2{};
+  Event track_added2_ev;
+  AudioTrackAddedCallback track_added2_cb =
+      [&audio_track2, &track_added2_ev](
+          mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
+          RemoteAudioTrackHandle native_handle) {
+        audio_track2 = native_handle;
+        track_added2_ev.Set();
+      };
+  mrsPeerConnectionRegisterAudioTrackAddedCallback(pair.pc2(),
+                                                   CB(track_added2_cb));
+
+  // Create the local audio track on the local peer (#1)
+  AudioDeviceConfiguration config{};
+  LocalAudioTrackHandle audio_track1{};
+  ASSERT_EQ(Result::kSuccess,
+            mrsPeerConnectionAddLocalAudioTrack(pair.pc1(), "test_audio_track",
+                                                &config, &audio_track1));
+  ASSERT_NE(nullptr, audio_track1);
+  ASSERT_NE(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
+
+  // Connect #1 and #2
+  pair.ConnectAndWait();
+
+  // Wait for remote track to be added on #2
+  ASSERT_TRUE(track_added2_ev.WaitFor(5s));
+  ASSERT_NE(nullptr, audio_track2);
+
+  // Register a callback on the remote track of #2
   uint32_t call_count = 0;
-  AudioFrameCallback audio_cb = [&call_count](const AudioFrame& frame) {
+  AudioFrameCallback audio2_cb = [&call_count](const AudioFrame& frame) {
     ASSERT_NE(nullptr, frame.data_);
     ASSERT_LT(0u, frame.bits_per_sample_);
     ASSERT_LT(0u, frame.sampling_rate_hz_);
@@ -104,88 +154,116 @@ TEST(AudioTrack, Simple) {
     //}
     ++call_count;
   };
-  mrsPeerConnectionRegisterRemoteAudioFrameCallback(pair.pc2(), CB(audio_cb));
-
-  pair.ConnectAndWait();
+  mrsRemoteAudioTrackRegisterFrameCallback(audio_track2, CB(audio2_cb));
 
   // Check several times this, because the audio "mute" is flaky, does not
   // really mute the audio, so check that the reported status is still
   // correct.
-  ASSERT_NE(mrsBool::kFalse,
-            mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
+  ASSERT_NE(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
+  // Give the track some time to stream audio data
   Event ev;
   ev.WaitFor(5s);
   ASSERT_LT(50u, call_count);  // at least 10 CPS
 
   // Same as above
-  ASSERT_NE(mrsBool::kFalse,
-            mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
+  ASSERT_NE(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
-  mrsPeerConnectionRegisterRemoteAudioFrameCallback(pair.pc2(), nullptr,
-                                                    nullptr);
+  // Clean-up
+  mrsRemoteAudioTrackRegisterFrameCallback(audio_track2, nullptr, nullptr);
+  mrsLocalAudioTrackRemoveRef(audio_track1);
 }
 
 TEST(AudioTrack, Muted) {
   LocalPeerPairRaii pair;
 
+  // In order to allow creating interop wrappers from native code, register the
+  // necessary interop callbacks.
+  mrsPeerConnectionInteropCallbacks interop{};
+  interop.remote_audio_track_create_object = &FakeIterop_RemoteAudioTrackCreate;
   ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalAudioTrack(pair.pc1()));
+            mrsPeerConnectionRegisterInteropCallbacks(pair.pc2(), &interop));
+
+  // Grab the handle of the remote track from the remote peer (#2) via the
+  // AudioTrackAdded callback.
+  RemoteAudioTrackHandle audio_track2{};
+  Event track_added2_ev;
+  AudioTrackAddedCallback track_added2_cb =
+      [&audio_track2, &track_added2_ev](
+          mrsRemoteAudioTrackInteropHandle /*interop_handle*/,
+          RemoteAudioTrackHandle native_handle) {
+        audio_track2 = native_handle;
+        track_added2_ev.Set();
+      };
+  mrsPeerConnectionRegisterAudioTrackAddedCallback(pair.pc2(),
+                                                   CB(track_added2_cb));
+
+  // Create the local audio track on the local peer (#1)
+  AudioDeviceConfiguration config{};
+  LocalAudioTrackHandle audio_track1{};
+  ASSERT_EQ(Result::kSuccess,
+            mrsPeerConnectionAddLocalAudioTrack(pair.pc1(), "test_audio_track",
+                                                &config, &audio_track1));
+  ASSERT_NE(nullptr, audio_track1);
+  ASSERT_NE(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
   // Disable the audio track; it should output only silence
-  ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetLocalAudioTrackEnabled(
-                                         pair.pc1(), mrsBool::kFalse));
-  ASSERT_EQ(mrsBool::kFalse,
-            mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
+  ASSERT_EQ(Result::kSuccess,
+            mrsLocalAudioTrackSetEnabled(audio_track1, mrsBool::kFalse));
+  ASSERT_EQ(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
-  uint32_t call_count = 0;
-  AudioFrameCallback audio_cb =
-      [&call_count, &pair](const AudioFrame& frame) {
-        ASSERT_NE(nullptr, frame.data_);
-        ASSERT_LT(0u, frame.bits_per_sample_);
-        ASSERT_LT(0u, frame.sampling_rate_hz_);
-        ASSERT_LT(0u, frame.channel_count_);
-        ASSERT_LT(0u, frame.sample_count_);
-        // TODO - See comment above
-        // if (bits_per_sample == 8) {
-        //  uint8_t min, max;
-        //  const bool is_silent =
-        //      IsSilent_uint8((const uint8_t*)audio_data,
-        //                     number_of_frames * number_of_channels, min, max);
-        //  EXPECT_TRUE(is_silent) << "uint8 call #" << call_count
-        //                         << " min=" << min << " max=" << max;
-        //} else if (bits_per_sample == 16) {
-        //  int16_t min, max;
-        //  const bool is_silent =
-        //      IsSilent_int16((const int16_t*)audio_data,
-        //                     number_of_frames * number_of_channels, min, max);
-        //  EXPECT_TRUE(is_silent) << "int16 call #" << call_count
-        //                         << " min=" << min << " max=" << max;
-        //} else {
-        //  ASSERT_TRUE(false) << "Unkown bits per sample (not 8 nor 16)";
-        //}
-        ++call_count;
-      };
-  mrsPeerConnectionRegisterRemoteAudioFrameCallback(pair.pc2(), CB(audio_cb));
-
+  // Connect #1 and #2
   pair.ConnectAndWait();
+
+  // Wait for remote track to be added on #2
+  ASSERT_TRUE(track_added2_ev.WaitFor(5s));
+  ASSERT_NE(nullptr, audio_track2);
+
+  // Register a callback on the remote track of #2
+  uint32_t call_count = 0;
+  AudioFrameCallback audio_cb = [&call_count, &pair](const AudioFrame& frame) {
+    ASSERT_NE(nullptr, frame.data_);
+    ASSERT_LT(0u, frame.bits_per_sample_);
+    ASSERT_LT(0u, frame.sampling_rate_hz_);
+    ASSERT_LT(0u, frame.channel_count_);
+    ASSERT_LT(0u, frame.sample_count_);
+    // TODO - See comment above
+    // if (bits_per_sample == 8) {
+    //  uint8_t min, max;
+    //  const bool is_silent =
+    //      IsSilent_uint8((const uint8_t*)audio_data,
+    //                     number_of_frames * number_of_channels, min, max);
+    //  EXPECT_TRUE(is_silent) << "uint8 call #" << call_count
+    //                         << " min=" << min << " max=" << max;
+    //} else if (bits_per_sample == 16) {
+    //  int16_t min, max;
+    //  const bool is_silent =
+    //      IsSilent_int16((const int16_t*)audio_data,
+    //                     number_of_frames * number_of_channels, min, max);
+    //  EXPECT_TRUE(is_silent) << "int16 call #" << call_count
+    //                         << " min=" << min << " max=" << max;
+    //} else {
+    //  ASSERT_TRUE(false) << "Unkown bits per sample (not 8 nor 16)";
+    //}
+    ++call_count;
+  };
+  mrsRemoteAudioTrackRegisterFrameCallback(audio_track2, CB(audio_cb));
 
   // Check several times this, because the audio "mute" is flaky, does not
   // really mute the audio, so check that the reported status is still
   // correct.
-  ASSERT_EQ(mrsBool::kFalse,
-            mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
+  ASSERT_EQ(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
   Event ev;
   ev.WaitFor(5s);
   ASSERT_LT(50u, call_count);  // at least 10 CPS
 
   // Same as above
-  ASSERT_EQ(mrsBool::kFalse,
-            mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
+  ASSERT_EQ(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
-  mrsPeerConnectionRegisterRemoteAudioFrameCallback(pair.pc2(), nullptr,
-                                                    nullptr);
+  // Clean-up
+  mrsRemoteAudioTrackRegisterFrameCallback(audio_track2, nullptr, nullptr);
+  mrsLocalAudioTrackRemoveRef(audio_track1);
 }
 
 #endif  // MRSW_EXCLUDE_DEVICE_TESTS

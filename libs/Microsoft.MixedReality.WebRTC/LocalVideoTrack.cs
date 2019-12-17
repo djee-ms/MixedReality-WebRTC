@@ -27,10 +27,11 @@ namespace Microsoft.MixedReality.WebRTC
         public string Name { get; }
 
         /// <summary>
-        /// External source for this video track, or <c>null</c> if the source is
-        /// some internal video capture device.
+        /// External source for this video track, or <c>null</c> if the source is some
+        /// internal video capture device, or has been removed from any peer connection
+        /// (and is therefore inactive).
         /// </summary>
-        public ExternalVideoTrackSource Source { get; } = null;
+        public ExternalVideoTrackSource Source { get; private set; } = null;
 
         /// <summary>
         /// Enabled status of the track. If enabled, send local video frames to the remote peer as
@@ -154,6 +155,11 @@ namespace Microsoft.MixedReality.WebRTC
             Debug.Assert(PeerConnection == previousConnection);
             Debug.Assert(!_nativeHandle.IsClosed);
             PeerConnection = null;
+            if (Source != null)
+            {
+                Source.OnTrackRemovedFromSource(this);
+                Source = null;
+            }
         }
     }
 }

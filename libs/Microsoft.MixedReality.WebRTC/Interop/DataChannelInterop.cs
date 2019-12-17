@@ -77,8 +77,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         {
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
             var dataChannelWrapper = CreateWrapper(peerWrapper, config, out callbacks);
-            var handle = GCHandle.Alloc(dataChannelWrapper, GCHandleType.Normal);
-            return GCHandle.ToIntPtr(handle);
+            return Utils.MakeWrapperRef(dataChannelWrapper);
         }
 
         [MonoPInvokeCallback(typeof(MessageCallback))]
@@ -107,7 +106,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         #region Utilities
 
-        public static DataChannel CreateWrapper(PeerConnection parent, CreateConfig config, out Callbacks callbacks)
+        public static DataChannel CreateWrapper(PeerConnection parent, in CreateConfig config, out Callbacks callbacks)
         {
             // Create the callback args for the data channel
             var args = new CallbackArgs()

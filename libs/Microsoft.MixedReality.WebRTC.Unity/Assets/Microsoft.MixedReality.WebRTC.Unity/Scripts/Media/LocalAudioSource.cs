@@ -38,6 +38,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         public bool AutoAddTrack = true;
 
+        public LocalAudioTrack Track { get; private set; } = null;
+
+        /// <summary>
+        /// Frame queue holding the pending frames enqueued by the audio source itself,
+        /// which an audio renderer needs to read and display.
+        /// </summary>
+        //private AudioFrameQueue<AudioFrameStorage> _frameQueue;
+
         protected void Awake()
         {
             PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
@@ -62,12 +70,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         protected void OnDisable()
         {
             var nativePeer = PeerConnection.Peer;
-            if ((nativePeer != null) && nativePeer.Initialized)
+            if ((Track != null) && (nativePeer != null) && nativePeer.Initialized)
             {
                 AudioStreamStopped.Invoke();
-                //nativePeer.LocalAudioFrameReady -= LocalAudioFrameReady;
-                nativePeer.RemoveLocalAudioTrack();
-                //FrameQueue.Clear();
+                //Track.AudioFrameReady -= AudioFrameReady;
+                nativePeer.RemoveLocalAudioTrack(Track);
+                Track.Dispose();
+                Track = null;
+                //_frameQueue.Clear();
             }
         }
 
@@ -101,23 +111,32 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 nativePeer.PreferredAudioCodec = PreferredAudioCodec;
 
                 //FrameQueue.Clear();
-                await nativePeer.AddLocalAudioTrackAsync();
+                var settings = new WebRTC.PeerConnection.LocalAudioTrackSettings
+                {
+                    trackName = "LocalAudioSource", //< TODO
+                };
+                Track = await nativePeer.AddLocalAudioTrackAsync(settings);
                 AudioStreamStarted.Invoke();
             }
         }
 
         private void OnPeerShutdown()
         {
-            AudioStreamStopped.Invoke();
-            var nativePeer = PeerConnection.Peer;
-            //nativePeer.LocalAudioFrameReady -= LocalAudioFrameReady;
-            nativePeer.RemoveLocalAudioTrack();
-            //FrameQueue.Clear();
+            if (Track != null)
+            {
+                AudioStreamStopped.Invoke();
+                //Track.AudioFrameReady -= AudioFrameReady;
+                var nativePeer = PeerConnection.Peer;
+                nativePeer.RemoveLocalAudioTrack(Track);
+                Track.Dispose();
+                Track = null;
+            }
+            //_frameQueue.Clear();
         }
 
-        //private void LocalAudioFrameReady(AudioFrame frame)
+        //private void AudioFrameReady(AudioFrame frame)
         //{
-        //    FrameQueue.Enqueue(frame);
+        //    _frameQueue.Enqueue(frame);
         //}
     }
 }

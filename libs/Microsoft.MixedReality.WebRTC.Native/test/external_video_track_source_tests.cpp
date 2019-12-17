@@ -7,6 +7,7 @@
 #include "interop/external_video_track_source_interop.h"
 #include "interop/interop_api.h"
 #include "interop/local_video_track_interop.h"
+#include "interop/remote_video_track_interop.h"
 
 #include "libyuv.h"
 
@@ -104,6 +105,10 @@ void ValidateQuadTestFrame(const void* data,
   ASSERT_LE(std::fabs(err), 768.0);  // +/-1 per component over 256 pixels
 }
 
+// PeerConnectionVideoTrackAddedCallback
+using VideoTrackAddedCallback =
+    InteropCallback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>;
+
 // PeerConnectionArgb32VideoFrameCallback
 using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
 
@@ -112,19 +117,43 @@ using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
 TEST(ExternalVideoTrackSource, Simple) {
   LocalPeerPairRaii pair;
 
-  ExternalVideoTrackSourceHandle source_handle = nullptr;
+  // Grab the handle of the remote track from the remote peer (#2) via the
+  // VideoTrackAdded callback.
+  RemoteVideoTrackHandle track_handle2{};
+  Event track_added2_ev;
+  VideoTrackAddedCallback track_added2_cb =
+      [&track_handle2, &track_added2_ev](
+          mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
+          RemoteVideoTrackHandle native_handle) {
+        track_handle2 = native_handle;
+        track_added2_ev.Set();
+      };
+  mrsPeerConnectionRegisterVideoTrackAddedCallback(pair.pc2(),
+                                                   CB(track_added2_cb));
+
+  // Create the external source for the local video track of the local peer (#1)
+  ExternalVideoTrackSourceHandle source_handle1 = nullptr;
   ASSERT_EQ(mrsResult::kSuccess,
             mrsExternalVideoTrackSourceCreateFromArgb32Callback(
-                &GenerateQuadTestFrame, nullptr, &source_handle));
-  ASSERT_NE(nullptr, source_handle);
+                &GenerateQuadTestFrame, nullptr, &source_handle1));
+  ASSERT_NE(nullptr, source_handle1);
 
-  LocalVideoTrackHandle track_handle = nullptr;
+  // Create the local track itself for #1
+  LocalVideoTrackHandle track_handle1 = nullptr;
   ASSERT_EQ(mrsResult::kSuccess,
             mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-                pair.pc1(), "gen_track", source_handle, &track_handle));
-  ASSERT_NE(nullptr, track_handle);
-  ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
+                pair.pc1(), "gen_track", source_handle1, &track_handle1));
+  ASSERT_NE(nullptr, track_handle1);
+  ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
 
+  // Connect #1 and #2
+  pair.ConnectAndWait();
+
+  // Wait for remote track to be added on #2
+  ASSERT_TRUE(track_added2_ev.WaitFor(5s));
+  ASSERT_NE(nullptr, track_handle2);
+
+  // Register a frame callback for the remote video of #2
   uint32_t frame_count = 0;
   Argb32VideoFrameCallback argb_cb =
       [&frame_count](const mrsArgb32VideoFrame& frame) {
@@ -135,22 +164,19 @@ TEST(ExternalVideoTrackSource, Simple) {
                               frame.height_);
         ++frame_count;
       };
-  mrsPeerConnectionRegisterArgb32RemoteVideoFrameCallback(pair.pc2(),
-                                                          CB(argb_cb));
-
-  pair.ConnectAndWait();
+  mrsRemoteVideoTrackRegisterArgb32FrameCallback(track_handle2, CB(argb_cb));
 
   // Simple timer
   Event ev;
   ev.WaitFor(5s);
   ASSERT_LT(50u, frame_count);  // at least 10 FPS
 
-  mrsPeerConnectionRegisterArgb32RemoteVideoFrameCallback(pair.pc2(), nullptr,
-                                                          nullptr);
-  mrsPeerConnectionRemoveLocalVideoTracksFromSource(pair.pc1(), source_handle);
-  mrsLocalVideoTrackRemoveRef(track_handle);
-  mrsExternalVideoTrackSourceShutdown(source_handle);
-  mrsExternalVideoTrackSourceRemoveRef(source_handle);
+  mrsRemoteVideoTrackRegisterArgb32FrameCallback(track_handle2, nullptr,
+                                                 nullptr);
+  mrsPeerConnectionRemoveLocalVideoTracksFromSource(pair.pc1(), source_handle1);
+  mrsLocalVideoTrackRemoveRef(track_handle1);
+  mrsExternalVideoTrackSourceShutdown(source_handle1);
+  mrsExternalVideoTrackSourceRemoveRef(source_handle1);
 }
 
 #endif  // MRSW_EXCLUDE_DEVICE_TESTS

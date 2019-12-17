@@ -10,8 +10,12 @@ namespace Microsoft::MixedReality::WebRTC {
 
 enum class ObjectType : int {
   kPeerConnection,
+  kLocalAudioTrack,
   kLocalVideoTrack,
   kExternalVideoTrackSource,
+  kRemoteAudioTrack,
+  kRemoteVideoTrack,
+  kDataChannel,
 };
 
 /// Global factory wrapper adding thread safety to all global objects, including

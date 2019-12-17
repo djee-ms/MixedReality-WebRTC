@@ -13,11 +13,12 @@ LocalVideoTrack::LocalVideoTrack(
     rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
     rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
     mrsLocalVideoTrackInteropHandle interop_handle) noexcept
-    : owner_(&owner),
+    : MediaTrack(owner),
       track_(std::move(track)),
       sender_(std::move(sender)),
       interop_handle_(interop_handle) {
   RTC_CHECK(owner_);
+  kind_ = TrackKind::kVideoTrack;
   rtc::VideoSinkWants sink_settings{};
   sink_settings.rotation_applied = true;
   track_->AddOrUpdateSink(this, sink_settings);
