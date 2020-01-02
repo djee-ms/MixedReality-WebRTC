@@ -39,7 +39,7 @@ using namespace std::chrono_literals;
 
 #pragma warning(push)
 #pragma warning(disable : 4100 4127)
-#include "api/datachannelinterface.h"
+#include "api/data_channel_interface.h"
 #include "rtc_base/thread_annotations.h"
 #pragma warning(pop)
 
