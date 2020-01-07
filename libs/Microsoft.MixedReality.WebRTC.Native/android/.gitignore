@@ -1,0 +1,18 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# CMake
+CMakefiles/
+
+# Gradle & Android Studio
+.idea/
+.gradle/
+*.iml
+/local.properties
+/build
+.externalNativeBuild
+.cxx
+app/libs
+
+# Build artifacts copied from Google's WebRTC repository
+deps/
