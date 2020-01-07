@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+#if MRS_WINDOWS
 using System.Diagnostics.Tracing;
+#endif
 
 namespace Microsoft.MixedReality.WebRTC.Tracing
 {
@@ -24,9 +26,44 @@ namespace Microsoft.MixedReality.WebRTC.Tracing
     /// Recorder (WPR). The <c>tools/tracing/</c> folder contains a WPR profile (*.wprp) which can be
     /// imported in wpr.exe to activate that event provider and record its events.
     /// </remarks>
+#if MRS_WINDOWS
     [EventSource(Name = "Microsoft.MixedReality.WebRTC", Guid = "00AEE89E-B531-4F20-A2C5-D02F37CB6AA1")]
     internal sealed class MainEventSource : EventSource
     {
+#else
+    internal sealed class MainEventSource
+    {
+        [Flags]
+        public enum EventKeywords { }
+
+        public enum EventLevel
+        { Critical = 1, Error = 2, Warning = 3, Informational = 4, Verbose = 5 }
+
+        class EventAttribute : Attribute
+        {
+            public EventAttribute(int id) { }
+            public EventLevel Level { get; set; }
+            public EventKeywords Keywords { get; set; }
+        }
+
+        class NonEventAttribute : Attribute { }
+
+        struct EventData
+        {
+            public IntPtr DataPointer { get; set; }
+            public int Size { get; set; }
+        }
+
+        void WriteEvent(int id) { }
+        void WriteEvent(int id, int arg0) { }
+        void WriteEvent(int id, int arg0, int arg1) { }
+        void WriteEvent(int id, int arg0, string arg1) { }
+        void WriteEvent(int id, int arg0, int arg1, int arg2) { }
+        void WriteEvent(int id, string arg0, string arg1) { }
+        void WriteEvent(int id, object[] args) { }
+
+        unsafe void WriteEventCore(int eventId, int eventDataCount, EventData* data) { }
+#endif
         /// <summary>
         /// Global event source instance to use for logging events.
         /// </summary>
