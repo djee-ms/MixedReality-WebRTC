@@ -171,7 +171,7 @@ class PeerConnectionImpl : public PeerConnection,
     remote_audio_observer_.reset(new AudioFrameObserver());
   }
 
-  void SetName(std::string_view name) { name_ = name; }
+  void SetName(std::string_view name) override { name_ = name; }
 
   std::string GetName() const override { return name_; }
 
@@ -1026,12 +1026,10 @@ void PeerConnectionImpl::OnSignalingChange(
       }
       break;
     case webrtc::PeerConnectionInterface::kHaveLocalOffer:
-      break;
     case webrtc::PeerConnectionInterface::kHaveLocalPrAnswer:
-      break;
     case webrtc::PeerConnectionInterface::kHaveRemoteOffer:
-      break;
     case webrtc::PeerConnectionInterface::kHaveRemotePrAnswer:
+    case webrtc::PeerConnectionInterface::kClosed:
       break;
   }
 }
