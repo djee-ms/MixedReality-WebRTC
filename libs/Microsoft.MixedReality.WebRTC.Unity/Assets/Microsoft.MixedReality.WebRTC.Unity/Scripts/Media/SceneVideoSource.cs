@@ -13,6 +13,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// <summary>
     /// Custom video source capturing the Unity scene content as rendered by a given camera,
     /// and sending it as a video track through the selected peer connection.
+    /// 
+    /// This component requires the renderer to support the async GPU readback feature
+    /// (<see xref="UnityEngine.SystemInfo.supportsAsyncGPUReadback"/>), which is not available
+    /// on some devices like OpenGL-based devices (Android in particular).
     /// </summary>
     public class SceneVideoSource : CustomVideoSource<Argb32VideoFrameStorage>
     {
@@ -72,10 +76,17 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         protected new void OnEnable()
         {
-            // If no camera provided, attempt to fallback to main camera
+            // The Unity OpenGL renderer (used e.g. on Android) doesn't support async readback.
+            // https://forum.unity.com/threads/graphics-asynchronous-gpu-readback-api.529901/
+            if (!SystemInfo.supportsAsyncGPUReadback)
+            {
+                throw new NotSupportedException("This device doesn't support async readback. Cannot use SceneVideoSource.");
+            }
+
+            // If no camera is provided, attempt to fallback to the main camera
             if (SourceCamera == null)
             {
-                var mainCameraGameObject = GameObject.FindGameObjectWithTag("MainCamera");
+                var mainCameraGameObject = Camera.main;
                 if (mainCameraGameObject != null)
                 {
                     SourceCamera = mainCameraGameObject.GetComponent<Camera>();
@@ -86,6 +97,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 throw new NullReferenceException("Empty source camera for SceneVideoSource, and could not find MainCamera as fallback.");
             }
 
+            // Setup the GPU readback on the camera to capture the rendered scene content
             CreateCommandBuffer();
             SourceCamera.AddCommandBuffer(CameraEvent, _commandBuffer);
 
@@ -96,13 +108,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             base.OnDisable();
 
-            // The camera sometimes goes away before this component.
-            if (SourceCamera != null)
+            if (_commandBuffer != null)
             {
-                SourceCamera.RemoveCommandBuffer(CameraEvent, _commandBuffer);
+                if (SourceCamera != null)
+                {
+                    SourceCamera.RemoveCommandBuffer(CameraEvent, _commandBuffer);
+                }
+                _commandBuffer.Dispose();
+                _commandBuffer = null;
             }
-            _commandBuffer.Dispose();
-            _commandBuffer = null;
         }
 
         /// <summary>
