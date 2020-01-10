@@ -10,15 +10,21 @@ namespace Microsoft::MixedReality::WebRTC {
 
 LocalAudioTrack::LocalAudioTrack(
     PeerConnection& owner,
+    RefPtr<AudioTransceiver> transceiver,
     rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
     rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
     mrsLocalAudioTrackInteropHandle interop_handle) noexcept
     : MediaTrack(owner),
       track_(std::move(track)),
       sender_(std::move(sender)),
+      transceiver_(std::move(transceiver)),
       interop_handle_(interop_handle) {
   RTC_CHECK(owner_);
+  RTC_CHECK(transceiver_);
+  RTC_CHECK(track_);
+  RTC_CHECK(sender_);
   kind_ = TrackKind::kAudioTrack;
+  transceiver_->OnLocalTrackCreated(this);
   track_->AddSink(this);  //< FIXME - Implementation is no-op
 }
 
@@ -34,12 +40,16 @@ std::string LocalAudioTrack::GetName() const noexcept {
   return track_->id();
 }
 
+void LocalAudioTrack::SetEnabled(bool enabled) const noexcept {
+  track_->set_enabled(enabled);
+}
+
 bool LocalAudioTrack::IsEnabled() const noexcept {
   return track_->enabled();
 }
 
-void LocalAudioTrack::SetEnabled(bool enabled) const noexcept {
-  track_->set_enabled(enabled);
+RefPtr<AudioTransceiver> LocalAudioTrack::GetTransceiver() const noexcept {
+  return transceiver_;
 }
 
 webrtc::AudioTrackInterface* LocalAudioTrack::impl() const {
@@ -56,7 +66,15 @@ void LocalAudioTrack::RemoveFromPeerConnection(
     peer.RemoveTrack(sender_);
     sender_ = nullptr;
     owner_ = nullptr;
+    transceiver_ = nullptr;
   }
+}
+
+void LocalAudioTrack::OnTransceiverChanged(
+    RefPtr<AudioTransceiver> newTransceiver) {
+  RTC_CHECK_NE(transceiver_.get(), newTransceiver.get());
+  RTC_CHECK_NE(transceiver_.get(), (AudioTransceiver*)nullptr);
+  transceiver_ = newTransceiver;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

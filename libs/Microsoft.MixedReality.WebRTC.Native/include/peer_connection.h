@@ -6,6 +6,8 @@
 #include "audio_frame_observer.h"
 #include "callback.h"
 #include "data_channel.h"
+#include "media/audio_transceiver.h"
+#include "media/video_transceiver.h"
 #include "mrs_errors.h"
 #include "refptr.h"
 #include "tracked_object.h"
@@ -210,6 +212,10 @@ class PeerConnection : public TrackedObject {
   // Video
   //
 
+  virtual MRS_API ErrorOr<RefPtr<VideoTransceiver>> AddVideoTransceiver(
+      std::string_view name,
+      const VideoTransceiverConfiguration& config) noexcept = 0;
+
   /// Add a video track to the peer connection. If no RTP sender/transceiver
   /// exist, create a new one for that track. Otherwise try to reuse an existing
   /// one.
@@ -280,6 +286,10 @@ class PeerConnection : public TrackedObject {
   //
   // Audio
   //
+
+  virtual MRS_API ErrorOr<RefPtr<AudioTransceiver>> AddAudioTransceiver(
+      std::string_view name,
+      const AudioTransceiverConfiguration& config) noexcept = 0;
 
   /// Add an audio track to the peer connection. If no RTP sender/transceiver
   /// exist, create a new one for that track. Otherwise try to reuse an existing

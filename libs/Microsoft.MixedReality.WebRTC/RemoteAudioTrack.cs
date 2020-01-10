@@ -21,6 +21,11 @@ namespace Microsoft.MixedReality.WebRTC
         public PeerConnection PeerConnection { get; private set; }
 
         /// <summary>
+        /// Audio transceiver this track is part of.
+        /// </summary>
+        public AudioTransceiver Transceiver { get; private set; }
+
+        /// <summary>
         /// Track name as specified during creation. This property is immutable.
         /// For remote audio track the property is specified by the remote peer.
         /// </summary>
@@ -73,10 +78,12 @@ namespace Microsoft.MixedReality.WebRTC
             Name = trackName;
         }
 
-        internal RemoteAudioTrack(RemoteAudioTrackHandle nativeHandle, PeerConnection peer, string trackName)
+        internal RemoteAudioTrack(RemoteAudioTrackHandle nativeHandle, PeerConnection peer,
+            AudioTransceiver transceiver, string trackName)
         {
             _nativeHandle = nativeHandle;
             PeerConnection = peer;
+            Transceiver = transceiver;
             Name = trackName;
             RegisterInteropCallbacks();
         }
@@ -146,6 +153,8 @@ namespace Microsoft.MixedReality.WebRTC
             Debug.Assert(PeerConnection == previousConnection);
             Debug.Assert(!_nativeHandle.IsClosed);
             PeerConnection = null;
+            Transceiver.OnRemoteTrackRemoved(this);
+            Transceiver = null;
         }
     }
 }

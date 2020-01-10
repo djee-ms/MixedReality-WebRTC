@@ -7,6 +7,7 @@
 #include "interop/interop_api.h"
 #include "interop/local_video_track_interop.h"
 #include "interop/remote_video_track_interop.h"
+#include "interop/video_transceiver_interop.h"
 
 #include "simple_interop.h"
 
@@ -129,9 +130,28 @@ TEST(VideoTrack, Simple) {
   // Create the local video track of the local peer (#1)
   VideoDeviceConfiguration config{};
   LocalVideoTrackHandle track_handle{};
-  ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalVideoTrack(pair.pc1(), "local_video_track",
-                                                &config, &track_handle));
+  VideoTransceiverHandle transceiver_handle{};
+  ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalVideoTrack(
+                                  pair.pc1(), "local_video_track", &config,
+                                  &track_handle, &transceiver_handle));
+  ASSERT_NE(nullptr, track_handle);
+  ASSERT_NE(nullptr, transceiver_handle);
+
+  // Check video transceiver consistency
+  {
+    LocalVideoTrackHandle track_handle_local{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
+                                    transceiver_handle, &track_handle_local));
+    ASSERT_EQ(track_handle, track_handle_local);
+    mrsLocalVideoTrackRemoveRef(track_handle_local);
+
+    RemoteVideoTrackHandle track_handle_remote{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
+                                    transceiver_handle, &track_handle_remote));
+    ASSERT_EQ(nullptr, track_handle_remote);
+  }
+
+  // New tracks are enabled by default
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
 
   // Connect #1 and #2
@@ -189,9 +209,12 @@ TEST(VideoTrack, Muted) {
   // Create the local video track of the local peer (#1)
   VideoDeviceConfiguration config{};
   LocalVideoTrackHandle track_handle{};
-  ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalVideoTrack(pair.pc1(), "local_video_track",
-                                                &config, &track_handle));
+  VideoTransceiverHandle transceiver_handle{};
+  ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalVideoTrack(
+                                  pair.pc1(), "local_video_track", &config,
+                                  &track_handle, &transceiver_handle));
+  ASSERT_NE(nullptr, track_handle);
+  ASSERT_NE(nullptr, transceiver_handle);
 
   // New tracks are enabled by default
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
@@ -271,11 +294,13 @@ TEST(VideoTrack, DeviceIdInvalid) {
   LocalPeerPairRaii pair;
   VideoDeviceConfiguration config{};
   LocalVideoTrackHandle track_handle{};
+  VideoTransceiverHandle transceiver_handle{};
   config.video_device_id = "[[INVALID DEVICE ID]]";
-  ASSERT_EQ(Result::kNotFound,
-            mrsPeerConnectionAddLocalVideoTrack(pair.pc1(), "invalid_track",
-                                                &config, &track_handle));
+  ASSERT_EQ(Result::kNotFound, mrsPeerConnectionAddLocalVideoTrack(
+                                   pair.pc1(), "invalid_track", &config,
+                                   &track_handle, &transceiver_handle));
   ASSERT_EQ(nullptr, track_handle);
+  ASSERT_EQ(nullptr, transceiver_handle);
 }
 
 TEST(VideoTrack, Multi) {
@@ -297,6 +322,7 @@ TEST(VideoTrack, Multi) {
     I420VideoFrameCallback frame_cb{};
     LocalVideoTrackHandle local_handle{};
     RemoteVideoTrackHandle remote_handle{};
+    VideoTransceiverHandle transceiver_handle{};
   };
   TestTrack tracks[kNumTracks];
 
@@ -330,12 +356,28 @@ TEST(VideoTrack, Multi) {
 
   // Create local video tracks on the local peer (#1)
   for (auto&& track : tracks) {
-    ASSERT_EQ(
-        Result::kSuccess,
-        mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-            pair.pc1(), "test_track", source_handle, &track.local_handle));
+    ASSERT_EQ(Result::kSuccess,
+              mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
+                  pair.pc1(), "test_track", source_handle, &track.local_handle,
+                  &track.transceiver_handle));
     ASSERT_NE(nullptr, track.local_handle);
+    ASSERT_NE(nullptr, track.transceiver_handle);
     ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track.local_handle));
+
+    // Check video transceiver consistency
+    {
+      LocalVideoTrackHandle track_handle_local{};
+      ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(track.transceiver_handle,
+                                                 &track_handle_local));
+      ASSERT_EQ(track.local_handle, track_handle_local);
+      mrsLocalVideoTrackRemoveRef(track_handle_local);
+
+      RemoteVideoTrackHandle track_handle_remote{};
+      ASSERT_EQ(Result::kSuccess,
+                mrsVideoTransceiverGetRemoteTrack(track.transceiver_handle,
+                                                  &track_handle_remote));
+      ASSERT_EQ(nullptr, track_handle_remote);
+    }
   }
 
   // Connect #1 and #2
@@ -364,7 +406,7 @@ TEST(VideoTrack, Multi) {
   Event ev;
   ev.WaitFor(5s);
   for (auto&& track : tracks) {
-    ASSERT_LT(50u, track.frame_count) << "Expected at least 10 FPS";
+    ASSERT_LT(50, track.frame_count) << "Expected at least 10 FPS";
   }
 
   for (auto&& track : tracks) {
@@ -409,12 +451,14 @@ TEST(VideoTrack, ExternalI420) {
   ASSERT_NE(nullptr, source_handle);
 
   // Create the local video track of the local peer (#1)
-  LocalVideoTrackHandle track_handle = nullptr;
-  ASSERT_EQ(
-      mrsResult::kSuccess,
-      mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-          pair.pc1(), "simulated_video_track", source_handle, &track_handle));
+  LocalVideoTrackHandle track_handle{};
+  VideoTransceiverHandle transceiver_handle{};
+  ASSERT_EQ(mrsResult::kSuccess,
+            mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
+                pair.pc1(), "simulated_video_track", source_handle,
+                &track_handle, &transceiver_handle));
   ASSERT_NE(nullptr, track_handle);
+  ASSERT_NE(nullptr, transceiver_handle);
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
 
   // Connect #1 and #2

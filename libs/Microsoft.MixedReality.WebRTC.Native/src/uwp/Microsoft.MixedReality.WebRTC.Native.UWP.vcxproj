@@ -139,14 +139,19 @@
     <ClInclude Include="..\..\include\tracked_object.h" />
     <ClInclude Include="..\..\include\video_frame.h" />
     <ClInclude Include="../interop/external_video_track_source_interop.h" />
+    <ClInclude Include="..\interop\audio_transceiver_interop.h" />
     <ClInclude Include="..\interop\local_audio_track_interop.h" />
     <ClInclude Include="..\interop\remote_audio_track_interop.h" />
     <ClInclude Include="..\interop\remote_video_track_interop.h" />
+    <ClInclude Include="..\interop\video_transceiver_interop.h" />
+    <ClInclude Include="..\media\audio_transceiver.h" />
     <ClInclude Include="..\media\external_video_track_source_impl.h" />
     <ClInclude Include="..\media\local_audio_track.h" />
     <ClInclude Include="..\media\media_track.h" />
     <ClInclude Include="..\media\remote_audio_track.h" />
     <ClInclude Include="..\media\remote_video_track.h" />
+    <ClInclude Include="..\media\transceiver.h" />
+    <ClInclude Include="..\media\video_transceiver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../interop/interop_api.cpp" />
@@ -163,13 +168,18 @@
     <ClCompile Include="../interop/peer_connection_interop.cpp" />
     <ClCompile Include="../interop/local_video_track_interop.cpp" />
     <ClCompile Include="../media/local_video_track.cpp" />
+    <ClCompile Include="..\interop\audio_transceiver_interop.cpp" />
     <ClCompile Include="..\interop\local_audio_track_interop.cpp" />
     <ClCompile Include="..\interop\remote_audio_track_interop.cpp" />
     <ClCompile Include="..\interop\remote_video_track_interop.cpp" />
+    <ClCompile Include="..\interop\video_transceiver_interop.cpp" />
+    <ClCompile Include="..\media\audio_transceiver.cpp" />
     <ClCompile Include="..\media\local_audio_track.cpp" />
     <ClCompile Include="..\media\media_track.cpp" />
     <ClCompile Include="..\media\remote_audio_track.cpp" />
     <ClCompile Include="..\media\remote_video_track.cpp" />
+    <ClCompile Include="..\media\transceiver.cpp" />
+    <ClCompile Include="..\media\video_transceiver.cpp" />
     <ClCompile Include="..\mrs_errors.cpp" />
     <ClCompile Include="../interop/external_video_track_source_interop.cpp" />
     <ClCompile Include="..\media\external_video_track_source.cpp" />

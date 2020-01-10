@@ -21,6 +21,11 @@ namespace Microsoft.MixedReality.WebRTC
         public PeerConnection PeerConnection { get; private set; }
 
         /// <summary>
+        /// Video transceiver this track is part of.
+        /// </summary>
+        public VideoTransceiver Transceiver { get; private set; }
+
+        /// <summary>
         /// Track name as specified during creation. This property is immutable.
         /// For remote video track the property is specified by the remote peer.
         /// </summary>
@@ -78,10 +83,12 @@ namespace Microsoft.MixedReality.WebRTC
             Name = trackName;
         }
 
-        internal RemoteVideoTrack(RemoteVideoTrackHandle nativeHandle, PeerConnection peer, string trackName)
+        internal RemoteVideoTrack(RemoteVideoTrackHandle nativeHandle, PeerConnection peer,
+            VideoTransceiver transceiver, string trackName)
         {
             _nativeHandle = nativeHandle;
             PeerConnection = peer;
+            Transceiver = transceiver;
             Name = trackName;
             RegisterInteropCallbacks();
         }
@@ -161,6 +168,8 @@ namespace Microsoft.MixedReality.WebRTC
             Debug.Assert(PeerConnection == previousConnection);
             Debug.Assert(!_nativeHandle.IsClosed);
             PeerConnection = null;
+            Transceiver.OnRemoteTrackRemoved(this);
+            Transceiver = null;
         }
     }
 }

@@ -17,9 +17,9 @@ const mrsPeerConnectionInteropHandle kFakeInteropPeerConnectionHandle =
 const mrsRemoteAudioTrackInteropHandle kFakeInteropRemoteAudioTrackHandle =
     (void*)0x2;
 
-mrsRemoteAudioTrackInteropHandle MRS_CALL
-FakeIterop_RemoteAudioTrackCreate(mrsPeerConnectionInteropHandle /*parent*/,
-                                  const mrsRemoteAudioTrackConfig& /*config*/) noexcept {
+mrsRemoteAudioTrackInteropHandle MRS_CALL FakeIterop_RemoteAudioTrackCreate(
+    mrsPeerConnectionInteropHandle /*parent*/,
+    const mrsRemoteAudioTrackConfig& /*config*/) noexcept {
   return kFakeInteropRemoteAudioTrackHandle;
 }
 
@@ -113,10 +113,12 @@ TEST(AudioTrack, Simple) {
   // Create the local audio track on the local peer (#1)
   AudioDeviceConfiguration config{};
   LocalAudioTrackHandle audio_track1{};
-  ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalAudioTrack(pair.pc1(), "test_audio_track",
-                                                &config, &audio_track1));
+  AudioTransceiverHandle audio_transceiver1{};
+  ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalAudioTrack(
+                                  pair.pc1(), "test_audio_track", &config,
+                                  &audio_track1, &audio_transceiver1));
   ASSERT_NE(nullptr, audio_track1);
+  ASSERT_NE(nullptr, audio_transceiver1);
   ASSERT_NE(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
   // Connect #1 and #2
@@ -201,10 +203,12 @@ TEST(AudioTrack, Muted) {
   // Create the local audio track on the local peer (#1)
   AudioDeviceConfiguration config{};
   LocalAudioTrackHandle audio_track1{};
+  AudioTransceiverHandle audio_transceiver1{};
   ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalAudioTrack(pair.pc1(), "test_audio_track",
-                                                &config, &audio_track1));
+            mrsPeerConnectionAddLocalAudioTrack(pair.pc1(), "test_audio_track", &config,
+                                  &audio_track1, &audio_transceiver1));
   ASSERT_NE(nullptr, audio_track1);
+  ASSERT_NE(nullptr, audio_transceiver1);
   ASSERT_NE(mrsBool::kFalse, mrsLocalAudioTrackIsEnabled(audio_track1));
 
   // Disable the audio track; it should output only silence

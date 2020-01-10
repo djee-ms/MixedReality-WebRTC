@@ -6,7 +6,7 @@
 #include "callback.h"
 #include "interop/interop_api.h"
 #include "media/media_track.h"
-#include "str.h"
+#include "refptr.h"
 #include "tracked_object.h"
 #include "audio_frame_observer.h"
 
@@ -23,6 +23,7 @@ class AudioTrackInterface;
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
+class AudioTransceiver;
 
 /// A local audio track is a media track for a peer connection backed by a local
 /// source, and transmitted to a remote peer.
@@ -39,6 +40,7 @@ class PeerConnection;
 class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
  public:
   LocalAudioTrack(PeerConnection& owner,
+                  RefPtr<AudioTransceiver> transceiver,
                   rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
                   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
                   mrsLocalAudioTrackInteropHandle interop_handle) noexcept;
@@ -56,6 +58,9 @@ class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
   /// See |SetEnabled(bool)|.
   MRS_API [[nodiscard]] bool IsEnabled() const noexcept;
 
+  [[nodiscard]] MRS_API RefPtr<AudioTransceiver> GetTransceiver() const
+      noexcept;
+
   //
   // Advanced use
   //
@@ -70,12 +75,17 @@ class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
 
   void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
 
+  void OnTransceiverChanged(RefPtr<AudioTransceiver> newTransceiver);
+
  private:
   /// Underlying core implementation.
   rtc::scoped_refptr<webrtc::AudioTrackInterface> track_;
 
   /// RTP sender this track is associated with.
   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender_;
+
+  /// Transceiver this track is associated with, if any.
+  RefPtr<AudioTransceiver> transceiver_;
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsLocalAudioTrackInteropHandle interop_handle_{};

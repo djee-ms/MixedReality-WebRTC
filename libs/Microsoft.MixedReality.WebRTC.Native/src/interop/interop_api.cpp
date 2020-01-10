@@ -687,7 +687,8 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
     PeerConnectionHandle peer_handle,
     const char* track_name,
     const VideoDeviceConfiguration* config,
-    LocalVideoTrackHandle* track_handle) noexcept {
+    LocalVideoTrackHandle* track_handle_out,
+    VideoTransceiverHandle* transceiver_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
     RTC_LOG(LS_ERROR) << "Invalid empty local video track name.";
     return Result::kInvalidParameter;
@@ -696,11 +697,16 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
     RTC_LOG(LS_ERROR) << "Invalid NULL local video device configuration.";
     return Result::kInvalidParameter;
   }
-  if (!track_handle) {
+  if (!track_handle_out) {
     RTC_LOG(LS_ERROR) << "Invalid NULL local video track handle.";
     return Result::kInvalidParameter;
   }
-  *track_handle = nullptr;
+  if (!transceiver_handle_out) {
+    RTC_LOG(LS_ERROR) << "Invalid NULL video transceiver handle.";
+    return Result::kInvalidParameter;
+  }
+  *track_handle_out = nullptr;
+  *transceiver_handle_out = nullptr;
 
   auto peer = static_cast<PeerConnection*>(peer_handle);
   if (!peer) {
@@ -742,22 +748,30 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
         SimpleMediaConstraints::MaxFrameRate(config->framerate));
   }
 
+  // Create the video track source
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
       pc_factory->CreateVideoSource(std::move(video_capturer),
                                     videoConstraints.get());
   if (!video_source) {
     return Result::kUnknownError;
   }
+
+  // Create the video track
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
       pc_factory->CreateVideoTrack(track_name, video_source);
   if (!video_track) {
     RTC_LOG(LS_ERROR) << "Failed to create local video track.";
     return Result::kUnknownError;
   }
+
+  // Add the video track to the peer connection
   auto result = peer->AddLocalVideoTrack(std::move(video_track));
   if (result.ok()) {
     RefPtr<LocalVideoTrack>& video_track_wrapper = result.value();
-    *track_handle = video_track_wrapper.release();
+    RefPtr<VideoTransceiver> video_transceiver =
+        video_track_wrapper->GetTransceiver();
+    *track_handle_out = video_track_wrapper.release();
+    *transceiver_handle_out = video_transceiver.release();
     return Result::kSuccess;
   }
   RTC_LOG(LS_ERROR) << "Failed to add local video track to peer connection.";
@@ -768,11 +782,13 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
     PeerConnectionHandle peer_handle,
     const char* track_name,
     ExternalVideoTrackSourceHandle source_handle,
-    LocalVideoTrackHandle* track_handle_out) noexcept {
-  if (!track_handle_out) {
+    LocalVideoTrackHandle* track_handle_out,
+    VideoTransceiverHandle* transceiver_handle_out) noexcept {
+  if (!track_handle_out || !transceiver_handle_out) {
     return Result::kInvalidParameter;
   }
   *track_handle_out = nullptr;
+  *transceiver_handle_out = nullptr;
   auto peer = static_cast<PeerConnection*>(peer_handle);
   if (!peer) {
     return Result::kInvalidNativeHandle;
@@ -802,7 +818,10 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
   }
   auto result = peer->AddLocalVideoTrack(std::move(video_track));
   if (result.ok()) {
-    *track_handle_out = result.value().release();
+    LocalVideoTrack* const track = result.value().release();
+    RefPtr<Transceiver> transceiver = track->GetTransceiver();
+    *track_handle_out = track;  // owns the ref
+    *transceiver_handle_out = transceiver.release();  // owns the ref
     return Result::kSuccess;
   }
   RTC_LOG(LS_ERROR) << "Failed to add local video track: "
@@ -829,16 +848,22 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalAudioTrack(
     PeerConnectionHandle peerHandle,
     const char* track_name,
     const AudioDeviceConfiguration* /*config*/,
-    LocalAudioTrackHandle* track_handle) noexcept {
+    LocalAudioTrackHandle* track_handle_out,
+    AudioTransceiverHandle* transceiver_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
     RTC_LOG(LS_ERROR) << "Invalid empty local audio track name.";
     return Result::kInvalidParameter;
   }
-  if (!track_handle) {
+  if (!track_handle_out) {
     RTC_LOG(LS_ERROR) << "Invalid NULL local audio track handle.";
     return Result::kInvalidParameter;
   }
-  *track_handle = nullptr;
+  *track_handle_out = nullptr;
+  if (!transceiver_handle_out) {
+    RTC_LOG(LS_ERROR) << "Invalid NULL audio transceiver handle.";
+    return Result::kInvalidParameter;
+  }
+  *transceiver_handle_out = nullptr;
 
   auto peer = static_cast<PeerConnection*>(peerHandle);
   if (!peer) {
@@ -865,7 +890,10 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalAudioTrack(
   auto result = peer->AddLocalAudioTrack(std::move(audio_track));
   if (result.ok()) {
     RefPtr<LocalAudioTrack>& audio_track_wrapper = result.value();
-    *track_handle = audio_track_wrapper.release();
+    RefPtr<AudioTransceiver> transceiver =
+        audio_track_wrapper->GetTransceiver();
+    *track_handle_out = audio_track_wrapper.release();
+    *transceiver_handle_out = transceiver.release();
     return Result::kSuccess;
   }
   RTC_LOG(LS_ERROR) << "Failed to add local video track to peer connection.";

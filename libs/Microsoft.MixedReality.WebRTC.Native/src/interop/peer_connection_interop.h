@@ -30,4 +30,16 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterIceGatheringStateChangedCallback(
     mrsPeerConnectionIceGatheringStateChangedCallback callback,
     void* user_data) noexcept;
 
+MRS_API mrsResult MRS_CALL mrsPeerConnectionAddAudioTransceiver(
+    PeerConnectionHandle peer_handle,
+    const char* name,
+    const AudioTransceiverConfiguration* config,
+    AudioTransceiverHandle* handle) noexcept;
+
+MRS_API mrsResult MRS_CALL mrsPeerConnectionAddVideoTransceiver(
+    PeerConnectionHandle peer_handle,
+    const char* name,
+    const VideoTransceiverConfiguration* config,
+    VideoTransceiverHandle* handle) noexcept;
+
 }  // extern "C"

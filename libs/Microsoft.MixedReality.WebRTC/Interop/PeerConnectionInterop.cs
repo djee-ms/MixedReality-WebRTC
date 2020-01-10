@@ -287,6 +287,16 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public SdpSemantic SdpSemantic;
         }
 
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        internal struct AudioTransceiverInteropInitSettings
+        {
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        internal struct VideoTransceiverInteropInitSettings
+        {
+        }
+
         /// <summary>
         /// Helper structure to pass audio capture device configuration to the underlying C++ library.
         /// </summary>
@@ -527,20 +537,32 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             PeerConnectionDataChannelRemovedCallback callback, IntPtr userData);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsPeerConnectionAddAudioTransceiver")]
+        public static extern uint PeerConnection_AddAudioTransceiver(PeerConnectionHandle peerHandle,
+            ref AudioTransceiverInteropInitSettings settings, out AudioTransceiverHandle transceiverHandle);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsPeerConnectionAddVideoTransceiver")]
+        public static extern uint PeerConnection_AddVideoTransceiver(PeerConnectionHandle peerHandle,
+            ref VideoTransceiverInteropInitSettings settings, out VideoTransceiverHandle transceiverHandle);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddLocalVideoTrack")]
         public static extern uint PeerConnection_AddLocalVideoTrack(PeerConnectionHandle peerHandle,
-            string trackName, ref VideoDeviceConfiguration config, out LocalVideoTrackHandle trackHandle);
+            string trackName, ref VideoDeviceConfiguration config, out LocalVideoTrackHandle trackHandle,
+            out VideoTransceiverHandle transceiverHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddLocalVideoTrackFromExternalSource")]
         public static extern uint PeerConnection_AddLocalVideoTrackFromExternalSource(
             PeerConnectionHandle peerHandle, string trackName, ExternalVideoTrackSourceHandle sourceHandle,
-            out LocalVideoTrackHandle trackHandle);
+            out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddLocalAudioTrack")]
         public static extern uint PeerConnection_AddLocalAudioTrack(PeerConnectionHandle peerHandle,
-            string trackName, ref AudioDeviceConfiguration config, out LocalAudioTrackHandle trackHandle);
+            string trackName, ref AudioDeviceConfiguration config, out LocalAudioTrackHandle trackHandle,
+            out AudioTransceiverHandle transceiverHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddDataChannel")]
@@ -609,9 +631,10 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             string trackName, ExternalVideoTrackSource externalSource)
         {
             uint res = PeerConnection_AddLocalVideoTrackFromExternalSource(peerHandle, trackName, externalSource._nativeHandle,
-                out LocalVideoTrackHandle trackHandle);
+                out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
-            var track = new LocalVideoTrack(trackHandle, peer, trackName, externalSource);
+            var transceiver = new VideoTransceiver(transceiverHandle, peer);
+            var track = new LocalVideoTrack(trackHandle, peer, transceiver, trackName, externalSource);
             externalSource.OnTrackAddedToSource(track);
             return track;
         }

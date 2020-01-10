@@ -21,6 +21,11 @@ namespace Microsoft.MixedReality.WebRTC
         public PeerConnection PeerConnection { get; private set; }
 
         /// <summary>
+        /// Audio transceiver this track is part of.
+        /// </summary>
+        public AudioTransceiver Transceiver { get; private set; }
+
+        /// <summary>
         /// Track name as specified during creation. This property is immutable.
         /// </summary>
         public string Name { get; }
@@ -70,10 +75,13 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         private LocalAudioTrackInterop.InteropCallbackArgs _interopCallbackArgs;
 
-        internal LocalAudioTrack(LocalAudioTrackHandle nativeHandle, PeerConnection peer, string trackName)
+        internal LocalAudioTrack(LocalAudioTrackHandle nativeHandle, PeerConnection peer,
+            AudioTransceiver transceiver, string trackName)
         {
             _nativeHandle = nativeHandle;
             PeerConnection = peer;
+            Transceiver = transceiver;
+            transceiver.OnLocalTrackCreated(this);
             Name = trackName;
             RegisterInteropCallbacks();
         }
@@ -127,6 +135,8 @@ namespace Microsoft.MixedReality.WebRTC
             Debug.Assert(PeerConnection == previousConnection);
             Debug.Assert(!_nativeHandle.IsClosed);
             PeerConnection = null;
+            Transceiver.OnLocalTrackRemoved(this);
+            Transceiver = null;
         }
     }
 }

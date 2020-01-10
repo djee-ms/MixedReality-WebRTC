@@ -6,7 +6,7 @@
 #include "callback.h"
 #include "interop/interop_api.h"
 #include "media/media_track.h"
-#include "str.h"
+#include "refptr.h"
 #include "tracked_object.h"
 #include "video_frame_observer.h"
 
@@ -23,6 +23,7 @@ class VideoTrackInterface;
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
+class VideoTransceiver;
 
 /// A local video track is a media track for a peer connection backed by a local
 /// source, and transmitted to a remote peer.
@@ -39,6 +40,7 @@ class PeerConnection;
 class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
  public:
   LocalVideoTrack(PeerConnection& owner,
+                  RefPtr<VideoTransceiver> transceiver,
                   rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
                   mrsLocalVideoTrackInteropHandle interop_handle) noexcept;
@@ -54,7 +56,10 @@ class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
-  MRS_API [[nodiscard]] bool IsEnabled() const noexcept;
+  [[nodiscard]] MRS_API bool IsEnabled() const noexcept;
+
+  [[nodiscard]] MRS_API RefPtr<VideoTransceiver> GetTransceiver() const
+      noexcept;
 
   //
   // Advanced use
@@ -70,12 +75,17 @@ class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
 
   void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
 
+  void OnTransceiverChanged(RefPtr<VideoTransceiver> newTransceiver);
+
  private:
   /// Underlying core implementation.
   rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
 
   /// RTP sender this track is associated with.
   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender_;
+
+  /// Transceiver this track is associated with, if any.
+  RefPtr<VideoTransceiver> transceiver_;
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsLocalVideoTrackInteropHandle interop_handle_{};

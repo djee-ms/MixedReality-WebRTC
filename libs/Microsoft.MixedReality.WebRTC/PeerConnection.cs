@@ -440,6 +440,21 @@ namespace Microsoft.MixedReality.WebRTC
             VideoHdr8,
         };
 
+        public class TransceiverInitSettings
+        {
+
+        }
+
+        public class AudioTransceiverInitSettings : TransceiverInitSettings
+        {
+
+        }
+
+        public class VideoTransceiverInitSettings : TransceiverInitSettings
+        {
+
+        }
+
         /// <summary>
         /// Settings for adding a local audio track backed by a local audio capture device (e.g. microphone).
         /// </summary>
@@ -598,6 +613,20 @@ namespace Microsoft.MixedReality.WebRTC
         /// For ICE connection status, see the <see cref="IceStateChanged"/> event.
         /// </remarks>
         public bool IsConnected { get; private set; } = false;
+
+        /// <summary>
+        /// Collection of audio transceivers of the peer connection.
+        /// Once a transceiver is added to the peer connection, it cannot be removed,
+        /// but its tracks can be changed. This requires some renegotiation.
+        /// </summary>
+        public List<AudioTransceiver> AudioTransceivers { get; } = new List<AudioTransceiver>();
+
+        /// <summary>
+        /// Collection of video transceivers of the peer connection.
+        /// Once a transceiver is added to the peer connection, it cannot be removed,
+        /// but its tracks can be changed. This requires some renegotiation.
+        /// </summary>
+        public List<VideoTransceiver> VideoTransceivers { get; } = new List<VideoTransceiver>();
 
         /// <summary>
         /// Collection of local audio tracks attached to the peer connection.
@@ -1011,6 +1040,60 @@ namespace Microsoft.MixedReality.WebRTC
         #region Local audio and video tracks
 
         /// <summary>
+        /// Add to the current connection a new audio transceiver.
+        /// 
+        /// A transceiver is a container for a pair of audio tracks, one local sending to the remote
+        /// peer, and one remote receiving from the remote peer. Both are optional, and the transceiver
+        /// can be in receive-only mode (no local track), in send-only mode (no remote track), or
+        /// inactive (neither local nor remote track).
+        /// 
+        /// Once a transceiver is added to the peer connection, it cannot be removed, but its tracks can be
+        /// changed (this requires some renegotiation).
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns>The newly created transceiver.</returns>
+        public AudioTransceiver AddAudioTransceiver(AudioTransceiverInitSettings settings)
+        {
+            ThrowIfConnectionNotOpen();
+            var config = (settings != null ? new PeerConnectionInterop.AudioTransceiverInteropInitSettings
+            {
+                //< TODO
+            } : new PeerConnectionInterop.AudioTransceiverInteropInitSettings());
+            uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, ref config,
+                out AudioTransceiverHandle transceiverHandle);
+            Utils.ThrowOnErrorCode(res);
+            var transceiver = new AudioTransceiver(transceiverHandle, this);
+            return transceiver;
+        }
+
+        /// <summary>
+        /// Add to the current connection a new video transceiver.
+        /// 
+        /// A transceiver is a container for a pair of video tracks, one local sending to the remote
+        /// peer, and one remote receiving from the remote peer. Both are optional, and the transceiver
+        /// can be in receive-only mode (no local track), in send-only mode (no remote track), or
+        /// inactive (neither local nor remote track).
+        /// 
+        /// Once a transceiver is added to the peer connection, it cannot be removed, but its tracks can be
+        /// changed (this requires some renegotiation).
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns>The newly created transceiver.</returns>
+        public VideoTransceiver AddVideoTransceiver(VideoTransceiverInitSettings settings)
+        {
+            ThrowIfConnectionNotOpen();
+            var config = (settings != null ? new PeerConnectionInterop.VideoTransceiverInteropInitSettings
+            {
+                //< TODO
+            } : new PeerConnectionInterop.VideoTransceiverInteropInitSettings());
+            uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, ref config,
+                out VideoTransceiverHandle transceiverHandle);
+            Utils.ThrowOnErrorCode(res);
+            var transceiver = new VideoTransceiver(transceiverHandle, this);
+            return transceiver;
+        }
+
+        /// <summary>
         /// Add to the current connection a video track from a local video capture device (webcam).
         /// 
         /// The video track receives its video data from an underlying hidden source associated with
@@ -1094,11 +1177,13 @@ namespace Microsoft.MixedReality.WebRTC
                     trackName = Guid.NewGuid().ToString();
                 }
                 uint res = PeerConnectionInterop.PeerConnection_AddLocalVideoTrack(_nativePeerhandle, trackName, ref config,
-                    out LocalVideoTrackHandle trackHandle);
+                    out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
                 Utils.ThrowOnErrorCode(res);
-                var track = new LocalVideoTrack(trackHandle, this, trackName);
+                var transceiver = new VideoTransceiver(transceiverHandle, this);
+                var track = new LocalVideoTrack(trackHandle, this, transceiver, trackName);
                 lock (_tracksLock)
                 {
+                    VideoTransceivers.Add(transceiver);
                     LocalVideoTracks.Add(track);
                 }
                 return track;
@@ -1123,7 +1208,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <summary>
         /// Add a local video track backed by an external video source managed by the caller.
         /// Unlike with <see cref="AddLocalVideoTrackAsync(LocalVideoTrackSettings)"/> which manages
-        /// a local video capture device and automatically produce frames, an external video source
+        /// a local video capture device and automatically produces frames, an external video source
         /// provides video frames directly to WebRTC when asked to do so via the provided callback.
         /// </summary>
         /// <param name="trackName">Name of the new track.</param>
@@ -1166,11 +1251,13 @@ namespace Microsoft.MixedReality.WebRTC
                     trackName = Guid.NewGuid().ToString();
                 }
                 uint res = PeerConnectionInterop.PeerConnection_AddLocalAudioTrack(_nativePeerhandle, trackName, ref config,
-                    out LocalAudioTrackHandle trackHandle);
+                    out LocalAudioTrackHandle trackHandle, out AudioTransceiverHandle transceiverHandle);
                 Utils.ThrowOnErrorCode(res);
-                var track = new LocalAudioTrack(trackHandle, this, trackName);
+                var transceiver = new AudioTransceiver(transceiverHandle, this);
+                var track = new LocalAudioTrack(trackHandle, this, transceiver, trackName);
                 lock (_tracksLock)
                 {
+                    AudioTransceivers.Add(transceiver);
                     LocalAudioTracks.Add(track);
                 }
                 return track;

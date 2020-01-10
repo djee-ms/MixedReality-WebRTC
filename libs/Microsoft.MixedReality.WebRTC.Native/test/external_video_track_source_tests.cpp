@@ -139,11 +139,14 @@ TEST(ExternalVideoTrackSource, Simple) {
   ASSERT_NE(nullptr, source_handle1);
 
   // Create the local track itself for #1
-  LocalVideoTrackHandle track_handle1 = nullptr;
+  LocalVideoTrackHandle track_handle1{};
+  VideoTransceiverHandle transceiver_handle1{};
   ASSERT_EQ(mrsResult::kSuccess,
             mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-                pair.pc1(), "gen_track", source_handle1, &track_handle1));
+                pair.pc1(), "gen_track", source_handle1, &track_handle1,
+                &transceiver_handle1));
   ASSERT_NE(nullptr, track_handle1);
+  ASSERT_NE(nullptr, transceiver_handle1);
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
 
   // Connect #1 and #2

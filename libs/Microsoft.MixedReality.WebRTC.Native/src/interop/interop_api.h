@@ -136,6 +136,12 @@ using PeerConnectionHandle = void*;
 /// Opaque handle to a native MediaTrack C++ object.
 using MediaTrackHandle = void*;
 
+/// Opaque handle to a native AudioTransceiver C++ object.
+using AudioTransceiverHandle = void*;
+
+/// Opaque handle to a native VideoTransceiver C++ object.
+using VideoTransceiverHandle = void*;
+
 /// Opaque handle to a native LocalAudioTrack C++ object.
 using LocalAudioTrackHandle = void*;
 
@@ -466,6 +472,9 @@ enum class VideoProfileKind : int32_t {
   kVideoHdr8,
 };
 
+struct AudioTransceiverConfiguration {};
+struct VideoTransceiverConfiguration {};
+
 /// Configuration for opening a local audio capture device.
 struct AudioDeviceConfiguration {};
 
@@ -528,7 +537,8 @@ MRS_API mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
     PeerConnectionHandle peerHandle,
     const char* track_name,
     const VideoDeviceConfiguration* config,
-    LocalVideoTrackHandle* track_handle) noexcept;
+    LocalVideoTrackHandle* track_handle_out,
+    VideoTransceiverHandle* transceiver_handle_out) noexcept;
 
 using mrsRequestExternalI420AVideoFrameCallback =
     mrsResult(MRS_CALL*)(void* user_data,
@@ -554,7 +564,8 @@ mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
     PeerConnectionHandle peer_handle,
     const char* track_name,
     ExternalVideoTrackSourceHandle source_handle,
-    LocalVideoTrackHandle* track_handle) noexcept;
+    LocalVideoTrackHandle* track_handle_out,
+    VideoTransceiverHandle* transceiver_handle_out) noexcept;
 
 /// Remove a local video track from the given peer connection and destroy it.
 /// After this call returned, the video track handle is invalid.
@@ -575,7 +586,8 @@ MRS_API mrsResult MRS_CALL mrsPeerConnectionAddLocalAudioTrack(
     PeerConnectionHandle peer_handle,
     const char* track_name,
     const AudioDeviceConfiguration* config,
-    LocalAudioTrackHandle* track_handle) noexcept;
+    LocalAudioTrackHandle* track_handle_out,
+    AudioTransceiverHandle* transceiver_handle_out) noexcept;
 
 MRS_API mrsResult MRS_CALL mrsPeerConnectionRemoveLocalAudioTrack(
     PeerConnectionHandle peer_handle,
