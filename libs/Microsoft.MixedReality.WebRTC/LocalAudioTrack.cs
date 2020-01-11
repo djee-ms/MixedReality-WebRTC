@@ -81,7 +81,7 @@ namespace Microsoft.MixedReality.WebRTC
             _nativeHandle = nativeHandle;
             PeerConnection = peer;
             Transceiver = transceiver;
-            transceiver.OnLocalTrackCreated(this);
+            transceiver.OnLocalTrackAdded(this);
             Name = trackName;
             RegisterInteropCallbacks();
         }
@@ -130,10 +130,20 @@ namespace Microsoft.MixedReality.WebRTC
             AudioFrameReady?.Invoke(frame);
         }
 
+        internal void OnTrackAdded(PeerConnection newConnection, AudioTransceiver newTransceiver)
+        {
+            Debug.Assert(!_nativeHandle.IsClosed);
+            Debug.Assert(PeerConnection == null);
+            Debug.Assert(Transceiver == null);
+            PeerConnection = newConnection;
+            Transceiver = newTransceiver;
+            newTransceiver.OnLocalTrackAdded(this);
+        }
+
         internal void OnTrackRemoved(PeerConnection previousConnection)
         {
-            Debug.Assert(PeerConnection == previousConnection);
             Debug.Assert(!_nativeHandle.IsClosed);
+            Debug.Assert(PeerConnection == previousConnection);
             PeerConnection = null;
             Transceiver.OnLocalTrackRemoved(this);
             Transceiver = null;

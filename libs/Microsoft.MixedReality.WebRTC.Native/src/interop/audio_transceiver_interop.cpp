@@ -30,6 +30,17 @@ mrsAudioTransceiverRemoveRef(AudioTransceiverHandle handle) noexcept {
   }
 }
 
+mrsResult MRS_CALL
+mrsAudioTransceiverSetLocalTrack(AudioTransceiverHandle transceiver_handle,
+                                 LocalAudioTrackHandle track_handle) noexcept {
+  if (!transceiver_handle || !track_handle) {
+    return Result::kInvalidNativeHandle;
+  }
+  auto transceiver = static_cast<AudioTransceiver*>(transceiver_handle);
+  auto track = static_cast<LocalAudioTrack*>(track_handle);
+  return transceiver->SetLocalTrack(track);
+}
+
 mrsResult MRS_CALL mrsAudioTransceiverGetLocalTrack(
     AudioTransceiverHandle transceiver_handle,
     LocalAudioTrackHandle* track_handle_out) noexcept {

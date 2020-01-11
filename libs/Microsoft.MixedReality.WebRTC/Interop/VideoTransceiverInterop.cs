@@ -67,14 +67,19 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static unsafe extern void VideoTransceiver_RemoveRef(IntPtr handle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsVideoTransceiverSetLocalTrack")]
+        public static unsafe extern uint VideoTransceiver_SetLocalTrack(VideoTransceiverHandle handle,
+            LocalVideoTrackHandle trackHandle);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsVideoTransceiverGetLocalTrack")]
         public static unsafe extern uint VideoTransceiver_GetLocalTrack(VideoTransceiverHandle handle,
-            ref LocalVideoTrackHandle trackHandle);
+            out LocalVideoTrackHandle trackHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsVideoTransceiverGetRemoteTrack")]
         public static unsafe extern uint VideoTransceiver_GetRemoteTrack(VideoTransceiverHandle handle,
-            ref RemoteVideoTrackHandle trackHandle);
+            out RemoteVideoTrackHandle trackHandle);
 
         #endregion
     }

@@ -67,6 +67,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static unsafe extern void AudioTransceiver_RemoveRef(IntPtr handle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsAudioTransceiverSetLocalTrack")]
+        public static unsafe extern uint AudioTransceiver_SetLocalTrack(AudioTransceiverHandle handle,
+            LocalAudioTrackHandle trackHandle);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsAudioTransceiverGetLocalTrack")]
         public static unsafe extern uint AudioTransceiver_GetLocalTrack(AudioTransceiverHandle handle,
             ref LocalAudioTrackHandle trackHandle);

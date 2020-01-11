@@ -286,6 +286,18 @@ namespace Microsoft.MixedReality.WebRTC
     public class PeerConnection : IDisposable
     {
         /// <summary>
+        /// Delegate for <see cref="AudioTransceiverAdded"/> event.
+        /// </summary>
+        /// <param name="transceiver">The newly added audio transceiver.</param>
+        public delegate void AudioTransceiverAddedDelegate(AudioTransceiver transceiver);
+
+        /// <summary>
+        /// Delegate for <see cref="VideoTransceiverAdded"/> event.
+        /// </summary>
+        /// <param name="transceiver">The newly added video transceiver.</param>
+        public delegate void VideoTransceiverAddedDelegate(VideoTransceiver transceiver);
+
+        /// <summary>
         /// Delegate for <see cref="AudioTrackAdded"/> event.
         /// </summary>
         /// <param name="track">The newly added audio track.</param>
@@ -699,6 +711,28 @@ namespace Microsoft.MixedReality.WebRTC
         public event Action RenegotiationNeeded;
 
         /// <summary>
+        /// Event that occurs when an audio transceiver is added to the peer connection, either
+        /// manually using <see cref="AddAudioTransceiver(AudioTransceiverInitSettings)"/>, or
+        /// automatically as a result of a new session negotiation.
+        /// </summary>
+        /// <remarks>
+        /// Transceivers cannot be removed from the peer connection, so there is no
+        /// <c>AudioTransceiverRemoved</c> event.
+        /// </remarks>
+        public event AudioTransceiverAddedDelegate AudioTransceiverAdded;
+
+        /// <summary>
+        /// Event that occurs when a video transceiver is added to the peer connection, either
+        /// manually using <see cref="AddVideoTransceiver(VideoTransceiverInitSettings)"/>, or
+        /// automatically as a result of a new session negotiation.
+        /// </summary>
+        /// <remarks>
+        /// Transceivers cannot be removed from the peer connection, so there is no
+        /// <c>VideoTransceiverRemoved</c> event.
+        /// </remarks>
+        public event VideoTransceiverAddedDelegate VideoTransceiverAdded;
+
+        /// <summary>
         /// Event that occurs when a remote audio track is added to the current connection.
         /// </summary>
         public event AudioTrackAddedDelegate AudioTrackAdded;
@@ -1063,6 +1097,7 @@ namespace Microsoft.MixedReality.WebRTC
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             var transceiver = new AudioTransceiver(transceiverHandle, this);
+            AudioTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
 
@@ -1090,6 +1125,7 @@ namespace Microsoft.MixedReality.WebRTC
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             var transceiver = new VideoTransceiver(transceiverHandle, this);
+            VideoTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
 

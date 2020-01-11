@@ -30,6 +30,17 @@ mrsVideoTransceiverRemoveRef(VideoTransceiverHandle handle) noexcept {
   }
 }
 
+mrsResult MRS_CALL
+mrsVideoTransceiverSetLocalTrack(VideoTransceiverHandle transceiver_handle,
+                                 LocalVideoTrackHandle track_handle) noexcept {
+  if (!transceiver_handle || !track_handle) {
+    return Result::kInvalidNativeHandle;
+  }
+  auto transceiver = static_cast<VideoTransceiver*>(transceiver_handle);
+  auto track = static_cast<LocalVideoTrack*>(track_handle);
+  return transceiver->SetLocalTrack(track);
+}
+
 mrsResult MRS_CALL mrsVideoTransceiverGetLocalTrack(
     VideoTransceiverHandle transceiver_handle,
     LocalVideoTrackHandle* track_handle_out) noexcept {

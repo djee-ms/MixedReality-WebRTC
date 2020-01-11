@@ -61,7 +61,23 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="track">The new local audio track sending data to the remote peer.</param>
         public void SetLocalTrack(LocalAudioTrack track)
         {
-            throw new NotImplementedException(); //< TODO
+            if (track.PeerConnection != PeerConnection)
+            {
+                throw new InvalidOperationException($"Cannot set track {track} of peer connection {track.PeerConnection} on audio transceiver {this} of different peer connection {PeerConnection}.");
+            }
+            if (track == _localTrack)
+            {
+                return;
+            }
+            var res = AudioTransceiverInterop.AudioTransceiver_SetLocalTrack(_nativeHandle, track._nativeHandle);
+            Utils.ThrowOnErrorCode(res);
+            var peerConnection = PeerConnection; // this gets reset below
+            _localTrack.OnTrackRemoved(peerConnection);
+            _localTrack = track;
+            _localTrack.OnTrackAdded(peerConnection, this);
+            Debug.Assert(_localTrack.PeerConnection == PeerConnection);
+            Debug.Assert(_localTrack.Transceiver == this);
+            Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
         }
 
         /// <summary>
@@ -74,7 +90,7 @@ namespace Microsoft.MixedReality.WebRTC
             throw new NotImplementedException(); //< TODO
         }
 
-        internal void OnLocalTrackCreated(LocalAudioTrack track)
+        internal void OnLocalTrackAdded(LocalAudioTrack track)
         {
             Debug.Assert(_localTrack == null);
             _localTrack = track;
