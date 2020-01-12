@@ -82,5 +82,41 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             out RemoteVideoTrackHandle trackHandle);
 
         #endregion
+
+
+        #region Marshaling data structures
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct CreateConfig
+        {
+        }
+
+        #endregion
+
+
+        #region Native callbacks
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        public delegate IntPtr CreateObjectCallback(IntPtr peer, in CreateConfig config);
+
+        [MonoPInvokeCallback(typeof(CreateObjectCallback))]
+        public static IntPtr VideoTransceiverCreateObjectCallback(IntPtr peer, in CreateConfig config)
+        {
+            var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
+            var videoTranceiverWrapper = CreateWrapper(peerWrapper, in config);
+            return Utils.MakeWrapperRef(videoTranceiverWrapper);
+        }
+
+        #endregion
+
+
+        #region Utilities
+
+        public static VideoTransceiver CreateWrapper(PeerConnection parent, in CreateConfig config)
+        {
+            return new VideoTransceiver(parent);
+        }
+
+        #endregion
     }
 }

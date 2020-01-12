@@ -213,14 +213,15 @@ class PeerConnection : public TrackedObject {
   //
 
   virtual MRS_API ErrorOr<RefPtr<VideoTransceiver>> AddVideoTransceiver(
-      std::string_view name,
-      const VideoTransceiverConfiguration& config) noexcept = 0;
+      const VideoTransceiverInitConfig& config) noexcept = 0;
 
   /// Add a video track to the peer connection. If no RTP sender/transceiver
   /// exist, create a new one for that track. Otherwise try to reuse an existing
   /// one.
   virtual MRS_API ErrorOr<RefPtr<LocalVideoTrack>> AddLocalVideoTrack(
-      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) noexcept = 0;
+      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track,
+      mrsVideoTransceiverInteropHandle transceiver_interop_handle,
+      mrsLocalVideoTrackInteropHandle track_interop_handle) noexcept = 0;
 
   /// Remove a local video track from the peer connection.
   /// The underlying RTP sender/transceiver are kept alive but inactive.
@@ -235,8 +236,10 @@ class PeerConnection : public TrackedObject {
 
   /// Callback invoked when a remote video track is added to the peer
   /// connection.
-  using VideoTrackAddedCallback =
-      Callback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>;
+  using VideoTrackAddedCallback = Callback<mrsRemoteVideoTrackInteropHandle,
+                                           RemoteVideoTrackHandle,
+                                           mrsVideoTransceiverInteropHandle,
+                                           VideoTransceiverHandle>;
 
   /// Register a custom |VideoTrackAddedCallback| invoked when a remote video
   /// track is added to the peer connection. Only one callback can be registered
@@ -246,8 +249,10 @@ class PeerConnection : public TrackedObject {
 
   /// Callback invoked when a remote video track is removed from the peer
   /// connection.
-  using VideoTrackRemovedCallback =
-      Callback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>;
+  using VideoTrackRemovedCallback = Callback<mrsRemoteVideoTrackInteropHandle,
+                                             RemoteVideoTrackHandle,
+                                             mrsVideoTransceiverInteropHandle,
+                                             VideoTransceiverHandle>;
 
   /// Register a custom |VideoTrackRemovedCallback| invoked when a remote video
   /// track is removed from the peer connection. Only one callback can be
@@ -288,14 +293,15 @@ class PeerConnection : public TrackedObject {
   //
 
   virtual MRS_API ErrorOr<RefPtr<AudioTransceiver>> AddAudioTransceiver(
-      std::string_view name,
-      const AudioTransceiverConfiguration& config) noexcept = 0;
+      const AudioTransceiverInitConfig& config) noexcept = 0;
 
   /// Add an audio track to the peer connection. If no RTP sender/transceiver
   /// exist, create a new one for that track. Otherwise try to reuse an existing
   /// one.
   virtual MRS_API ErrorOr<RefPtr<LocalAudioTrack>> AddLocalAudioTrack(
-      rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track) noexcept = 0;
+      rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track,
+      mrsAudioTransceiverInteropHandle transceiver_interop_handle,
+      mrsLocalAudioTrackInteropHandle track_interop_handle) noexcept = 0;
 
   /// Remove an existing local audio track from the peer connection.
   /// The underlying RTP sender/transceiver are kept alive but inactive.
@@ -304,8 +310,10 @@ class PeerConnection : public TrackedObject {
 
   /// Callback invoked when a remote audio track is added to the peer
   /// connection.
-  using AudioTrackAddedCallback =
-      Callback<mrsRemoteAudioTrackInteropHandle, RemoteAudioTrackHandle>;
+  using AudioTrackAddedCallback = Callback<mrsRemoteAudioTrackInteropHandle,
+                                           RemoteAudioTrackHandle,
+                                           mrsAudioTransceiverInteropHandle,
+                                           AudioTransceiverHandle>;
 
   /// Register a custom AudioTrackAddedCallback invoked when a remote audio
   /// track is is added to the peer connection. Only one callback can be
@@ -315,8 +323,10 @@ class PeerConnection : public TrackedObject {
 
   /// Callback invoked when a remote audio track is removed from the peer
   /// connection.
-  using AudioTrackRemovedCallback =
-      Callback<mrsRemoteAudioTrackInteropHandle, RemoteAudioTrackHandle>;
+  using AudioTrackRemovedCallback = Callback<mrsRemoteAudioTrackInteropHandle,
+                                             RemoteAudioTrackHandle,
+                                             mrsAudioTransceiverInteropHandle,
+                                             AudioTransceiverHandle>;
 
   /// Register a custom AudioTrackRemovedCallback invoked when a remote audio
   /// track is removed from the peer connection. Only one callback can be

@@ -7,7 +7,7 @@
 #include "callback.h"
 #include "interop/interop_api.h"
 #include "media_track.h"
-#include "str.h"
+#include "refptr.h"
 #include "tracked_object.h"
 
 namespace rtc {
@@ -23,6 +23,7 @@ class AudioTrackInterface;
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
+class AudioTransceiver;
 
 /// A remote audio track is a media track for a peer connection backed by a
 /// remote audio stream received from the remote peer.
@@ -33,6 +34,7 @@ class PeerConnection;
 class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
  public:
   RemoteAudioTrack(PeerConnection& owner,
+                   RefPtr<AudioTransceiver> transceiver,
                    rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
                    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
                    mrsRemoteAudioTrackInteropHandle interop_handle) noexcept;
@@ -58,13 +60,9 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
   // Advanced use
   //
 
-  [[nodiscard]] webrtc::AudioTrackInterface* impl() const noexcept {
-    return track_;
-  }
-
-  [[nodiscard]] webrtc::RtpReceiverInterface* receiver() const noexcept {
-    return receiver_;
-  }
+  [[nodiscard]] webrtc::AudioTrackInterface* impl() const;
+  [[nodiscard]] webrtc::RtpReceiverInterface* receiver() const;
+  [[nodiscard]] AudioTransceiver* GetTransceiver() const;
 
   [[nodiscard]] mrsRemoteAudioTrackInteropHandle GetInteropHandle() const
       noexcept {
@@ -80,6 +78,9 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
 
   /// RTP sender this track is associated with.
   rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver_;
+
+  /// Transceiver this track is associated with, if any.
+  RefPtr<AudioTransceiver> transceiver_;
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsRemoteAudioTrackInteropHandle interop_handle_{};

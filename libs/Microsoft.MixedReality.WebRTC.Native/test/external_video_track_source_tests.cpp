@@ -107,7 +107,10 @@ void ValidateQuadTestFrame(const void* data,
 
 // PeerConnectionVideoTrackAddedCallback
 using VideoTrackAddedCallback =
-    InteropCallback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>;
+    InteropCallback<mrsRemoteVideoTrackInteropHandle,
+                    RemoteVideoTrackHandle,
+                    mrsVideoTransceiverInteropHandle,
+                    VideoTransceiverHandle>;
 
 // PeerConnectionArgb32VideoFrameCallback
 using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
@@ -124,7 +127,8 @@ TEST(ExternalVideoTrackSource, Simple) {
   VideoTrackAddedCallback track_added2_cb =
       [&track_handle2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle native_handle) {
+          RemoteVideoTrackHandle native_handle,
+          mrsVideoTransceiverInteropHandle, VideoTransceiverHandle) {
         track_handle2 = native_handle;
         track_added2_ev.Set();
       };
@@ -141,9 +145,11 @@ TEST(ExternalVideoTrackSource, Simple) {
   // Create the local track itself for #1
   LocalVideoTrackHandle track_handle1{};
   VideoTransceiverHandle transceiver_handle1{};
+  LocalVideoTrackFromExternalSourceInitConfig track_config{};
+  track_config.source_handle = source_handle1;
   ASSERT_EQ(mrsResult::kSuccess,
             mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-                pair.pc1(), "gen_track", source_handle1, &track_handle1,
+                pair.pc1(), "gen_track", &track_config, &track_handle1,
                 &transceiver_handle1));
   ASSERT_NE(nullptr, track_handle1);
   ASSERT_NE(nullptr, transceiver_handle1);

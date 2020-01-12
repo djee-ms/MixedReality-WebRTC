@@ -75,15 +75,25 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         private LocalAudioTrackInterop.InteropCallbackArgs _interopCallbackArgs;
 
-        internal LocalAudioTrack(LocalAudioTrackHandle nativeHandle, PeerConnection peer,
-            AudioTransceiver transceiver, string trackName)
+        // Constructor for interop-based creation; SetHandle() will be called later
+        internal LocalAudioTrack(PeerConnection peer, AudioTransceiver transceiver, string trackName)
         {
-            _nativeHandle = nativeHandle;
             PeerConnection = peer;
             Transceiver = transceiver;
             transceiver.OnLocalTrackAdded(this);
             Name = trackName;
             RegisterInteropCallbacks();
+        }
+
+        internal void SetHandle(LocalAudioTrackHandle handle)
+        {
+            Debug.Assert(!handle.IsClosed);
+            // Either first-time assign or no-op (assign same value again)
+            Debug.Assert(_nativeHandle.IsInvalid || (_nativeHandle == handle));
+            if (_nativeHandle != handle)
+            {
+                _nativeHandle = handle;
+            }
         }
 
         private void RegisterInteropCallbacks()

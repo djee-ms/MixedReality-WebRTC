@@ -72,20 +72,11 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         private RemoteAudioTrackInterop.InteropCallbackArgs _interopCallbackArgs;
 
+        // Constructor for interop-based creation; SetHandle() will be called later
         internal RemoteAudioTrack(PeerConnection peer, string trackName)
         {
             PeerConnection = peer;
             Name = trackName;
-        }
-
-        internal RemoteAudioTrack(RemoteAudioTrackHandle nativeHandle, PeerConnection peer,
-            AudioTransceiver transceiver, string trackName)
-        {
-            _nativeHandle = nativeHandle;
-            PeerConnection = peer;
-            Transceiver = transceiver;
-            Name = trackName;
-            RegisterInteropCallbacks();
         }
 
         internal void SetHandle(RemoteAudioTrackHandle handle)
@@ -146,6 +137,16 @@ namespace Microsoft.MixedReality.WebRTC
         {
             MainEventSource.Log.RemoteAudioFrameReady(frame.bitsPerSample, frame.sampleRate, frame.channelCount, frame.sampleCount);
             AudioFrameReady?.Invoke(frame);
+        }
+
+        internal void OnTrackAddedToTransceiver(AudioTransceiver transceiver)
+        {
+            Debug.Assert(PeerConnection == transceiver.PeerConnection);
+            Debug.Assert(!_nativeHandle.IsClosed);
+            Debug.Assert(Transceiver == null);
+            Debug.Assert(transceiver != null);
+            Transceiver = transceiver;
+            transceiver.OnRemoteTrackAdded(this);
         }
 
         internal void OnTrackRemoved(PeerConnection previousConnection)

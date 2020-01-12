@@ -25,7 +25,10 @@ mrsRemoteAudioTrackInteropHandle MRS_CALL FakeIterop_RemoteAudioTrackCreate(
 
 // PeerConnectionAudioTrackAddedCallback
 using AudioTrackAddedCallback =
-    InteropCallback<mrsRemoteVideoTrackInteropHandle, RemoteAudioTrackHandle>;
+    InteropCallback<mrsRemoteVideoTrackInteropHandle,
+                    RemoteAudioTrackHandle,
+                    mrsAudioTransceiverInteropHandle,
+                    AudioTransceiverHandle>;
 
 // PeerConnectionAudioFrameCallback
 using AudioFrameCallback = InteropCallback<const AudioFrame&>;
@@ -103,7 +106,8 @@ TEST(AudioTrack, Simple) {
   AudioTrackAddedCallback track_added2_cb =
       [&audio_track2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteAudioTrackHandle native_handle) {
+          RemoteAudioTrackHandle native_handle,
+          mrsAudioTransceiverInteropHandle, AudioTransceiverHandle) {
         audio_track2 = native_handle;
         track_added2_ev.Set();
       };
@@ -111,7 +115,7 @@ TEST(AudioTrack, Simple) {
                                                    CB(track_added2_cb));
 
   // Create the local audio track on the local peer (#1)
-  AudioDeviceConfiguration config{};
+  LocalAudioTrackInitConfig config{};
   LocalAudioTrackHandle audio_track1{};
   AudioTransceiverHandle audio_transceiver1{};
   ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalAudioTrack(
@@ -193,7 +197,8 @@ TEST(AudioTrack, Muted) {
   AudioTrackAddedCallback track_added2_cb =
       [&audio_track2, &track_added2_ev](
           mrsRemoteAudioTrackInteropHandle /*interop_handle*/,
-          RemoteAudioTrackHandle native_handle) {
+          RemoteAudioTrackHandle native_handle,
+          mrsAudioTransceiverInteropHandle, AudioTransceiverHandle) {
         audio_track2 = native_handle;
         track_added2_ev.Set();
       };
@@ -201,11 +206,11 @@ TEST(AudioTrack, Muted) {
                                                    CB(track_added2_cb));
 
   // Create the local audio track on the local peer (#1)
-  AudioDeviceConfiguration config{};
+  LocalAudioTrackInitConfig config{};
   LocalAudioTrackHandle audio_track1{};
   AudioTransceiverHandle audio_transceiver1{};
-  ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddLocalAudioTrack(pair.pc1(), "test_audio_track", &config,
+  ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalAudioTrack(
+                                  pair.pc1(), "test_audio_track", &config,
                                   &audio_track1, &audio_transceiver1));
   ASSERT_NE(nullptr, audio_track1);
   ASSERT_NE(nullptr, audio_transceiver1);

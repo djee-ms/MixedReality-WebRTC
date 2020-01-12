@@ -20,7 +20,8 @@ class VideoTransceiver : public Transceiver {
   VideoTransceiver(PeerConnection& owner) noexcept;
   VideoTransceiver(
       PeerConnection& owner,
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept;
+      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
+      mrsVideoTransceiverInteropHandle interop_handle) noexcept;
   MRS_API ~VideoTransceiver() override;
 
   MRS_API Result SetLocalTrack(RefPtr<LocalVideoTrack> local_track) noexcept;
@@ -34,14 +35,21 @@ class VideoTransceiver : public Transceiver {
   }
 
   //
-  // Advanced
+  // Internal
   //
 
   void OnLocalTrackCreated(RefPtr<LocalVideoTrack> track);
+  void OnRemoteTrackCreated(RefPtr<RemoteVideoTrack> track);
+  mrsVideoTransceiverInteropHandle GetInteropHandle() const {
+    return interop_handle_;
+  }
 
  protected:
   RefPtr<LocalVideoTrack> local_track_;
   RefPtr<RemoteVideoTrack> remote_track_;
+
+  /// Optional interop handle, if associated with an interop wrapper.
+  mrsVideoTransceiverInteropHandle interop_handle_{};
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

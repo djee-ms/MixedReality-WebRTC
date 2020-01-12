@@ -20,7 +20,8 @@ class AudioTransceiver : public Transceiver {
   AudioTransceiver(PeerConnection& owner) noexcept;
   AudioTransceiver(
       PeerConnection& owner,
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept;
+      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
+      mrsAudioTransceiverInteropHandle interop_handle) noexcept;
   MRS_API ~AudioTransceiver() override;
 
   MRS_API Result SetLocalTrack(RefPtr<LocalAudioTrack> local_track) noexcept;
@@ -34,14 +35,21 @@ class AudioTransceiver : public Transceiver {
   }
 
   //
-  // Advanced
+  // Internal
   //
 
   void OnLocalTrackCreated(RefPtr<LocalAudioTrack> track);
+  void OnRemoteTrackCreated(RefPtr<RemoteAudioTrack> track);
+  mrsAudioTransceiverInteropHandle GetInteropHandle() const {
+    return interop_handle_;
+  }
 
  protected:
   RefPtr<LocalAudioTrack> local_track_;
   RefPtr<RemoteAudioTrack> remote_track_;
+
+  /// Optional interop handle, if associated with an interop wrapper.
+  mrsAudioTransceiverInteropHandle interop_handle_{};
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

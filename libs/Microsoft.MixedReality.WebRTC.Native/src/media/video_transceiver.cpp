@@ -12,8 +12,10 @@ VideoTransceiver::VideoTransceiver(PeerConnection& owner) noexcept
 
 VideoTransceiver::VideoTransceiver(
     PeerConnection& owner,
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept
-    : Transceiver(MediaKind::kVideo, owner, transceiver) {}
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
+    mrsVideoTransceiverInteropHandle interop_handle) noexcept
+    : Transceiver(MediaKind::kVideo, owner, transceiver),
+      interop_handle_(interop_handle) {}
 
 VideoTransceiver::~VideoTransceiver() {}
 
@@ -44,6 +46,11 @@ Result VideoTransceiver::SetLocalTrack(
 void VideoTransceiver::OnLocalTrackCreated(RefPtr<LocalVideoTrack> track) {
   RTC_DCHECK(!local_track_);
   local_track_ = std::move(track);
+}
+
+void VideoTransceiver::OnRemoteTrackCreated(RefPtr<RemoteVideoTrack> track) {
+  RTC_DCHECK(!remote_track_);
+  remote_track_ = std::move(track);
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

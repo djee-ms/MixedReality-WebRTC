@@ -39,19 +39,17 @@ void MRS_CALL mrsPeerConnectionRegisterIceGatheringStateChangedCallback(
   }
 }
 
-mrsResult MRS_CALL mrsPeerConnectionAddAudioTransceiver(
-    PeerConnectionHandle peer_handle,
-    const char* name,
-    const AudioTransceiverConfiguration* config,
-    AudioTransceiverHandle* handle) noexcept {
-  if (!handle) {
+mrsResult MRS_CALL
+mrsPeerConnectionAddAudioTransceiver(PeerConnectionHandle peer_handle,
+                                     const AudioTransceiverInitConfig* config,
+                                     AudioTransceiverHandle* handle) noexcept {
+  if (!handle || !config) {
     return Result::kInvalidParameter;
   }
   *handle = nullptr;
   if (auto peer = static_cast<PeerConnection*>(peer_handle)) {
     ErrorOr<RefPtr<AudioTransceiver>> audio_transceiver =
-        peer->AddAudioTransceiver(
-            name, config ? *config : AudioTransceiverConfiguration{});
+        peer->AddAudioTransceiver(*config);
     if (audio_transceiver.ok()) {
       *handle = (AudioTransceiverHandle)audio_transceiver.value().release();
       return Result::kSuccess;
@@ -61,19 +59,17 @@ mrsResult MRS_CALL mrsPeerConnectionAddAudioTransceiver(
   return Result::kInvalidNativeHandle;
 }
 
-mrsResult MRS_CALL mrsPeerConnectionAddVideoTransceiver(
-    PeerConnectionHandle peer_handle,
-    const char* name,
-    const VideoTransceiverConfiguration* config,
-    VideoTransceiverHandle* handle) noexcept {
-  if (!handle) {
+mrsResult MRS_CALL
+mrsPeerConnectionAddVideoTransceiver(PeerConnectionHandle peer_handle,
+                                     const VideoTransceiverInitConfig* config,
+                                     VideoTransceiverHandle* handle) noexcept {
+  if (!handle || !config) {
     return Result::kInvalidParameter;
   }
   *handle = nullptr;
   if (auto peer = static_cast<PeerConnection*>(peer_handle)) {
     ErrorOr<RefPtr<VideoTransceiver>> video_transceiver =
-        peer->AddVideoTransceiver(
-            name, config ? *config : VideoTransceiverConfiguration{});
+        peer->AddVideoTransceiver(*config);
     if (video_transceiver.ok()) {
       *handle = (AudioTransceiverHandle)video_transceiver.value().release();
       return Result::kSuccess;

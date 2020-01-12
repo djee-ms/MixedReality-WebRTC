@@ -13,8 +13,10 @@ AudioTransceiver::AudioTransceiver(PeerConnection& owner) noexcept
 
 AudioTransceiver::AudioTransceiver(
     PeerConnection& owner,
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept
-    : Transceiver(MediaKind::kAudio, owner, transceiver) {}
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
+    mrsAudioTransceiverInteropHandle interop_handle) noexcept
+    : Transceiver(MediaKind::kAudio, owner, transceiver),
+      interop_handle_(interop_handle) {}
 
 AudioTransceiver::~AudioTransceiver() {}
 
@@ -45,6 +47,11 @@ Result AudioTransceiver::SetLocalTrack(
 void AudioTransceiver::OnLocalTrackCreated(RefPtr<LocalAudioTrack> track) {
   RTC_DCHECK(!local_track_);
   local_track_ = std::move(track);
+}
+
+void AudioTransceiver::OnRemoteTrackCreated(RefPtr<RemoteAudioTrack> track) {
+  RTC_DCHECK(!remote_track_);
+  remote_track_ = std::move(track);
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

@@ -480,7 +480,7 @@ namespace Microsoft.MixedReality.WebRTC
             /// The track name can optionally be empty, in which case the implementation will create a valid
             /// random track name.
             /// </summary>
-            public string trackName = string.Empty; 
+            public string trackName = string.Empty;
         }
 
         /// <summary>
@@ -853,6 +853,8 @@ namespace Microsoft.MixedReality.WebRTC
                 _interopCallbacks = new PeerConnectionInterop.InteropCallbacks()
                 {
                     Peer = this,
+                    AudioTransceiverCreateObjectCallback = AudioTransceiverInterop.AudioTransceiverCreateObjectCallback,
+                    VideoTransceiverCreateObjectCallback = VideoTransceiverInterop.VideoTransceiverCreateObjectCallback,
                     RemoteAudioTrackCreateObjectCallback = RemoteAudioTrackInterop.RemoteAudioTrackCreateObjectCallback,
                     RemoteVideoTrackCreateObjectCallback = RemoteVideoTrackInterop.RemoteVideoTrackCreateObjectCallback,
                     DataChannelCreateObjectCallback = DataChannelInterop.DataChannelCreateObjectCallback,
@@ -943,6 +945,8 @@ namespace Microsoft.MixedReality.WebRTC
                         var self = GCHandle.ToIntPtr(_selfHandle);
                         var interopCallbacks = new PeerConnectionInterop.MarshaledInteropCallbacks
                         {
+                            AudioTransceiverCreateObjectCallback = _interopCallbacks.AudioTransceiverCreateObjectCallback,
+                            VideoTransceiverCreateObjectCallback = _interopCallbacks.VideoTransceiverCreateObjectCallback,
                             RemoteAudioTrackCreateObjectCallback = _interopCallbacks.RemoteAudioTrackCreateObjectCallback,
                             RemoteVideoTrackCreateObjectCallback = _interopCallbacks.RemoteVideoTrackCreateObjectCallback,
                             DataChannelCreateObjectCallback = _interopCallbacks.DataChannelCreateObjectCallback
@@ -1089,14 +1093,12 @@ namespace Microsoft.MixedReality.WebRTC
         public AudioTransceiver AddAudioTransceiver(AudioTransceiverInitSettings settings)
         {
             ThrowIfConnectionNotOpen();
-            var config = (settings != null ? new PeerConnectionInterop.AudioTransceiverInteropInitSettings
-            {
-                //< TODO
-            } : new PeerConnectionInterop.AudioTransceiverInteropInitSettings());
-            uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, ref config,
+            var transceiver = new AudioTransceiver(this);
+            var config = new PeerConnectionInterop.AudioTransceiverInteropInitConfig(transceiver, settings);
+            uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, in config,
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
-            var transceiver = new AudioTransceiver(transceiverHandle, this);
+            transceiver.SetHandle(transceiverHandle);
             AudioTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
@@ -1117,14 +1119,12 @@ namespace Microsoft.MixedReality.WebRTC
         public VideoTransceiver AddVideoTransceiver(VideoTransceiverInitSettings settings)
         {
             ThrowIfConnectionNotOpen();
-            var config = (settings != null ? new PeerConnectionInterop.VideoTransceiverInteropInitSettings
-            {
-                //< TODO
-            } : new PeerConnectionInterop.VideoTransceiverInteropInitSettings());
-            uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, ref config,
+            var transceiver = new VideoTransceiver(this);
+            var config = new PeerConnectionInterop.VideoTransceiverInteropInitConfig(transceiver, settings);
+            uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, in config,
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
-            var transceiver = new VideoTransceiver(transceiverHandle, this);
+            transceiver.SetHandle(transceiverHandle);
             VideoTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
@@ -1196,27 +1196,19 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 // On UWP this cannot be called from the main UI thread, so always call it from
                 // a background worker thread.
-                var config = (settings != null ? new PeerConnectionInterop.VideoDeviceConfiguration
-                {
-                    VideoDeviceId = settings.videoDevice.id,
-                    VideoProfileId = settings.videoProfileId,
-                    VideoProfileKind = settings.videoProfileKind,
-                    Width = settings.width.GetValueOrDefault(0),
-                    Height = settings.height.GetValueOrDefault(0),
-                    Framerate = settings.framerate.GetValueOrDefault(0.0),
-                    EnableMixedRealityCapture = (mrsBool)settings.enableMrc,
-                    EnableMRCRecordingIndicator = (mrsBool)settings.enableMrcRecordingIndicator
-                } : new PeerConnectionInterop.VideoDeviceConfiguration());
                 string trackName = settings?.trackName;
                 if (string.IsNullOrEmpty(trackName))
                 {
                     trackName = Guid.NewGuid().ToString();
                 }
-                uint res = PeerConnectionInterop.PeerConnection_AddLocalVideoTrack(_nativePeerhandle, trackName, ref config,
+                var transceiver = new VideoTransceiver(this);
+                var track = new LocalVideoTrack(this, transceiver, trackName);
+                var config = new PeerConnectionInterop.LocalVideoTrackInteropInitConfig(transceiver, track, settings);
+                uint res = PeerConnectionInterop.PeerConnection_AddLocalVideoTrack(_nativePeerhandle, trackName, in config,
                     out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
                 Utils.ThrowOnErrorCode(res);
-                var transceiver = new VideoTransceiver(transceiverHandle, this);
-                var track = new LocalVideoTrack(trackHandle, this, transceiver, trackName);
+                transceiver.SetHandle(transceiverHandle);
+                track.SetHandle(trackHandle);
                 lock (_tracksLock)
                 {
                     VideoTransceivers.Add(transceiver);
@@ -1278,19 +1270,28 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 // On UWP this cannot be called from the main UI thread, so always call it from
                 // a background worker thread.
-                var config = (settings != null ? new PeerConnectionInterop.AudioDeviceConfiguration
-                {
-                } : new PeerConnectionInterop.AudioDeviceConfiguration());
+
                 string trackName = settings?.trackName;
                 if (string.IsNullOrEmpty(trackName))
                 {
                     trackName = Guid.NewGuid().ToString();
                 }
-                uint res = PeerConnectionInterop.PeerConnection_AddLocalAudioTrack(_nativePeerhandle, trackName, ref config,
+
+                // Create interop wrappers
+                var transceiver = new AudioTransceiver(this);
+                var track = new LocalAudioTrack(this, transceiver, trackName);
+
+                // Parse settings
+                var config = new PeerConnectionInterop.LocalAudioTrackInteropInitConfig(transceiver, track, settings);
+
+                // Create native implementation objects
+                uint res = PeerConnectionInterop.PeerConnection_AddLocalAudioTrack(_nativePeerhandle, trackName, in config,
                     out LocalAudioTrackHandle trackHandle, out AudioTransceiverHandle transceiverHandle);
                 Utils.ThrowOnErrorCode(res);
-                var transceiver = new AudioTransceiver(transceiverHandle, this);
-                var track = new LocalAudioTrack(trackHandle, this, transceiver, trackName);
+                track.SetHandle(trackHandle);
+                transceiver.SetHandle(transceiverHandle);
+
+                // On success add wrappers to peer connection and return the track
                 lock (_tracksLock)
                 {
                     AudioTransceivers.Add(transceiver);
@@ -1568,7 +1569,8 @@ namespace Microsoft.MixedReality.WebRTC
         public void SetRemoteDescription(string type, string sdp)
         {
             ThrowIfConnectionNotOpen();
-            PeerConnectionInterop.PeerConnection_SetRemoteDescription(_nativePeerhandle, type, sdp);
+            uint res = PeerConnectionInterop.PeerConnection_SetRemoteDescription(_nativePeerhandle, type, sdp);
+            Utils.ThrowOnErrorCode(res);
         }
 
         #endregion
@@ -1604,7 +1606,7 @@ namespace Microsoft.MixedReality.WebRTC
         {
             // Ensure the logging system is ready before using PInvoke.
             MainEventSource.Log.Initialize();
-            
+
 
             var devices = new List<VideoCaptureDevice>();
             var eventWaitHandle = new ManualResetEventSlim(initialState: false);
@@ -1841,13 +1843,18 @@ namespace Microsoft.MixedReality.WebRTC
             RenegotiationNeeded?.Invoke();
         }
 
-        internal void OnAudioTrackAdded(RemoteAudioTrack track)
+        internal void OnAudioTrackAdded(RemoteAudioTrack track, AudioTransceiver transceiver)
         {
             MainEventSource.Log.AudioTrackAdded(track.Name);
             lock (_tracksLock)
             {
                 RemoteAudioTracks.Add(track);
+                if (!AudioTransceivers.Contains(transceiver))
+                {
+                    AudioTransceivers.Add(transceiver);
+                }
             }
+            track.OnTrackAddedToTransceiver(transceiver);
             AudioTrackAdded?.Invoke(track);
         }
 
@@ -1861,13 +1868,18 @@ namespace Microsoft.MixedReality.WebRTC
             AudioTrackRemoved?.Invoke(track);
         }
 
-        internal void OnVideoTrackAdded(RemoteVideoTrack track)
+        internal void OnVideoTrackAdded(RemoteVideoTrack track, VideoTransceiver transceiver)
         {
             MainEventSource.Log.VideoTrackAdded(track.Name);
             lock (_tracksLock)
             {
                 RemoteVideoTracks.Add(track);
+                if (!VideoTransceivers.Contains(transceiver))
+                {
+                    VideoTransceivers.Add(transceiver);
+                }
             }
+            track.OnTrackAddedToTransceiver(transceiver);
             VideoTrackAdded?.Invoke(track);
         }
 

@@ -31,7 +31,10 @@ mrsRemoteVideoTrackInteropHandle MRS_CALL FakeIterop_RemoteVideoTrackCreate(
 
 // PeerConnectionVideoTrackAddedCallback
 using VideoTrackAddedCallback =
-    InteropCallback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>;
+    InteropCallback<mrsRemoteVideoTrackInteropHandle,
+                    RemoteVideoTrackHandle,
+                    mrsVideoTransceiverInteropHandle,
+                    VideoTransceiverHandle>;
 
 // PeerConnectionI420VideoFrameCallback
 using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
@@ -120,7 +123,8 @@ TEST(VideoTrack, Simple) {
   VideoTrackAddedCallback track_added2_cb =
       [&track_handle2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle native_handle) {
+          RemoteVideoTrackHandle native_handle,
+          mrsVideoTransceiverInteropHandle, VideoTransceiverHandle) {
         track_handle2 = native_handle;
         track_added2_ev.Set();
       };
@@ -128,7 +132,7 @@ TEST(VideoTrack, Simple) {
                                                    CB(track_added2_cb));
 
   // Create the local video track of the local peer (#1)
-  VideoDeviceConfiguration config{};
+  LocalVideoTrackInitConfig config{};
   LocalVideoTrackHandle track_handle{};
   VideoTransceiverHandle transceiver_handle{};
   ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalVideoTrack(
@@ -199,7 +203,8 @@ TEST(VideoTrack, Muted) {
   VideoTrackAddedCallback track_added2_cb =
       [&track_handle2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle native_handle) {
+          RemoteVideoTrackHandle native_handle,
+          mrsVideoTransceiverInteropHandle, VideoTransceiverHandle) {
         track_handle2 = native_handle;
         track_added2_ev.Set();
       };
@@ -207,7 +212,7 @@ TEST(VideoTrack, Muted) {
                                                    CB(track_added2_cb));
 
   // Create the local video track of the local peer (#1)
-  VideoDeviceConfiguration config{};
+  LocalVideoTrackInitConfig config{};
   LocalVideoTrackHandle track_handle{};
   VideoTransceiverHandle transceiver_handle{};
   ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalVideoTrack(
@@ -283,7 +288,7 @@ void MRS_CALL enumDeviceCallbackCompleted(void* user_data) {
 //  ev.Wait();
 //
 //  for (auto&& id : device_ids) {
-//    VideoDeviceConfiguration config{};
+//    LocalVideoTrackInitConfig config{};
 //    config.video_device_id = id.c_str();
 //    ASSERT_EQ(Result::kSuccess,
 //              mrsPeerConnectionAddLocalVideoTrack(pair.pc1(), config));
@@ -292,7 +297,7 @@ void MRS_CALL enumDeviceCallbackCompleted(void* user_data) {
 
 TEST(VideoTrack, DeviceIdInvalid) {
   LocalPeerPairRaii pair;
-  VideoDeviceConfiguration config{};
+  LocalVideoTrackInitConfig config{};
   LocalVideoTrackHandle track_handle{};
   VideoTransceiverHandle transceiver_handle{};
   config.video_device_id = "[[INVALID DEVICE ID]]";
@@ -338,7 +343,8 @@ TEST(VideoTrack, Multi) {
   VideoTrackAddedCallback track_added2_cb =
       [&tracks, &track_id, &track_added2_sem, kNumTracks](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle native_handle) {
+          RemoteVideoTrackHandle native_handle,
+          mrsVideoTransceiverInteropHandle, VideoTransceiverHandle) {
         int id = track_id.fetch_add(1);
         ASSERT_LT(id, kNumTracks);
         tracks[id].remote_handle = native_handle;
@@ -355,10 +361,12 @@ TEST(VideoTrack, Multi) {
   ASSERT_NE(nullptr, source_handle);
 
   // Create local video tracks on the local peer (#1)
+  LocalVideoTrackFromExternalSourceInitConfig track_config{};
+  track_config.source_handle = source_handle;
   for (auto&& track : tracks) {
     ASSERT_EQ(Result::kSuccess,
               mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-                  pair.pc1(), "test_track", source_handle, &track.local_handle,
+                  pair.pc1(), "test_track", &track_config, &track.local_handle,
                   &track.transceiver_handle));
     ASSERT_NE(nullptr, track.local_handle);
     ASSERT_NE(nullptr, track.transceiver_handle);
@@ -367,7 +375,8 @@ TEST(VideoTrack, Multi) {
     // Check video transceiver consistency
     {
       LocalVideoTrackHandle track_handle_local{};
-      ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(track.transceiver_handle,
+      ASSERT_EQ(Result::kSuccess,
+                mrsVideoTransceiverGetLocalTrack(track.transceiver_handle,
                                                  &track_handle_local));
       ASSERT_EQ(track.local_handle, track_handle_local);
       mrsLocalVideoTrackRemoveRef(track_handle_local);
@@ -436,7 +445,8 @@ TEST(VideoTrack, ExternalI420) {
   VideoTrackAddedCallback track_added2_cb =
       [&track_handle2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle native_handle) {
+          RemoteVideoTrackHandle native_handle,
+          mrsVideoTransceiverInteropHandle, VideoTransceiverHandle) {
         track_handle2 = native_handle;
         track_added2_ev.Set();
       };
@@ -453,9 +463,11 @@ TEST(VideoTrack, ExternalI420) {
   // Create the local video track of the local peer (#1)
   LocalVideoTrackHandle track_handle{};
   VideoTransceiverHandle transceiver_handle{};
+  LocalVideoTrackFromExternalSourceInitConfig track_config{};
+  track_config.source_handle = source_handle;
   ASSERT_EQ(mrsResult::kSuccess,
             mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-                pair.pc1(), "simulated_video_track", source_handle,
+                pair.pc1(), "simulated_video_track", &track_config,
                 &track_handle, &transceiver_handle));
   ASSERT_NE(nullptr, track_handle);
   ASSERT_NE(nullptr, transceiver_handle);

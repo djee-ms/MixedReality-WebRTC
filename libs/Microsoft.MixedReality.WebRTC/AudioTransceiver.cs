@@ -48,10 +48,21 @@ namespace Microsoft.MixedReality.WebRTC
         private LocalAudioTrack _localTrack = null;
         private RemoteAudioTrack _remoteTrack = null;
 
-        internal AudioTransceiver(AudioTransceiverHandle nativeHandle, PeerConnection peerConnection)
+        // Constructor for interop-based creation; SetHandle() will be called later
+        internal AudioTransceiver(PeerConnection peerConnection)
             : base(peerConnection)
         {
-            _nativeHandle = nativeHandle;
+        }
+
+        internal void SetHandle(AudioTransceiverHandle handle)
+        {
+            Debug.Assert(!handle.IsClosed);
+            // Either first-time assign or no-op (assign same value again)
+            Debug.Assert(_nativeHandle.IsInvalid || (_nativeHandle == handle));
+            if (_nativeHandle != handle)
+            {
+                _nativeHandle = handle;
+            }
         }
 
         /// <summary>
@@ -78,6 +89,25 @@ namespace Microsoft.MixedReality.WebRTC
             Debug.Assert(_localTrack.PeerConnection == PeerConnection);
             Debug.Assert(_localTrack.Transceiver == this);
             Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
+            switch (DesiredDirection)
+            {
+            case Direction.Inactive:
+            case Direction.ReceiveOnly:
+                if (_localTrack != null)
+                {
+                    // Add send bit
+                    DesiredDirection |= Direction.SendOnly;
+                }
+                break;
+            case Direction.SendOnly:
+            case Direction.SendReceive:
+                if (_localTrack == null)
+                {
+                    // Remove send bit
+                    DesiredDirection &= Direction.ReceiveOnly;
+                }
+                break;
+            }
         }
 
         /// <summary>
@@ -100,6 +130,12 @@ namespace Microsoft.MixedReality.WebRTC
         {
             Debug.Assert(_localTrack == track);
             _localTrack = null;
+        }
+
+        internal void OnRemoteTrackAdded(RemoteAudioTrack track)
+        {
+            Debug.Assert(_remoteTrack == null);
+            _remoteTrack = track;
         }
 
         internal void OnRemoteTrackRemoved(RemoteAudioTrack track)

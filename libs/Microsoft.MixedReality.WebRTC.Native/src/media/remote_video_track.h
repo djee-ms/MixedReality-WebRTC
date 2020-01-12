@@ -6,7 +6,7 @@
 #include "callback.h"
 #include "interop/interop_api.h"
 #include "media_track.h"
-#include "str.h"
+#include "refptr.h"
 #include "tracked_object.h"
 #include "video_frame_observer.h"
 
@@ -23,6 +23,7 @@ class VideoTrackInterface;
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
+class VideoTransceiver;
 
 /// A remote video track is a media track for a peer connection backed by a
 /// remote video stream received from the remote peer.
@@ -33,6 +34,7 @@ class PeerConnection;
 class RemoteVideoTrack : public VideoFrameObserver, public MediaTrack {
  public:
   RemoteVideoTrack(PeerConnection& owner,
+                   RefPtr<VideoTransceiver> transceiver,
                    rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
                    mrsRemoteVideoTrackInteropHandle interop_handle) noexcept;
@@ -56,6 +58,7 @@ class RemoteVideoTrack : public VideoFrameObserver, public MediaTrack {
 
   [[nodiscard]] webrtc::VideoTrackInterface* impl() const;
   [[nodiscard]] webrtc::RtpReceiverInterface* receiver() const;
+  [[nodiscard]] VideoTransceiver* GetTransceiver() const;
 
   [[nodiscard]] mrsRemoteVideoTrackInteropHandle GetInteropHandle() const
       noexcept {
@@ -71,6 +74,9 @@ class RemoteVideoTrack : public VideoFrameObserver, public MediaTrack {
 
   /// RTP sender this track is associated with.
   rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver_;
+
+  /// Transceiver this track is associated with, if any.
+  RefPtr<VideoTransceiver> transceiver_;
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsRemoteVideoTrackInteropHandle interop_handle_{};

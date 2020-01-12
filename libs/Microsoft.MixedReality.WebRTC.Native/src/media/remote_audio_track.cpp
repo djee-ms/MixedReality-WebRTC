@@ -10,15 +10,21 @@ namespace Microsoft::MixedReality::WebRTC {
 
 RemoteAudioTrack::RemoteAudioTrack(
     PeerConnection& owner,
+    RefPtr<AudioTransceiver> transceiver,
     rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
     mrsRemoteAudioTrackInteropHandle interop_handle) noexcept
     : MediaTrack(owner),
       track_(std::move(track)),
       receiver_(std::move(receiver)),
+      transceiver_(std::move(transceiver)),
       interop_handle_(interop_handle) {
   RTC_CHECK(owner_);
+  RTC_CHECK(track_);
+  RTC_CHECK(receiver_);
+  RTC_CHECK(transceiver_);
   kind_ = TrackKind::kAudioTrack;
+  transceiver_->OnRemoteTrackCreated(this);
   track_->AddSink(this);
 }
 
@@ -30,6 +36,18 @@ RemoteAudioTrack::~RemoteAudioTrack() {
 void RemoteAudioTrack::OnTrackRemoved(PeerConnection& owner) {
   RTC_DCHECK(owner_ == &owner);
   owner_ = nullptr;
+}
+
+webrtc::AudioTrackInterface* RemoteAudioTrack::impl() const {
+  return track_.get();
+}
+
+webrtc::RtpReceiverInterface* RemoteAudioTrack::receiver() const {
+  return receiver_.get();
+}
+
+AudioTransceiver* RemoteAudioTrack::GetTransceiver() const {
+  return transceiver_.get();
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

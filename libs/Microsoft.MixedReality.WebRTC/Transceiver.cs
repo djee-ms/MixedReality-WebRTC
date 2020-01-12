@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+
 namespace Microsoft.MixedReality.WebRTC
 {
     /// <summary>
@@ -28,9 +30,55 @@ namespace Microsoft.MixedReality.WebRTC
     public abstract class Transceiver
     {
         /// <summary>
+        /// Transceiver direction.
+        /// </summary>
+        [Flags]
+        public enum Direction
+        {
+            /// <summary>
+            /// Transceiver is inactive, neither sending nor receiving any media data, and has neither local
+            /// nor remote tracks attached to it.
+            /// </summary>
+            Inactive = 0,
+
+            /// <summary>
+            /// Transceiver has only a local track and is sending to the remote peer, but is not receiving
+            /// any media from the remote peer.
+            /// </summary>
+            SendOnly = 0x1,
+
+            /// <summary>
+            /// Transceiver has only a remote track and is receiving from the remote peer, but is not
+            /// sending any media to the remote peer.
+            /// </summary>
+            ReceiveOnly = 0x2,
+
+            /// <summary>
+            /// Transceiver has both a local and remote tracks and is both sending to and receiving from
+            /// the remote peer connection.
+            /// </summary>
+            SendReceive = 0x3
+        }
+
+        /// <summary>
         /// Peer connection this transceiver is part of.
         /// </summary>
-        public PeerConnection PeerConnection { get; }
+        public PeerConnection PeerConnection { get; } = null;
+
+        /// <summary>
+        /// Transceiver direction mapping 1:1 to the configuration of the local and remote tracks.
+        /// If a negotiation is pending, then this is the next direction that will be negotiated when
+        /// calling <see cref="PeerConnection.CreateOffer"/> or <see cref="PeerConnection.CreateAnswer"/>.
+        /// Otherwise this is equal to <see cref="NegotiatedDirection"/>.
+        /// </summary>
+        public Direction DesiredDirection { get; protected set; } = Direction.Inactive;
+
+        /// <summary>
+        /// Last negotiated transceiver direction. This is equal to <see cref="DesiredDirection"/>
+        /// after a negotiation is completed, but remains constant until the next SDP negotiation
+        /// even if local and remote tracks are changed on the transceiver.
+        /// </summary>
+        public Direction NegotiatedDirection { get; protected set; } = Direction.Inactive;
 
         /// <summary>
         /// Create a new transceiver associated with a given peer connection.

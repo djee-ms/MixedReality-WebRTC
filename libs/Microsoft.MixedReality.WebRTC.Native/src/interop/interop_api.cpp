@@ -94,7 +94,7 @@ class SimpleMediaConstraints : public webrtc::MediaConstraintsInterface {
 
 /// Helper to open a video capture device.
 mrsResult OpenVideoCaptureDevice(
-    const VideoDeviceConfiguration& config,
+    const LocalVideoTrackInitConfig& config,
     std::unique_ptr<cricket::VideoCapturer>& capturer_out) noexcept {
   capturer_out.reset();
 #if defined(WINUWP)
@@ -623,7 +623,8 @@ void MRS_CALL mrsPeerConnectionRegisterAudioTrackAddedCallback(
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterAudioTrackAddedCallback(
-        Callback<mrsRemoteAudioTrackInteropHandle, RemoteAudioTrackHandle>{
+        Callback<mrsRemoteAudioTrackInteropHandle, RemoteAudioTrackHandle,
+                 mrsAudioTransceiverInteropHandle, AudioTransceiverHandle>{
             callback, user_data});
   }
 }
@@ -634,7 +635,8 @@ void MRS_CALL mrsPeerConnectionRegisterAudioTrackRemovedCallback(
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterAudioTrackRemovedCallback(
-        Callback<mrsRemoteAudioTrackInteropHandle, RemoteAudioTrackHandle>{
+        Callback<mrsRemoteAudioTrackInteropHandle, RemoteAudioTrackHandle,
+                 mrsAudioTransceiverInteropHandle, AudioTransceiverHandle>{
             callback, user_data});
   }
 }
@@ -645,7 +647,8 @@ void MRS_CALL mrsPeerConnectionRegisterVideoTrackAddedCallback(
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterVideoTrackAddedCallback(
-        Callback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>{
+        Callback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle,
+                 mrsVideoTransceiverInteropHandle, VideoTransceiverHandle>{
             callback, user_data});
   }
 }
@@ -656,7 +659,8 @@ void MRS_CALL mrsPeerConnectionRegisterVideoTrackRemovedCallback(
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterVideoTrackRemovedCallback(
-        Callback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle>{
+        Callback<mrsRemoteVideoTrackInteropHandle, RemoteVideoTrackHandle,
+                 mrsVideoTransceiverInteropHandle, VideoTransceiverHandle>{
             callback, user_data});
   }
 }
@@ -686,7 +690,7 @@ void MRS_CALL mrsPeerConnectionRegisterDataChannelRemovedCallback(
 mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
     PeerConnectionHandle peer_handle,
     const char* track_name,
-    const VideoDeviceConfiguration* config,
+    const LocalVideoTrackInitConfig* config,
     LocalVideoTrackHandle* track_handle_out,
     VideoTransceiverHandle* transceiver_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
@@ -765,7 +769,9 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
   }
 
   // Add the video track to the peer connection
-  auto result = peer->AddLocalVideoTrack(std::move(video_track));
+  auto result = peer->AddLocalVideoTrack(std::move(video_track),
+                                         config->transceiver_interop_handle,
+                                         config->track_interop_handle);
   if (result.ok()) {
     RefPtr<LocalVideoTrack>& video_track_wrapper = result.value();
     RefPtr<VideoTransceiver> video_transceiver =
@@ -781,7 +787,7 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
 mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
     PeerConnectionHandle peer_handle,
     const char* track_name,
-    ExternalVideoTrackSourceHandle source_handle,
+    const LocalVideoTrackFromExternalSourceInitConfig* config,
     LocalVideoTrackHandle* track_handle_out,
     VideoTransceiverHandle* transceiver_handle_out) noexcept {
   if (!track_handle_out || !transceiver_handle_out) {
@@ -794,7 +800,7 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
     return Result::kInvalidNativeHandle;
   }
   auto track_source =
-      static_cast<detail::ExternalVideoTrackSourceImpl*>(source_handle);
+      static_cast<detail::ExternalVideoTrackSourceImpl*>(config->source_handle);
   if (!track_source) {
     return Result::kInvalidNativeHandle;
   }
@@ -816,11 +822,13 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
   if (!video_track) {
     return Result::kUnknownError;
   }
-  auto result = peer->AddLocalVideoTrack(std::move(video_track));
+  auto result = peer->AddLocalVideoTrack(std::move(video_track),
+                                         config->transceiver_interop_handle,
+                                         config->track_interop_handle);
   if (result.ok()) {
     LocalVideoTrack* const track = result.value().release();
     RefPtr<Transceiver> transceiver = track->GetTransceiver();
-    *track_handle_out = track;  // owns the ref
+    *track_handle_out = track;                        // owns the ref
     *transceiver_handle_out = transceiver.release();  // owns the ref
     return Result::kSuccess;
   }
@@ -847,7 +855,7 @@ mrsResult MRS_CALL mrsPeerConnectionRemoveLocalVideoTracksFromSource(
 mrsResult MRS_CALL mrsPeerConnectionAddLocalAudioTrack(
     PeerConnectionHandle peerHandle,
     const char* track_name,
-    const AudioDeviceConfiguration* /*config*/,
+    const LocalAudioTrackInitConfig* config,
     LocalAudioTrackHandle* track_handle_out,
     AudioTransceiverHandle* transceiver_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
@@ -887,7 +895,9 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalAudioTrack(
     RTC_LOG(LS_ERROR) << "Failed to create local audio track.";
     return Result::kUnknownError;
   }
-  auto result = peer->AddLocalAudioTrack(std::move(audio_track));
+  auto result = peer->AddLocalAudioTrack(std::move(audio_track),
+                                         config->transceiver_interop_handle,
+                                         config->track_interop_handle);
   if (result.ok()) {
     RefPtr<LocalAudioTrack>& audio_track_wrapper = result.value();
     RefPtr<AudioTransceiver> transceiver =

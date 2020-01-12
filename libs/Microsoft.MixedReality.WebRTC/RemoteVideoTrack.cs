@@ -77,20 +77,11 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         private RemoteVideoTrackInterop.InteropCallbackArgs _interopCallbackArgs;
 
+        // Constructor for interop-based creation; SetHandle() will be called later
         internal RemoteVideoTrack(PeerConnection peer, string trackName)
         {
             PeerConnection = peer;
             Name = trackName;
-        }
-
-        internal RemoteVideoTrack(RemoteVideoTrackHandle nativeHandle, PeerConnection peer,
-            VideoTransceiver transceiver, string trackName)
-        {
-            _nativeHandle = nativeHandle;
-            PeerConnection = peer;
-            Transceiver = transceiver;
-            Name = trackName;
-            RegisterInteropCallbacks();
         }
 
         internal void SetHandle(RemoteVideoTrackHandle handle)
@@ -161,6 +152,16 @@ namespace Microsoft.MixedReality.WebRTC
         {
             MainEventSource.Log.Argb32RemoteVideoFrameReady(frame.width, frame.height);
             Argb32VideoFrameReady?.Invoke(frame);
+        }
+
+        internal void OnTrackAddedToTransceiver(VideoTransceiver transceiver)
+        {
+            Debug.Assert(PeerConnection == transceiver.PeerConnection);
+            Debug.Assert(!_nativeHandle.IsClosed);
+            Debug.Assert(Transceiver == null);
+            Debug.Assert(transceiver != null);
+            Transceiver = transceiver;
+            transceiver.OnRemoteTrackAdded(this);
         }
 
         internal void OnTrackRemoved(PeerConnection previousConnection)
