@@ -24,7 +24,7 @@ LocalAudioTrack::LocalAudioTrack(
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
   kind_ = TrackKind::kAudioTrack;
-  transceiver_->OnLocalTrackCreated(this);
+  transceiver_->OnLocalTrackAdded(this);
   track_->AddSink(this);  //< FIXME - Implementation is no-op
 }
 
@@ -33,6 +33,7 @@ LocalAudioTrack::~LocalAudioTrack() {
   if (owner_) {
     owner_->RemoveLocalAudioTrack(*this);
   }
+  RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }
 
@@ -66,6 +67,7 @@ void LocalAudioTrack::RemoveFromPeerConnection(
     peer.RemoveTrack(sender_);
     sender_ = nullptr;
     owner_ = nullptr;
+    transceiver_->OnLocalTrackRemoved(this);
     transceiver_ = nullptr;
   }
 }
@@ -74,7 +76,9 @@ void LocalAudioTrack::OnTransceiverChanged(
     RefPtr<AudioTransceiver> newTransceiver) {
   RTC_CHECK_NE(transceiver_.get(), newTransceiver.get());
   RTC_CHECK_NE(transceiver_.get(), (AudioTransceiver*)nullptr);
+  transceiver_->OnLocalTrackRemoved(this);
   transceiver_ = newTransceiver;
+  transceiver_->OnLocalTrackAdded(this);
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

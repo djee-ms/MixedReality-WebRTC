@@ -44,14 +44,24 @@ Result AudioTransceiver::SetLocalTrack(
   return Result::kSuccess;
 }
 
-void AudioTransceiver::OnLocalTrackCreated(RefPtr<LocalAudioTrack> track) {
+void AudioTransceiver::OnLocalTrackAdded(RefPtr<LocalAudioTrack> track) {
   RTC_DCHECK(!local_track_);
   local_track_ = std::move(track);
 }
 
-void AudioTransceiver::OnRemoteTrackCreated(RefPtr<RemoteAudioTrack> track) {
+void AudioTransceiver::OnRemoteTrackAdded(RefPtr<RemoteAudioTrack> track) {
   RTC_DCHECK(!remote_track_);
   remote_track_ = std::move(track);
+}
+
+void AudioTransceiver::OnLocalTrackRemoved(LocalAudioTrack* track) {
+  RTC_DCHECK_EQ(track, local_track_.get());
+  local_track_ = nullptr;
+}
+
+void AudioTransceiver::OnRemoteTrackRemoved(RemoteAudioTrack* track) {
+  RTC_DCHECK_EQ(track, remote_track_.get());
+  remote_track_ = nullptr;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

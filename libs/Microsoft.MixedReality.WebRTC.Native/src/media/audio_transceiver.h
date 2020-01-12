@@ -38,8 +38,10 @@ class AudioTransceiver : public Transceiver {
   // Internal
   //
 
-  void OnLocalTrackCreated(RefPtr<LocalAudioTrack> track);
-  void OnRemoteTrackCreated(RefPtr<RemoteAudioTrack> track);
+  void OnLocalTrackAdded(RefPtr<LocalAudioTrack> track);
+  void OnRemoteTrackAdded(RefPtr<RemoteAudioTrack> track);
+  void OnLocalTrackRemoved(LocalAudioTrack* track);
+  void OnRemoteTrackRemoved(RemoteAudioTrack* track);
   mrsAudioTransceiverInteropHandle GetInteropHandle() const {
     return interop_handle_;
   }

@@ -24,7 +24,7 @@ LocalVideoTrack::LocalVideoTrack(
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
   kind_ = TrackKind::kVideoTrack;
-  transceiver_->OnLocalTrackCreated(this);
+  transceiver_->OnLocalTrackAdded(this);
   rtc::VideoSinkWants sink_settings{};
   sink_settings.rotation_applied = true;
   track_->AddOrUpdateSink(this, sink_settings);
@@ -35,6 +35,7 @@ LocalVideoTrack::~LocalVideoTrack() {
   if (owner_) {
     owner_->RemoveLocalVideoTrack(*this);
   }
+  RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }
 
@@ -68,6 +69,7 @@ void LocalVideoTrack::RemoveFromPeerConnection(
     peer.RemoveTrack(sender_);
     sender_ = nullptr;
     owner_ = nullptr;
+    transceiver_->OnLocalTrackRemoved(this);
     transceiver_ = nullptr;
   }
 }
@@ -76,7 +78,9 @@ void LocalVideoTrack::OnTransceiverChanged(
     RefPtr<VideoTransceiver> newTransceiver) {
   RTC_CHECK_NE(transceiver_.get(), newTransceiver.get());
   RTC_CHECK_NE(transceiver_.get(), (VideoTransceiver*)nullptr);
+  transceiver_->OnLocalTrackRemoved(this);
   transceiver_ = newTransceiver;
+  transceiver_->OnLocalTrackAdded(this);
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

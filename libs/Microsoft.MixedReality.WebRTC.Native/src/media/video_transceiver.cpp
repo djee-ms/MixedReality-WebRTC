@@ -43,14 +43,24 @@ Result VideoTransceiver::SetLocalTrack(
   return Result::kSuccess;
 }
 
-void VideoTransceiver::OnLocalTrackCreated(RefPtr<LocalVideoTrack> track) {
+void VideoTransceiver::OnLocalTrackAdded(RefPtr<LocalVideoTrack> track) {
   RTC_DCHECK(!local_track_);
   local_track_ = std::move(track);
 }
 
-void VideoTransceiver::OnRemoteTrackCreated(RefPtr<RemoteVideoTrack> track) {
+void VideoTransceiver::OnRemoteTrackAdded(RefPtr<RemoteVideoTrack> track) {
   RTC_DCHECK(!remote_track_);
   remote_track_ = std::move(track);
+}
+
+void VideoTransceiver::OnLocalTrackRemoved(LocalVideoTrack* track) {
+  RTC_DCHECK_EQ(track, local_track_.get());
+  local_track_ = nullptr;
+}
+
+void VideoTransceiver::OnRemoteTrackRemoved(RemoteVideoTrack* track) {
+  RTC_DCHECK_EQ(track, remote_track_.get());
+  remote_track_ = nullptr;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

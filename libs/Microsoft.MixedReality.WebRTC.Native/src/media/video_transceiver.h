@@ -38,8 +38,10 @@ class VideoTransceiver : public Transceiver {
   // Internal
   //
 
-  void OnLocalTrackCreated(RefPtr<LocalVideoTrack> track);
-  void OnRemoteTrackCreated(RefPtr<RemoteVideoTrack> track);
+  void OnLocalTrackAdded(RefPtr<LocalVideoTrack> track);
+  void OnRemoteTrackAdded(RefPtr<RemoteVideoTrack> track);
+  void OnLocalTrackRemoved(LocalVideoTrack* track);
+  void OnRemoteTrackRemoved(RemoteVideoTrack* track);
   mrsVideoTransceiverInteropHandle GetInteropHandle() const {
     return interop_handle_;
   }
