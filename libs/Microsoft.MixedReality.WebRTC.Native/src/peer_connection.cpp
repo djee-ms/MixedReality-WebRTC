@@ -1403,7 +1403,6 @@ void PeerConnectionImpl::OnAddTrack(
       return;
     }
     RefPtr<AudioTransceiver> transceiver = ret.MoveValue();
-    AudioTransceiverHandle tranceiver_handle = transceiver.get();
 
     // The transceiver wrapper might have been created, in which case we need to
     // inform its interop wrapper of its handle.
@@ -1412,12 +1411,11 @@ void PeerConnectionImpl::OnAddTrack(
 
     // Create the native object
     RefPtr<RemoteAudioTrack> remote_audio_track = new RemoteAudioTrack(
-        *this, std::move(transceiver), std::move(audio_track),
+        *this, transceiver, std::move(audio_track),
         std::move(receiver), interop_handle);
-    RemoteAudioTrackHandle audio_handle = remote_audio_track.get();
     {
       rtc::CritScope lock(&tracks_mutex_);
-      remote_audio_tracks_.emplace_back(std::move(remote_audio_track));
+      remote_audio_tracks_.emplace_back(remote_audio_track);
     }
 
     // Invoke the AudioTrackAdded callback, which will set the native handle on
@@ -1426,6 +1424,8 @@ void PeerConnectionImpl::OnAddTrack(
       auto lock = std::scoped_lock{media_track_callback_mutex_};
       auto cb = audio_track_added_callback_;
       if (cb) {
+        AudioTransceiverHandle tranceiver_handle = transceiver.release();
+        RemoteAudioTrackHandle audio_handle = remote_audio_track.release();
         cb(interop_handle, audio_handle, transceiver_interop_handle,
            tranceiver_handle);
       }
@@ -1448,7 +1448,6 @@ void PeerConnectionImpl::OnAddTrack(
       return;
     }
     RefPtr<VideoTransceiver> transceiver = ret.MoveValue();
-    VideoTransceiverHandle tranceiver_handle = transceiver.get();
 
     // The transceiver wrapper might have been created, in which case we need to
     // inform its interop wrapper of its handle.
@@ -1457,12 +1456,11 @@ void PeerConnectionImpl::OnAddTrack(
 
     // Create the native object
     RefPtr<RemoteVideoTrack> remote_video_track = new RemoteVideoTrack(
-        *this, std::move(transceiver), std::move(video_track),
+        *this, transceiver, std::move(video_track),
         std::move(receiver), interop_handle);
-    RemoteVideoTrackHandle video_handle = remote_video_track.get();
     {
       rtc::CritScope lock(&tracks_mutex_);
-      remote_video_tracks_.emplace_back(std::move(remote_video_track));
+      remote_video_tracks_.emplace_back(remote_video_track);
     }
 
     // Invoke the VideoTrackAdded callback, which will set the native handle on
@@ -1471,6 +1469,8 @@ void PeerConnectionImpl::OnAddTrack(
       auto lock = std::scoped_lock{media_track_callback_mutex_};
       auto cb = video_track_added_callback_;
       if (cb) {
+        VideoTransceiverHandle tranceiver_handle = transceiver.release();
+        RemoteVideoTrackHandle video_handle = remote_video_track.release();
         cb(interop_handle, video_handle, transceiver_interop_handle,
            tranceiver_handle);
       }
