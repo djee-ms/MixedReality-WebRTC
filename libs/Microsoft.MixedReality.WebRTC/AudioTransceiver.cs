@@ -72,23 +72,38 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="track">The new local audio track sending data to the remote peer.</param>
         public void SetLocalTrack(LocalAudioTrack track)
         {
-            if (track.PeerConnection != PeerConnection)
-            {
-                throw new InvalidOperationException($"Cannot set track {track} of peer connection {track.PeerConnection} on audio transceiver {this} of different peer connection {PeerConnection}.");
-            }
             if (track == _localTrack)
             {
                 return;
             }
+            if ((track.PeerConnection != null) && (track.PeerConnection != PeerConnection))
+            {
+                throw new InvalidOperationException($"Cannot set track {track} of peer connection {track.PeerConnection} on audio transceiver {this} of different peer connection {PeerConnection}.");
+            }
             var res = AudioTransceiverInterop.AudioTransceiver_SetLocalTrack(_nativeHandle, track._nativeHandle);
             Utils.ThrowOnErrorCode(res);
-            var peerConnection = PeerConnection; // this gets reset below
-            _localTrack.OnTrackRemoved(peerConnection);
-            _localTrack = track;
-            _localTrack.OnTrackAdded(peerConnection, this);
-            Debug.Assert(_localTrack.PeerConnection == PeerConnection);
-            Debug.Assert(_localTrack.Transceiver == this);
-            Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
+
+            // Capture peer connection; it gets reset during track manipulation below
+            var peerConnection = PeerConnection;
+
+            // Remove old track
+            if (_localTrack != null)
+            {
+                _localTrack.OnTrackRemoved(peerConnection);
+            }
+            Debug.Assert(_localTrack == null);
+
+            // Add new track
+            if (track != null)
+            {
+                track.OnTrackAdded(peerConnection, this);
+                Debug.Assert(track == _localTrack);
+                Debug.Assert(_localTrack.PeerConnection == PeerConnection);
+                Debug.Assert(_localTrack.Transceiver == this);
+                Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
+            }
+
+            // Update direction
             switch (DesiredDirection)
             {
             case Direction.Inactive:
