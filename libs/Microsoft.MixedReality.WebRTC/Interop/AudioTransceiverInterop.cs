@@ -91,6 +91,20 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         {
         }
 
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        internal ref struct InitConfig
+        {
+            /// <summary>
+            /// Handle to the audio transceiver wrapper.
+            /// </summary>
+            public IntPtr transceiverHandle;
+
+            public InitConfig(AudioTransceiver transceiver, AudioTransceiverInitSettings settings)
+            {
+                transceiverHandle = Utils.MakeWrapperRef(transceiver);
+            }
+        }
+
         #endregion
 
 

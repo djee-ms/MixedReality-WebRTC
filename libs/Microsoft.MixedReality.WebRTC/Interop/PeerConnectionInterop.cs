@@ -293,34 +293,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public SdpSemantic SdpSemantic;
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        internal ref struct AudioTransceiverInteropInitConfig
-        {
-            /// <summary>
-            /// Handle to the audio transceiver wrapper.
-            /// </summary>
-            public IntPtr transceiverHandle;
-
-            public AudioTransceiverInteropInitConfig(AudioTransceiver transceiver, PeerConnection.AudioTransceiverInitSettings settings)
-            {
-                transceiverHandle = Utils.MakeWrapperRef(transceiver);
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        internal ref struct VideoTransceiverInteropInitConfig
-        {
-            /// <summary>
-            /// Handle to the video transceiver wrapper.
-            /// </summary>
-            public IntPtr transceiverHandle;
-
-            public VideoTransceiverInteropInitConfig(VideoTransceiver transceiver, PeerConnection.VideoTransceiverInitSettings settings)
-            {
-                transceiverHandle = Utils.MakeWrapperRef(transceiver);
-            }
-        }
-
         /// <summary>
         /// Helper structure to pass parameters to the native implementation when creating a local audio track.
         /// </summary>
@@ -328,18 +300,18 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         internal ref struct LocalAudioTrackInteropInitConfig
         {
             /// <summary>
-            /// Handle to the audio transceiver wrapper.
-            /// </summary>
-            public IntPtr transceiverHandle;
-
-            /// <summary>
             /// Handle to the local audio track wrapper.
             /// </summary>
             public IntPtr trackHandle;
 
-            public LocalAudioTrackInteropInitConfig(AudioTransceiver transceiver, LocalAudioTrack track, PeerConnection.LocalAudioTrackSettings settings)
+            /// <summary>
+            /// Constructor for creating a local audio track.
+            /// </summary>
+            /// <param name="track">The newly created track wrapper.</param>
+            /// <param name="settings">The settings to initialize the newly created native track.</param>
+            /// <seealso cref="LocalAudioTrack.CreateFromDeviceAsync(LocalAudioTrackSettings)"/>
+            public LocalAudioTrackInteropInitConfig(LocalAudioTrack track, LocalAudioTrackSettings settings)
             {
-                transceiverHandle = Utils.MakeWrapperRef(transceiver);
                 trackHandle = Utils.MakeWrapperRef(track);
             }
         }
@@ -351,11 +323,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         internal ref struct LocalVideoTrackInteropInitConfig
         {
-            /// <summary>
-            /// Handle to the video transceiver wrapper.
-            /// </summary>
-            public IntPtr transceiverHandle;
-
             /// <summary>
             /// Handle to the local video track wrapper.
             /// </summary>
@@ -391,7 +358,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             /// is discouraged, as it over-constraints the selection algorithm.
             /// </remarks>
             /// <seealso xref="MediaCapture.IsVideoProfileSupported(string)"/>
-            public PeerConnection.VideoProfileKind VideoProfileKind;
+            public VideoProfileKind VideoProfileKind;
 
             /// <summary>
             /// Optional capture resolution width, in pixels, or zero for no constraint.
@@ -418,10 +385,14 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             /// </summary>
             public mrsBool EnableMRCRecordingIndicator;
 
-            public LocalVideoTrackInteropInitConfig(VideoTransceiver transceiver, LocalVideoTrack track,
-                PeerConnection.LocalVideoTrackSettings settings)
+            /// <summary>
+            /// Constructor for creating a local video track from a wrapper and some user settings.
+            /// </summary>
+            /// <param name="track">The newly created track wrapper.</param>
+            /// <param name="settings">The settings to initialize the newly created native track.</param>
+            /// <seealso cref="LocalVideoTrack.CreateFromDeviceAsync(LocalVideoTrackSettings)"/>
+            public LocalVideoTrackInteropInitConfig(LocalVideoTrack track, LocalVideoTrackSettings settings)
             {
-                transceiverHandle = Utils.MakeWrapperRef(transceiver);
                 trackHandle = Utils.MakeWrapperRef(track);
 
                 if (settings != null)
@@ -439,7 +410,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
                 {
                     VideoDeviceId = string.Empty;
                     VideoProfileId = string.Empty;
-                    VideoProfileKind = PeerConnection.VideoProfileKind.Unspecified;
+                    VideoProfileKind = VideoProfileKind.Unspecified;
                     Width = 0;
                     Height = 0;
                     Framerate = 0.0;
@@ -457,12 +428,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         internal ref struct LocalVideoTrackFromExternalSourceInteropInitConfig
         {
             /// <summary>
-            /// Handle to the <see cref="VideoTransceiver"/> wrapper for the native video transceiver that will
-            /// be created.
-            /// </summary>
-            public IntPtr VideoTransceiverWrapperHandle;
-
-            /// <summary>
             /// Handle to the <see cref="LocalVideoTrack"/> wrapper for the native local video track that will
             /// be created.
             /// </summary>
@@ -473,6 +438,18 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             /// local video track that will be created.
             /// </summary>
             public ExternalVideoTrackSourceHandle SourceHandle;
+
+            /// <summary>
+            /// Constructor for creating a local video track from a wrapper and an existing external source.
+            /// </summary>
+            /// <param name="track">The newly created track wrapper.</param>
+            /// <param name="source">The external source to use with the newly created native track.</param>
+            /// <seealso cref="LocalVideoTrack.CreateFromExternalSource(string, ExternalVideoTrackSource)"/>
+            public LocalVideoTrackFromExternalSourceInteropInitConfig(LocalVideoTrack track, ExternalVideoTrackSource source)
+            {
+                LocalVideoTrackWrapperHandle = Utils.MakeWrapperRef(track);
+                SourceHandle = source._nativeHandle;
+            }
         }
 
 
@@ -647,12 +624,12 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddAudioTransceiver")]
         public static extern uint PeerConnection_AddAudioTransceiver(PeerConnectionHandle peerHandle,
-            in AudioTransceiverInteropInitConfig config, out AudioTransceiverHandle transceiverHandle);
+            in AudioTransceiverInterop.InitConfig config, out AudioTransceiverHandle transceiverHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddVideoTransceiver")]
         public static extern uint PeerConnection_AddVideoTransceiver(PeerConnectionHandle peerHandle,
-            in VideoTransceiverInteropInitConfig config, out VideoTransceiverHandle transceiverHandle);
+            in VideoTransceiverInterop.InitConfig config, out VideoTransceiverHandle transceiverHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddLocalVideoTrack")]
@@ -729,31 +706,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionClose")]
         public static extern uint PeerConnection_Close(PeerConnectionHandle peerHandle);
-
-        #endregion
-
-
-        #region Helpers
-
-        public static LocalVideoTrack AddLocalVideoTrackFromExternalSource(PeerConnection peer, PeerConnectionHandle peerHandle,
-            string trackName, ExternalVideoTrackSource externalSource)
-        {
-            var transceiver = new VideoTransceiver(peer);
-            var track = new LocalVideoTrack(peer, transceiver, trackName, externalSource);
-            var initConfig = new LocalVideoTrackFromExternalSourceInteropInitConfig
-            {
-                VideoTransceiverWrapperHandle = Utils.MakeWrapperRef(transceiver),
-                LocalVideoTrackWrapperHandle = Utils.MakeWrapperRef(track),
-                SourceHandle = externalSource._nativeHandle
-            };
-            uint res = PeerConnection_AddLocalVideoTrackFromExternalSource(peerHandle, trackName, in initConfig,
-                out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
-            Utils.ThrowOnErrorCode(res);
-            transceiver.SetHandle(transceiverHandle);
-            track.SetHandle(trackHandle);
-            externalSource.OnTrackAddedToSource(track);
-            return track;
-        }
 
         #endregion
     }

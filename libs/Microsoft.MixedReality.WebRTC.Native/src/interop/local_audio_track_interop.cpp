@@ -29,7 +29,7 @@ mrsLocalAudioTrackRemoveRef(LocalAudioTrackHandle handle) noexcept {
   }
 }
 
-// mrsLocalAudioTrackCreate -> interop_api.cpp
+// mrsLocalAudioTrackCreateFromDevice -> interop_api.cpp
 
 void MRS_CALL
 mrsLocalAudioTrackRegisterFrameCallback(LocalAudioTrackHandle trackHandle,

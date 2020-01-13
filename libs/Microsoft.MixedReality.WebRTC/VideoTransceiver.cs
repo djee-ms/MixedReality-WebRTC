@@ -83,12 +83,18 @@ namespace Microsoft.MixedReality.WebRTC
             var res = VideoTransceiverInterop.VideoTransceiver_SetLocalTrack(_nativeHandle, track._nativeHandle);
             Utils.ThrowOnErrorCode(res);
             var peerConnection = PeerConnection; // this gets reset below
-            _localTrack.OnTrackRemoved(peerConnection);
+            if (_localTrack != null)
+            {
+                _localTrack.OnTrackRemoved(peerConnection);
+            }
             _localTrack = track;
-            _localTrack.OnTrackAdded(peerConnection, this);
-            Debug.Assert(_localTrack.PeerConnection == PeerConnection);
-            Debug.Assert(_localTrack.Transceiver == this);
-            Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
+            if (_localTrack != null)
+            {
+                _localTrack.OnTrackAdded(peerConnection, this);
+                Debug.Assert(_localTrack.PeerConnection == PeerConnection);
+                Debug.Assert(_localTrack.Transceiver == this);
+                Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
+            }
         }
 
         /// <summary>

@@ -280,6 +280,21 @@ namespace Microsoft.MixedReality.WebRTC
         public uint fourcc;
     }
 
+    public class TransceiverInitSettings
+    {
+
+    }
+
+    public class AudioTransceiverInitSettings : TransceiverInitSettings
+    {
+
+    }
+
+    public class VideoTransceiverInitSettings : TransceiverInitSettings
+    {
+
+    }
+
     /// <summary>
     /// The WebRTC peer connection object is the entry point to using WebRTC.
     /// </summary>
@@ -385,183 +400,6 @@ namespace Microsoft.MixedReality.WebRTC
             /// </summary>
             Data = 3
         };
-
-        /// <summary>
-        /// Kind of video profile. This corresponds to the <see xref="Windows.Media.Capture.KnownVideoProfile"/>
-        /// enum of the <see xref="Windows.Media.Capture.MediaCapture"/> API.
-        /// </summary>
-        /// <seealso href="https://docs.microsoft.com/en-us/uwp/api/windows.media.capture.knownvideoprofile"/>
-        public enum VideoProfileKind : int
-        {
-            /// <summary>
-            /// Unspecified video profile kind. Used to remove any constraint on the video profile kind.
-            /// </summary>
-            Unspecified,
-
-            /// <summary>
-            /// Video profile for video recording, often of higher quality and framerate at the expense
-            /// of power consumption and latency.
-            /// </summary>
-            VideoRecording,
-
-            /// <summary>
-            /// Video profile for high quality photo capture.
-            /// </summary>
-            HighQualityPhoto,
-
-            /// <summary>
-            /// Balanced video profile to capture both videos and photos.
-            /// </summary>
-            BalancedVideoAndPhoto,
-
-            /// <summary>
-            /// Video profile for video conferencing, often of lower power consumption
-            /// and lower latency by deprioritizing higher resolutions.
-            /// This is the recommended profile for most WebRTC applications, if supported.
-            /// </summary>
-            VideoConferencing,
-
-            /// <summary>
-            /// Video profile for capturing a sequence of photos.
-            /// </summary>
-            PhotoSequence,
-
-            /// <summary>
-            /// Video profile containing high framerate capture formats.
-            /// </summary>
-            HighFrameRate,
-
-            /// <summary>
-            /// Video profile for capturing a variable sequence of photos.
-            /// </summary>
-            VariablePhotoSequence,
-
-            /// <summary>
-            /// Video profile for capturing videos with High Dynamic Range (HDR) and Wide Color Gamut (WCG).
-            /// </summary>
-            HdrWithWcgVideo,
-
-            /// <summary>
-            /// Video profile for capturing photos with High Dynamic Range (HDR) and Wide Color Gamut (WCG).
-            /// </summary>
-            HdrWithWcgPhoto,
-
-            /// <summary>
-            /// Video profile for capturing videos with High Dynamic Range (HDR).
-            /// </summary>
-            VideoHdr8,
-        };
-
-        public class TransceiverInitSettings
-        {
-
-        }
-
-        public class AudioTransceiverInitSettings : TransceiverInitSettings
-        {
-
-        }
-
-        public class VideoTransceiverInitSettings : TransceiverInitSettings
-        {
-
-        }
-
-        /// <summary>
-        /// Settings for adding a local audio track backed by a local audio capture device (e.g. microphone).
-        /// </summary>
-        public class LocalAudioTrackSettings
-        {
-            /// <summary>
-            /// Name of the track to create, as used for the SDP negotiation.
-            /// This name needs to comply with the requirements of an SDP token, as described in the SDP RFC
-            /// https://tools.ietf.org/html/rfc4566#page-43. In particular the name cannot contain spaces nor
-            /// double quotes <code>"</code>.
-            /// The track name can optionally be empty, in which case the implementation will create a valid
-            /// random track name.
-            /// </summary>
-            public string trackName = string.Empty;
-        }
-
-        /// <summary>
-        /// Settings for adding a local video track backed by a local video capture device (e.g. webcam).
-        /// </summary>
-        public class LocalVideoTrackSettings
-        {
-            /// <summary>
-            /// Name of the track to create, as used for the SDP negotiation.
-            /// This name needs to comply with the requirements of an SDP token, as described in the SDP RFC
-            /// https://tools.ietf.org/html/rfc4566#page-43. In particular the name cannot contain spaces nor
-            /// double quotes <code>"</code>.
-            /// The track name can optionally be empty, in which case the implementation will create a valid
-            /// random track name.
-            /// </summary>
-            public string trackName = string.Empty;
-
-            /// <summary>
-            /// Optional video capture device to use for capture.
-            /// Use the default device if not specified.
-            /// </summary>
-            public VideoCaptureDevice videoDevice = default;
-
-            /// <summary>
-            /// Optional unique identifier of the video profile to use for capture,
-            /// if the device supports video profiles, as retrieved by one of:
-            /// - <see xref="MediaCapture.FindAllVideoProfiles"/>
-            /// - <see xref="MediaCapture.FindKnownVideoProfiles"/>
-            /// This requires <see cref="videoDevice"/> to be specified.
-            /// </summary>
-            public string videoProfileId = string.Empty;
-
-            /// <summary>
-            /// Optional video profile kind to restrict the list of video profiles to consider.
-            /// Note that this is not exclusive with <see cref="videoProfileId"/>, although in
-            /// practice it is recommended to specify only one or the other.
-            /// This requires <see cref="videoDevice"/> to be specified.
-            /// </summary>
-            public VideoProfileKind videoProfileKind = VideoProfileKind.Unspecified;
-
-            /// <summary>
-            /// Enable Mixed Reality Capture (MRC) on devices supporting the feature.
-            /// This setting is silently ignored on device not supporting MRC.
-            /// </summary>
-            /// <remarks>
-            /// This is only supported on UWP.
-            /// </remarks>
-            public bool enableMrc = true;
-
-            /// <summary>
-            /// Display the on-screen recording indicator while MRC is enabled.
-            /// This setting is silently ignored on device not supporting MRC, or if
-            /// <see cref="enableMrc"/> is set to <c>false</c>.
-            /// </summary>
-            /// <remarks>
-            /// This is only supported on UWP.
-            /// </remarks>
-            public bool enableMrcRecordingIndicator = true;
-
-            /// <summary>
-            /// Optional capture resolution width, in pixels.
-            /// This must be a resolution width the device supports.
-            /// </summary>
-            public uint? width;
-
-            /// <summary>
-            /// Optional capture resolution height, in pixels.
-            /// This must be a resolution width the device supports.
-            /// </summary>
-            public uint? height;
-
-            /// <summary>
-            /// Optional capture frame rate, in frames per second (FPS).
-            /// This must be a capture framerate the device supports.
-            /// </summary>
-            /// <remarks>
-            /// This is compared by strict equality, so is best left unspecified or to an exact value
-            /// retrieved by <see cref="GetVideoCaptureFormatsAsync"/>.
-            /// </remarks>
-            public double? framerate;
-        }
 
 
         #region Codec filtering
@@ -1075,7 +913,7 @@ namespace Microsoft.MixedReality.WebRTC
         #endregion
 
 
-        #region Local audio and video tracks
+        #region Transceivers
 
         /// <summary>
         /// Add to the current connection a new audio transceiver.
@@ -1090,11 +928,11 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         /// <param name="settings"></param>
         /// <returns>The newly created transceiver.</returns>
-        public AudioTransceiver AddAudioTransceiver(AudioTransceiverInitSettings settings)
+        public AudioTransceiver AddAudioTransceiver(AudioTransceiverInitSettings settings = null)
         {
             ThrowIfConnectionNotOpen();
             var transceiver = new AudioTransceiver(this);
-            var config = new PeerConnectionInterop.AudioTransceiverInteropInitConfig(transceiver, settings);
+            var config = new AudioTransceiverInterop.InitConfig(transceiver, settings);
             uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, in config,
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
@@ -1116,237 +954,17 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         /// <param name="settings"></param>
         /// <returns>The newly created transceiver.</returns>
-        public VideoTransceiver AddVideoTransceiver(VideoTransceiverInitSettings settings)
+        public VideoTransceiver AddVideoTransceiver(VideoTransceiverInitSettings settings = null)
         {
             ThrowIfConnectionNotOpen();
             var transceiver = new VideoTransceiver(this);
-            var config = new PeerConnectionInterop.VideoTransceiverInteropInitConfig(transceiver, settings);
+            var config = new VideoTransceiverInterop.InitConfig(transceiver, settings);
             uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, in config,
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
             VideoTransceiverAdded?.Invoke(transceiver);
             return transceiver;
-        }
-
-        /// <summary>
-        /// Add to the current connection a video track from a local video capture device (webcam).
-        /// 
-        /// The video track receives its video data from an underlying hidden source associated with
-        /// the track and producing video frames by capturing them from a capture device accessible
-        /// from the local host machine, generally a USB webcam or built-in device camera.
-        /// 
-        /// The underlying video source initially starts in the capturing state, and will remain live
-        /// for as long as the track is added to the peer connection. It can be temporarily disabled
-        /// and re-enabled (see <see cref="LocalVideoTrack.Enabled"/>) while remaining added to the
-        /// peer connection. Note that disabling the track does not release the device; the source
-        /// retains exclusive access to it.
-        /// </summary>
-        /// <param name="settings">Video capture settings for configuring the capture device associated with
-        /// the underlying video track source.</param>
-        /// <returns>This returns a task which, upon successful completion, provides an instance of
-        /// <see cref="LocalVideoTrack"/> representing the newly added video track.</returns>
-        /// <remarks>
-        /// On UWP this requires the "webcam" capability.
-        /// See <see href="https://docs.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations"/>
-        /// for more details.
-        /// 
-        /// The video capture device may be accessed several times during the initializing process,
-        /// generally once for listing and validating the capture format, and once for actually starting
-        /// the video capture.
-        /// 
-        /// Note that the capture device must support a capture format with the given constraints of profile
-        /// ID or kind, capture resolution, and framerate, otherwise the call will fail. That is, there is no
-        /// fallback mechanism selecting a closest match. Developers should use
-        /// <see cref="GetVideoCaptureFormatsAsync(string)"/> to list the supported formats ahead of calling
-        /// <see cref="AddLocalVideoTrackAsync(LocalVideoTrackSettings)"/>, and can build their own fallback
-        /// mechanism on top of this call if needed.
-        /// </remarks>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
-        /// <example>
-        /// Create a video track called "MyTrack", with Mixed Reality Capture (MRC) enabled.
-        /// This assumes that the platform supports MRC. Note that if MRC is not available
-        /// the call will still succeed, but will return a track without MRC enabled.
-        /// <code>
-        /// var settings = new LocalVideoTrackSettings
-        /// {
-        ///     trackName = "MyTrack",
-        ///     enableMrc = true
-        /// };
-        /// var videoTrack = await peerConnection.AddLocalVideoTrackAsync(settings);
-        /// </code>
-        /// Create a video track from a local webcam, asking for a capture format suited for video conferencing,
-        /// and a target framerate of 30 frames per second (FPS). The implementation will select an appropriate
-        /// capture resolution. This assumes that the device supports video profiles, and has at least one capture
-        /// format supporting 30 FPS capture associated with the VideoConferencing profile. Otherwise the call
-        /// will fail.
-        /// <code>
-        /// var settings = new LocalVideoTrackSettings
-        /// {
-        ///     videoProfileKind = VideoProfileKind.VideoConferencing,
-        ///     framerate = 30.0
-        /// };
-        /// var videoTrack = await peerConnection.AddLocalVideoTrackAsync(settings);
-        /// </code>
-        /// </example>
-        public Task<LocalVideoTrack> AddLocalVideoTrackAsync(LocalVideoTrackSettings settings = null)
-        {
-            ThrowIfConnectionNotOpen();
-            return Task.Run(() =>
-            {
-                // On UWP this cannot be called from the main UI thread, so always call it from
-                // a background worker thread.
-                string trackName = settings?.trackName;
-                if (string.IsNullOrEmpty(trackName))
-                {
-                    trackName = Guid.NewGuid().ToString();
-                }
-                var transceiver = new VideoTransceiver(this);
-                var track = new LocalVideoTrack(this, transceiver, trackName);
-                var config = new PeerConnectionInterop.LocalVideoTrackInteropInitConfig(transceiver, track, settings);
-                uint res = PeerConnectionInterop.PeerConnection_AddLocalVideoTrack(_nativePeerhandle, trackName, in config,
-                    out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
-                Utils.ThrowOnErrorCode(res);
-                transceiver.SetHandle(transceiverHandle);
-                track.SetHandle(trackHandle);
-                lock (_tracksLock)
-                {
-                    VideoTransceivers.Add(transceiver);
-                    LocalVideoTracks.Add(track);
-                }
-                return track;
-            });
-        }
-
-        /// <summary>
-        /// Remove from the current connection the local video track added with <see cref="AddLocalAudioTrackAsync"/>.
-        /// </summary>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
-        public void RemoveLocalVideoTrack(LocalVideoTrack track)
-        {
-            ThrowIfConnectionNotOpen();
-            PeerConnectionInterop.PeerConnection_RemoveLocalVideoTrack(_nativePeerhandle, track._nativeHandle);
-            track.OnTrackRemoved(this); // => LocalVideoTrack.PeerConnection = null
-            lock (_tracksLock)
-            {
-                LocalVideoTracks.Remove(track);
-            }
-        }
-
-        /// <summary>
-        /// Add a local video track backed by an external video source managed by the caller.
-        /// Unlike with <see cref="AddLocalVideoTrackAsync(LocalVideoTrackSettings)"/> which manages
-        /// a local video capture device and automatically produces frames, an external video source
-        /// provides video frames directly to WebRTC when asked to do so via the provided callback.
-        /// </summary>
-        /// <param name="trackName">Name of the new track.</param>
-        /// <param name="externalSource">External source providing the frames for the track.</param>
-        public LocalVideoTrack AddCustomLocalVideoTrack(string trackName, ExternalVideoTrackSource externalSource)
-        {
-            ThrowIfConnectionNotOpen();
-            var track = PeerConnectionInterop.AddLocalVideoTrackFromExternalSource(this, _nativePeerhandle,
-                trackName, externalSource);
-            lock (_tracksLock)
-            {
-                LocalVideoTracks.Add(track);
-            }
-            return track;
-        }
-
-        /// <summary>
-        /// Add to the current connection an audio track from a local audio capture device (microphone).
-        /// </summary>
-        /// <returns>Asynchronous task completed once the device is capturing and the track is added.</returns>
-        /// <remarks>
-        /// On UWP this requires the "microphone" capability.
-        /// See <see href="https://docs.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations"/>
-        /// for more details.
-        /// </remarks>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
-        public Task<LocalAudioTrack> AddLocalAudioTrackAsync(LocalAudioTrackSettings settings = null)
-        {
-            ThrowIfConnectionNotOpen();
-            return Task.Run(() =>
-            {
-                // On UWP this cannot be called from the main UI thread, so always call it from
-                // a background worker thread.
-
-                string trackName = settings?.trackName;
-                if (string.IsNullOrEmpty(trackName))
-                {
-                    trackName = Guid.NewGuid().ToString();
-                }
-
-                // Create interop wrappers
-                var transceiver = new AudioTransceiver(this);
-                var track = new LocalAudioTrack(this, transceiver, trackName);
-
-                // Parse settings
-                var config = new PeerConnectionInterop.LocalAudioTrackInteropInitConfig(transceiver, track, settings);
-
-                // Create native implementation objects
-                uint res = PeerConnectionInterop.PeerConnection_AddLocalAudioTrack(_nativePeerhandle, trackName, in config,
-                    out LocalAudioTrackHandle trackHandle, out AudioTransceiverHandle transceiverHandle);
-                Utils.ThrowOnErrorCode(res);
-                track.SetHandle(trackHandle);
-                transceiver.SetHandle(transceiverHandle);
-
-                // On success add wrappers to peer connection and return the track
-                lock (_tracksLock)
-                {
-                    AudioTransceivers.Add(transceiver);
-                    LocalAudioTracks.Add(track);
-                }
-                return track;
-            });
-        }
-
-        /// <summary>
-        /// Remove all the local video tracks associated with the given video track source.
-        /// </summary>
-        /// <param name="source">The video track source.</param>
-        /// <remarks>
-        /// Currently there is a 1:1 mapping between tracks and sources (source sharing is not available),
-        /// therefore this is equivalent to <see cref="RemoveLocalVideoTrack(LocalVideoTrack)"/>.
-        /// </remarks>
-        public void RemoveLocalVideoTracksFromSource(ExternalVideoTrackSource source)
-        {
-            ThrowIfConnectionNotOpen();
-            PeerConnectionInterop.PeerConnection_RemoveLocalVideoTracksFromSource(_nativePeerhandle, source._nativeHandle);
-            lock (_tracksLock)
-            {
-                int numTracks = LocalVideoTracks.Count;
-                int i = 0;
-                while (i < numTracks)
-                {
-                    var track = LocalVideoTracks[i];
-                    if (track.Source == source)
-                    {
-                        source.OnTrackRemovedFromSource(track);
-                        LocalVideoTracks.RemoveAt(i);
-                        --numTracks;
-                    }
-                    else
-                    {
-                        ++i;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Remove from the current connection the local audio track added with <see cref="AddLocalAudioTrackAsync"/>.
-        /// </summary>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
-        public void RemoveLocalAudioTrack(LocalAudioTrack track)
-        {
-            ThrowIfConnectionNotOpen();
-            PeerConnectionInterop.PeerConnection_RemoveLocalAudioTrack(_nativePeerhandle, track._nativeHandle);
-            track.OnTrackRemoved(this); // => LocalAudioTrack.PeerConnection = null
-            lock (_tracksLock)
-            {
-                LocalAudioTracks.Remove(track);
-            }
         }
 
         #endregion
@@ -1598,15 +1216,14 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         /// <returns>The list of available video capture devices.</returns>
         /// <remarks>
-        /// Assign one of the returned <see cref="VideoCaptureDevice"/> to the
-        /// <see cref="LocalVideoTrackSettings.videoDevice"/> field to force a local video
-        /// track to use that device when creating it with <see cref="AddLocalVideoTrackAsync(LocalVideoTrackSettings)"/>.
+        /// Assign one of the returned <see cref="VideoCaptureDevice"/> to the <see cref="LocalVideoTrackSettings.videoDevice"/>
+        /// field to force a local video track to use that device when creating it with
+        /// <see cref="LocalVideoTrack.CreateFromDeviceAsync(LocalVideoTrackSettings)"/>.
         /// </remarks>
         public static Task<List<VideoCaptureDevice>> GetVideoCaptureDevicesAsync()
         {
             // Ensure the logging system is ready before using PInvoke.
             MainEventSource.Log.Initialize();
-
 
             var devices = new List<VideoCaptureDevice>();
             var eventWaitHandle = new ManualResetEventSlim(initialState: false);

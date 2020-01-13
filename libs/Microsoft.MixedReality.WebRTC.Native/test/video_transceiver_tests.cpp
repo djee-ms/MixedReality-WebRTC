@@ -105,8 +105,8 @@ TEST(VideoTransceiver, Simple) {
   LocalVideoTrackInitConfig track_config{};
   LocalVideoTrackHandle track_handle1{};
   ASSERT_EQ(Result::kSuccess,
-            mrsLocalVideoTrackCreate(&track_config, "local_video_track",
-                                     &track_handle1));
+            mrsLocalVideoTrackCreateFromDevice(
+                &track_config, "local_video_track", &track_handle1));
   ASSERT_NE(nullptr, track_handle1);
 
   // Set the video track of the transceiver on #1, which will add it to the peer

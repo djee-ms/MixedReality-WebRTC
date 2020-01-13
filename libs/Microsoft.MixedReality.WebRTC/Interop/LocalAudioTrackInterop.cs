@@ -68,6 +68,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static unsafe extern void LocalAudioTrack_RemoveRef(IntPtr handle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsLocalAudioTrackCreateFromDevice")]
+        public static unsafe extern uint LocalAudioTrack_CreateFromDevice(in PeerConnectionInterop.LocalAudioTrackInteropInitConfig config,
+            string trackName, out LocalAudioTrackHandle trackHandle);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsLocalAudioTrackRegisterFrameCallback")]
         public static extern void LocalAudioTrack_RegisterFrameCallback(LocalAudioTrackHandle trackHandle,
             AudioFrameUnmanagedCallback callback, IntPtr userData);

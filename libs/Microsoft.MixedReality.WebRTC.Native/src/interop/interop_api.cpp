@@ -689,10 +689,10 @@ void MRS_CALL mrsPeerConnectionRegisterDataChannelRemovedCallback(
   }
 }
 
-mrsResult MRS_CALL
-mrsLocalVideoTrackCreate(const LocalVideoTrackInitConfig* config,
-                         const char* track_name,
-                         LocalVideoTrackHandle* track_handle_out) noexcept {
+mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
+    const LocalVideoTrackInitConfig* config,
+    const char* track_name,
+    LocalVideoTrackHandle* track_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
     RTC_LOG(LS_ERROR) << "Invalid empty local video track name.";
     return Result::kInvalidParameter;
@@ -930,10 +930,10 @@ mrsResult MRS_CALL mrsPeerConnectionRemoveLocalVideoTracksFromSource(
   return Result::kSuccess;
 }
 
-mrsResult MRS_CALL
-mrsLocalAudioTrackCreate(const LocalAudioTrackInitConfig* config,
-                         const char* track_name,
-                         LocalAudioTrackHandle* track_handle_out) noexcept {
+mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
+    const LocalAudioTrackInitConfig* config,
+    const char* track_name,
+    LocalAudioTrackHandle* track_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
     RTC_LOG(LS_ERROR) << "Invalid empty local audio track name.";
     return Result::kInvalidParameter;

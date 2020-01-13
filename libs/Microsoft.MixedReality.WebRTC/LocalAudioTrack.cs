@@ -3,11 +3,28 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.MixedReality.WebRTC.Interop;
 using Microsoft.MixedReality.WebRTC.Tracing;
 
 namespace Microsoft.MixedReality.WebRTC
 {
+    /// <summary>
+    /// Settings for adding a local audio track backed by a local audio capture device (e.g. microphone).
+    /// </summary>
+    public class LocalAudioTrackSettings
+    {
+        /// <summary>
+        /// Name of the track to create, as used for the SDP negotiation.
+        /// This name needs to comply with the requirements of an SDP token, as described in the SDP RFC
+        /// https://tools.ietf.org/html/rfc4566#page-43. In particular the name cannot contain spaces nor
+        /// double quotes <code>"</code>.
+        /// The track name can optionally be empty, in which case the implementation will create a valid
+        /// random track name.
+        /// </summary>
+        public string trackName = string.Empty;
+    }
+
     /// <summary>
     /// Audio track sending to the remote peer audio frames originating from
     /// a local track source (local microphone or other audio recording device).
@@ -75,14 +92,63 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         private LocalAudioTrackInterop.InteropCallbackArgs _interopCallbackArgs;
 
-        // Constructor for interop-based creation; SetHandle() will be called later
+        /// <summary>
+        /// Create an audio track from a local audio capture device (microphone).
+        /// This does not add the track to any peer connection. Instead, the track must be added manually to
+        /// an audio transceiver to be attached to a peer connection and transmitted to a remote peer.
+        /// </summary>
+        /// <param name="settings">Settings to initialize the local audio track.</param>
+        /// <returns>Asynchronous task completed once the device is capturing and the track is created.</returns>
+        /// <remarks>
+        /// On UWP this requires the "microphone" capability.
+        /// See <see href="https://docs.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations"/>
+        /// for more details.
+        /// </remarks>
+        public static Task<LocalAudioTrack> CreateFromDeviceAsync(LocalAudioTrackSettings settings = null)
+        {
+            return Task.Run(() =>
+            {
+                // On UWP this cannot be called from the main UI thread, so always call it from
+                // a background worker thread.
+
+                string trackName = settings?.trackName;
+                if (string.IsNullOrEmpty(trackName))
+                {
+                    trackName = Guid.NewGuid().ToString();
+                }
+
+                // Create interop wrappers
+                var track = new LocalAudioTrack(trackName);
+
+                // Parse settings
+                var config = new PeerConnectionInterop.LocalAudioTrackInteropInitConfig(track, settings);
+
+                // Create native implementation objects
+                uint res = LocalAudioTrackInterop.LocalAudioTrack_CreateFromDevice(in config, trackName,
+                    out LocalAudioTrackHandle trackHandle);
+                Utils.ThrowOnErrorCode(res);
+                track.SetHandle(trackHandle);
+                return track;
+            });
+        }
+
+        // Constructor for interop-based creation; SetHandle() will be called later.
+        // Constructor for standalone track not associated to a peer connection.
+        internal LocalAudioTrack(string trackName)
+        {
+            PeerConnection = null;
+            Transceiver = null;
+            Name = trackName;
+        }
+
+        // Constructor for interop-based creation; SetHandle() will be called later.
+        // Constructor for a track associated with a peer connection.
         internal LocalAudioTrack(PeerConnection peer, AudioTransceiver transceiver, string trackName)
         {
             PeerConnection = peer;
             Transceiver = transceiver;
             transceiver.OnLocalTrackAdded(this);
             Name = trackName;
-            RegisterInteropCallbacks();
         }
 
         internal void SetHandle(LocalAudioTrackHandle handle)
@@ -93,6 +159,7 @@ namespace Microsoft.MixedReality.WebRTC
             if (_nativeHandle != handle)
             {
                 _nativeHandle = handle;
+                RegisterInteropCallbacks();
             }
         }
 
@@ -117,8 +184,14 @@ namespace Microsoft.MixedReality.WebRTC
             }
 
             // Remove the track from the peer connection, if any
-            PeerConnection?.RemoveLocalAudioTrack(this);
-            Debug.Assert(PeerConnection == null); // see OnTrackRemoved
+            if (Transceiver != null)
+            {
+                Debug.Assert(PeerConnection != null);
+                Debug.Assert(Transceiver.LocalTrack == this);
+                Transceiver.SetLocalTrack(null);
+            }
+            Debug.Assert(PeerConnection == null);
+            Debug.Assert(Transceiver == null);
 
             // Unregister interop callbacks
             if (_selfHandle != IntPtr.Zero)

@@ -5,8 +5,10 @@
 // line, to prevent clang-format from reordering it with other headers.
 #include "pch.h"
 
+#include "global_factory.h"
 #include "interop/local_video_track_interop.h"
 #include "local_video_track.h"
+#include "media/external_video_track_source_impl.h"
 
 using namespace Microsoft::MixedReality::WebRTC;
 
@@ -29,7 +31,50 @@ mrsLocalVideoTrackRemoveRef(LocalVideoTrackHandle handle) noexcept {
   }
 }
 
-// mrsLocalVideoTrackCreate -> interop_api.cpp
+// mrsLocalVideoTrackCreateFromDevice -> interop_api.cpp
+
+mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
+    const LocalVideoTrackFromExternalSourceInitConfig* config,
+    const char* track_name,
+    LocalVideoTrackHandle* track_handle_out) noexcept {
+  if (!track_handle_out) {
+    return Result::kInvalidParameter;
+  }
+  *track_handle_out = nullptr;
+
+  auto track_source =
+      static_cast<detail::ExternalVideoTrackSourceImpl*>(config->source_handle);
+  if (!track_source) {
+    return Result::kInvalidNativeHandle;
+  }
+
+  std::string track_name_str;
+  if (track_name && (track_name[0] != '\0')) {  //< TODO IsStringNullOrEmpty()
+    track_name_str = track_name;
+  } else {
+    track_name_str = "external_track";
+  }
+
+  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  if (!pc_factory) {
+    return Result::kUnknownError;
+  }
+
+  // The video track keeps a reference to the video source; let's hope this
+  // does not change, because this is not explicitly mentioned in the docs,
+  // and the video track is the only one keeping the video source alive.
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
+      pc_factory->CreateVideoTrack(track_name_str, track_source->impl());
+  if (!video_track) {
+    return Result::kUnknownError;
+  }
+
+  // Create the video track wrapper
+  RefPtr<LocalVideoTrack> track =
+      new LocalVideoTrack(std::move(video_track), config->track_interop_handle);
+  *track_handle_out = track.release();
+  return Result::kSuccess;
+}
 
 void MRS_CALL mrsLocalVideoTrackRegisterI420AFrameCallback(
     LocalVideoTrackHandle trackHandle,

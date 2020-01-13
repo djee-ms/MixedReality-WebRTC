@@ -23,10 +23,16 @@ mrsLocalVideoTrackRemoveRef(LocalVideoTrackHandle handle) noexcept;
 /// Create a new local video track by opening a local video capture device
 /// (webcam).
 /// [UWP] This must be invoked from another thread than the main UI thread.
-MRS_API mrsResult MRS_CALL
-mrsLocalVideoTrackCreate(const LocalVideoTrackInitConfig* config,
-                         const char* track_name,
-                         LocalVideoTrackHandle* track_handle_out) noexcept;
+MRS_API mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
+    const LocalVideoTrackInitConfig* config,
+    const char* track_name,
+    LocalVideoTrackHandle* track_handle_out) noexcept;
+
+/// Create a new local video track by using an existing external video source.
+MRS_API mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
+    const LocalVideoTrackFromExternalSourceInitConfig* config,
+    const char* track_name,
+    LocalVideoTrackHandle* track_handle_out) noexcept;
 
 /// Register a custom callback to be called when the local video track captured
 /// a frame. The captured frames is passed to the registered callback in I420
