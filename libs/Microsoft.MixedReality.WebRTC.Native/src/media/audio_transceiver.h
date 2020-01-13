@@ -17,7 +17,11 @@ class PeerConnection;
 /// Transceiver containing audio tracks.
 class AudioTransceiver : public Transceiver {
  public:
-  AudioTransceiver(PeerConnection& owner) noexcept;
+  /// Constructor for Plan B.
+  AudioTransceiver(PeerConnection& owner,
+                   mrsAudioTransceiverInteropHandle interop_handle) noexcept;
+
+  /// Constructor for Unified Plan.
   AudioTransceiver(
       PeerConnection& owner,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,

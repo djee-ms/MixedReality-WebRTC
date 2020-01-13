@@ -17,11 +17,16 @@ class PeerConnection;
 /// Transceiver containing video tracks.
 class VideoTransceiver : public Transceiver {
  public:
-  VideoTransceiver(PeerConnection& owner) noexcept;
+  /// Constructor for Plan B.
+  VideoTransceiver(PeerConnection& owner,
+                   mrsVideoTransceiverInteropHandle interop_handle) noexcept;
+
+  /// Constructor for Unified Plan.
   VideoTransceiver(
       PeerConnection& owner,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
       mrsVideoTransceiverInteropHandle interop_handle) noexcept;
+
   MRS_API ~VideoTransceiver() override;
 
   MRS_API Result SetLocalTrack(RefPtr<LocalVideoTrack> local_track) noexcept;

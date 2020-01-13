@@ -30,11 +30,14 @@ std::string_view ObjectTypeToString(ObjectType type) {
   static_assert((int)ObjectType::kRemoteAudioTrack == 4, "");
   static_assert((int)ObjectType::kRemoteVideoTrack == 5, "");
   static_assert((int)ObjectType::kDataChannel == 6, "");
+  static_assert((int)ObjectType::kAudioTransceiver == 7, "");
+  static_assert((int)ObjectType::kVideoTransceiver == 8, "");
   constexpr const std::string_view s_types[] = {
       "PeerConnection",   "LocalAudioTrack",
       "LocalVideoTrack",  "ExternalVideoTrackSource",
       "RemoteAudioTrack", "RemoteVideoTrack",
-      "DataChannel"};
+      "DataChannel",      "AudioTransceiver",
+      "VideoTransceiver"};
   return s_types[(int)type];
 }
 
@@ -74,11 +77,7 @@ GlobalFactory::~GlobalFactory() {
     RTC_LOG(LS_ERROR) << "Shutting down the global factory while "
                       << alive_objects_.size()
                       << " objects are still alive. This will likely deadlock.";
-    for (auto&& pair : alive_objects_) {
-      RTC_LOG(LS_ERROR) << "- " << ObjectToString(pair.second, pair.first)
-                        << " [" << pair.first->GetApproxRefCount()
-                        << " ref(s)]";
-    }
+    ReportLiveObjects();
   }
   ShutdownNoLock();
 }
@@ -143,6 +142,19 @@ void GlobalFactory::RemoveObject(ObjectType type, TrackedObject* obj) noexcept {
       }
     }
   } catch (...) {
+  }
+}
+
+void GlobalFactory::ReportLiveObjects() {
+  std::scoped_lock lock(mutex_);
+  RTC_LOG(LS_INFO) << "mr-webrtc alive objects report for "
+                   << alive_objects_.size() << " objects:";
+  int i = 0;
+  for (auto&& pair : alive_objects_) {
+    RTC_LOG(LS_INFO) << "[" << i << "] "
+                     << ObjectToString(pair.second, pair.first) << " [~"
+                     << pair.first->GetApproxRefCount() << " ref(s)]";
+    ++i;
   }
 }
 

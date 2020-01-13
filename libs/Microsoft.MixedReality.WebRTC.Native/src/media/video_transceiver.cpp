@@ -3,21 +3,30 @@
 
 #include "pch.h"
 
+#include "interop/global_factory.h"
 #include "video_transceiver.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
-VideoTransceiver::VideoTransceiver(PeerConnection& owner) noexcept
-    : Transceiver(MediaKind::kVideo, owner) {}
+VideoTransceiver::VideoTransceiver(
+    PeerConnection& owner,
+    mrsVideoTransceiverInteropHandle interop_handle) noexcept
+    : Transceiver(MediaKind::kVideo, owner), interop_handle_(interop_handle) {
+  GlobalFactory::Instance()->AddObject(ObjectType::kVideoTransceiver, this);
+}
 
 VideoTransceiver::VideoTransceiver(
     PeerConnection& owner,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kVideo, owner, transceiver),
-      interop_handle_(interop_handle) {}
+      interop_handle_(interop_handle) {
+  GlobalFactory::Instance()->AddObject(ObjectType::kVideoTransceiver, this);
+}
 
-VideoTransceiver::~VideoTransceiver() {}
+VideoTransceiver::~VideoTransceiver() {
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kVideoTransceiver, this);
+}
 
 Result VideoTransceiver::SetLocalTrack(
     RefPtr<LocalVideoTrack> local_track) noexcept {

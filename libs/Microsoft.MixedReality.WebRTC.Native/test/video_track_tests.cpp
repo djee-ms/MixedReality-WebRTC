@@ -119,13 +119,16 @@ TEST(VideoTrack, Simple) {
   // Grab the handle of the remote track from the remote peer (#2) via the
   // VideoTrackAdded callback.
   RemoteVideoTrackHandle track_handle2{};
+  VideoTransceiverHandle transceiver_handle2{};
   Event track_added2_ev;
   VideoTrackAddedCallback track_added2_cb =
-      [&track_handle2, &track_added2_ev](
+      [&track_handle2, &transceiver_handle2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle native_handle,
-          mrsVideoTransceiverInteropHandle, VideoTransceiverHandle) {
-        track_handle2 = native_handle;
+          RemoteVideoTrackHandle track_native_handle,
+          mrsVideoTransceiverInteropHandle /*interop_handle*/,
+          VideoTransceiverHandle transceiver_native_handle) {
+        track_handle2 = track_native_handle;
+        transceiver_handle2 = transceiver_native_handle;
         track_added2_ev.Set();
       };
   mrsPeerConnectionRegisterVideoTrackAddedCallback(pair.pc2(),
@@ -133,30 +136,32 @@ TEST(VideoTrack, Simple) {
 
   // Create the local video track of the local peer (#1)
   LocalVideoTrackInitConfig config{};
-  LocalVideoTrackHandle track_handle{};
-  VideoTransceiverHandle transceiver_handle{};
+  LocalVideoTrackHandle track_handle1{};
+  VideoTransceiverHandle transceiver_handle1{};
   ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddLocalVideoTrack(
                                   pair.pc1(), "local_video_track", &config,
-                                  &track_handle, &transceiver_handle));
-  ASSERT_NE(nullptr, track_handle);
-  ASSERT_NE(nullptr, transceiver_handle);
+                                  &track_handle1, &transceiver_handle1));
+  ASSERT_NE(nullptr, track_handle1);
+  ASSERT_NE(nullptr, transceiver_handle1);
 
-  // Check video transceiver consistency
+  // Check video transceiver #1 consistency
   {
+    // Local track is track_handle1
     LocalVideoTrackHandle track_handle_local{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
-                                    transceiver_handle, &track_handle_local));
-    ASSERT_EQ(track_handle, track_handle_local);
+                                    transceiver_handle1, &track_handle_local));
+    ASSERT_EQ(track_handle1, track_handle_local);
     mrsLocalVideoTrackRemoveRef(track_handle_local);
 
+    // Remote track is NULL
     RemoteVideoTrackHandle track_handle_remote{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
-                                    transceiver_handle, &track_handle_remote));
+                                    transceiver_handle1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
   }
 
   // New tracks are enabled by default
-  ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
+  ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
 
   // Connect #1 and #2
   pair.ConnectAndWait();
@@ -164,6 +169,22 @@ TEST(VideoTrack, Simple) {
   // Wait for remote track to be added on #2
   ASSERT_TRUE(track_added2_ev.WaitFor(5s));
   ASSERT_NE(nullptr, track_handle2);
+
+  // Check video transceiver #2 consistency
+  {
+    // Local track is NULL
+    LocalVideoTrackHandle track_handle_local{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
+                                    transceiver_handle2, &track_handle_local));
+    ASSERT_EQ(nullptr, track_handle_local);
+
+    // Remote track is track_handle2
+    RemoteVideoTrackHandle track_handle_remote{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
+                                    transceiver_handle2, &track_handle_remote));
+    ASSERT_EQ(track_handle2, track_handle_remote);
+    mrsRemoteVideoTrackRemoveRef(track_handle_remote);
+  }
 
   // Register a frame callback for the remote video of #2
   uint32_t frame_count = 0;
@@ -177,13 +198,18 @@ TEST(VideoTrack, Simple) {
   };
   mrsRemoteVideoTrackRegisterI420AFrameCallback(track_handle2, CB(i420cb));
 
+  // Wait 5 seconds and check the frame callback is called
   Event ev;
   ev.WaitFor(5s);
   ASSERT_LT(50u, frame_count) << "Expected at least 10 FPS";
 
+  // Clean-up
   mrsRemoteVideoTrackRegisterI420AFrameCallback(track_handle2, nullptr,
                                                 nullptr);
-  mrsLocalVideoTrackRemoveRef(track_handle);
+  mrsRemoteVideoTrackRemoveRef(track_handle2);
+  mrsVideoTransceiverRemoveRef(transceiver_handle2);
+  mrsLocalVideoTrackRemoveRef(track_handle1);
+  mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
 
 TEST(VideoTrack, Muted) {

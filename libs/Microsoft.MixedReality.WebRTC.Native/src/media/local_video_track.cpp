@@ -3,6 +3,7 @@
 
 #include "pch.h"
 
+#include "interop/global_factory.h"
 #include "local_video_track.h"
 #include "peer_connection.h"
 
@@ -23,6 +24,7 @@ LocalVideoTrack::LocalVideoTrack(
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
+  GlobalFactory::Instance()->AddObject(ObjectType::kLocalVideoTrack, this);
   kind_ = TrackKind::kVideoTrack;
   transceiver_->OnLocalTrackAdded(this);
   rtc::VideoSinkWants sink_settings{};
@@ -35,6 +37,7 @@ LocalVideoTrack::~LocalVideoTrack() {
   if (owner_) {
     owner_->RemoveLocalVideoTrack(*this);
   }
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kLocalVideoTrack, this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }

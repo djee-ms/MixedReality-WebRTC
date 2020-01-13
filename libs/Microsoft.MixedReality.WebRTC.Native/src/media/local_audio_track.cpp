@@ -3,6 +3,7 @@
 
 #include "pch.h"
 
+#include "interop/global_factory.h"
 #include "local_audio_track.h"
 #include "peer_connection.h"
 
@@ -23,6 +24,7 @@ LocalAudioTrack::LocalAudioTrack(
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
+  GlobalFactory::Instance()->AddObject(ObjectType::kLocalAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
   transceiver_->OnLocalTrackAdded(this);
   track_->AddSink(this);  //< FIXME - Implementation is no-op
@@ -33,6 +35,7 @@ LocalAudioTrack::~LocalAudioTrack() {
   if (owner_) {
     owner_->RemoveLocalAudioTrack(*this);
   }
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kLocalAudioTrack, this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }

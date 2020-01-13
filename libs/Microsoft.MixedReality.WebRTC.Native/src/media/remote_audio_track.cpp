@@ -3,6 +3,7 @@
 
 #include "pch.h"
 
+#include "interop/global_factory.h"
 #include "peer_connection.h"
 #include "remote_audio_track.h"
 
@@ -23,6 +24,7 @@ RemoteAudioTrack::RemoteAudioTrack(
   RTC_CHECK(track_);
   RTC_CHECK(receiver_);
   RTC_CHECK(transceiver_);
+  GlobalFactory::Instance()->AddObject(ObjectType::kRemoteAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
   transceiver_->OnRemoteTrackAdded(this);
   track_->AddSink(this);
@@ -30,6 +32,7 @@ RemoteAudioTrack::RemoteAudioTrack(
 
 RemoteAudioTrack::~RemoteAudioTrack() {
   track_->RemoveSink(this);
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kRemoteAudioTrack, this);
   RTC_CHECK(!owner_);
 }
 

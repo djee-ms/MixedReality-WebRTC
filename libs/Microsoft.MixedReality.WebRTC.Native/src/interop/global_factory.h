@@ -16,6 +16,8 @@ enum class ObjectType : int {
   kRemoteAudioTrack,
   kRemoteVideoTrack,
   kDataChannel,
+  kAudioTransceiver,
+  kVideoTransceiver,
 };
 
 /// Global factory wrapper adding thread safety to all global objects, including
@@ -50,6 +52,9 @@ class GlobalFactory {
   /// Remove an object added with |AddObject|. This is generally called from the
   /// object's destructor for safety.
   void RemoveObject(ObjectType type, TrackedObject* obj) noexcept;
+
+  /// Report live objects to WebRTC logging system for debugging.
+  void ReportLiveObjects();
 
 #if defined(WINUWP)
   using WebRtcFactoryPtr =

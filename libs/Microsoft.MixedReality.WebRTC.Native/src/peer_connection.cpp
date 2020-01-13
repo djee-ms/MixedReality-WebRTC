@@ -669,24 +669,31 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
   RefPtr<VideoTransceiver> transceiver;
   switch (peer_->GetConfiguration().sdp_semantics) {
     case webrtc::SdpSemantics::kPlanB: {
-      transceiver = new VideoTransceiver(*this);
+      // Plan B doesn't have transceivers; just create a wrapper.
+      transceiver =
+          new VideoTransceiver(*this, config.transceiver_interop_handle);
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
+      // Create the low-level implementation object
       webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
           ret = peer_->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO);
       if (!ret.ok()) {
         return ErrorFromRTCError(ret.MoveError());
       }
+
+      // Create the transceiver wrapper
       transceiver = new VideoTransceiver(*this, ret.MoveValue(),
                                          config.transceiver_interop_handle);
     } break;
     default:
       return Error(Result::kUnknownError, "Unknown SDP semantic.");
   }
-  if (transceiver) {
-    return transceiver;
+  RTC_DCHECK(transceiver);
+  {
+    rtc::CritScope lock(&tracks_mutex_);
+    video_transceivers_.emplace_back(transceiver);
   }
-  return Error(Result::kUnknownError);
+  return transceiver;
 }
 
 ErrorOr<RefPtr<LocalVideoTrack>> PeerConnectionImpl::AddLocalVideoTrack(
@@ -710,7 +717,7 @@ ErrorOr<RefPtr<LocalVideoTrack>> PeerConnectionImpl::AddLocalVideoTrack(
   RefPtr<VideoTransceiver> transceiver = ret.MoveValue();
   RefPtr<LocalVideoTrack> track =
       new LocalVideoTrack(*this, std::move(transceiver), std::move(video_track),
-                          std::move(sender), nullptr);
+                          std::move(sender), track_interop_handle);
   {
     rtc::CritScope lock(&tracks_mutex_);
     local_video_tracks_.push_back(track);
@@ -770,7 +777,9 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
   RefPtr<AudioTransceiver> transceiver;
   switch (peer_->GetConfiguration().sdp_semantics) {
     case webrtc::SdpSemantics::kPlanB: {
-      transceiver = new AudioTransceiver(*this);
+      // Plan B doesn't have transceivers; just create a wrapper.
+      transceiver =
+          new AudioTransceiver(*this, config.transceiver_interop_handle);
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
       // Create the low-level implementation object
@@ -783,19 +792,16 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
       // Create the transceiver wrapper
       transceiver = new AudioTransceiver(*this, ret.MoveValue(),
                                          config.transceiver_interop_handle);
-      AudioTransceiverHandle handle = transceiver.get();
-      {
-        rtc::CritScope lock(&tracks_mutex_);
-        audio_transceivers_.emplace_back(std::move(transceiver));
-      }
     } break;
     default:
       return Error(Result::kUnknownError, "Unknown SDP semantic.");
   }
-  if (transceiver) {
-    return transceiver;
+  RTC_DCHECK(transceiver);
+  {
+    rtc::CritScope lock(&tracks_mutex_);
+    audio_transceivers_.emplace_back(transceiver);
   }
-  return Error(Result::kUnknownError);
+  return transceiver;
 }
 
 ErrorOr<RefPtr<LocalAudioTrack>> PeerConnectionImpl::AddLocalAudioTrack(
@@ -1131,9 +1137,15 @@ void PeerConnectionImpl::Close() noexcept {
         }
       }
     }
-  }
 
-  // local_audio_sender_ = nullptr;
+    // Clear transceivers
+    //< TODO - This is done inside the lock, but the lock is released before
+    // peer_ is cleared, so before the connection is actually closed, which
+    // doesn't prevent add(Audio|Video)Transceiver from being called again in
+    // parallel...
+    audio_transceivers_.clear();
+    video_transceivers_.clear();
+  }
 
   remote_streams_.clear();
 

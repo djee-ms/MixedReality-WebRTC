@@ -4,21 +4,30 @@
 #include "pch.h"
 
 #include "audio_transceiver.h"
+#include "interop/global_factory.h"
 #include "peer_connection.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
-AudioTransceiver::AudioTransceiver(PeerConnection& owner) noexcept
-    : Transceiver(MediaKind::kAudio, owner) {}
+AudioTransceiver::AudioTransceiver(
+    PeerConnection& owner,
+    mrsAudioTransceiverInteropHandle interop_handle) noexcept
+    : Transceiver(MediaKind::kAudio, owner), interop_handle_(interop_handle) {
+  GlobalFactory::Instance()->AddObject(ObjectType::kAudioTransceiver, this);
+}
 
 AudioTransceiver::AudioTransceiver(
     PeerConnection& owner,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kAudio, owner, transceiver),
-      interop_handle_(interop_handle) {}
+      interop_handle_(interop_handle) {
+  GlobalFactory::Instance()->AddObject(ObjectType::kAudioTransceiver, this);
+}
 
-AudioTransceiver::~AudioTransceiver() {}
+AudioTransceiver::~AudioTransceiver() {
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kAudioTransceiver, this);
+}
 
 Result AudioTransceiver::SetLocalTrack(
     RefPtr<LocalAudioTrack> local_track) noexcept {

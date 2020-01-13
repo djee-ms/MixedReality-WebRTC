@@ -3,8 +3,9 @@
 
 #include "pch.h"
 
-#include "remote_video_track.h"
+#include "interop/global_factory.h"
 #include "peer_connection.h"
+#include "remote_video_track.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -23,6 +24,7 @@ RemoteVideoTrack::RemoteVideoTrack(
   RTC_CHECK(track_);
   RTC_CHECK(receiver_);
   RTC_CHECK(transceiver_);
+  GlobalFactory::Instance()->AddObject(ObjectType::kRemoteVideoTrack, this);
   kind_ = TrackKind::kVideoTrack;
   transceiver_->OnRemoteTrackAdded(this);
   rtc::VideoSinkWants sink_settings{};
@@ -32,6 +34,7 @@ RemoteVideoTrack::RemoteVideoTrack(
 
 RemoteVideoTrack::~RemoteVideoTrack() {
   track_->RemoveSink(this);
+  GlobalFactory::Instance()->RemoveObject(ObjectType::kRemoteVideoTrack, this);
   RTC_CHECK(!owner_);
 }
 
