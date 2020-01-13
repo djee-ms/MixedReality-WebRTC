@@ -143,5 +143,11 @@ namespace Microsoft.MixedReality.WebRTC
             Debug.Assert(_remoteTrack == track);
             _remoteTrack = null;
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"(VideoTransceiver)\"{Name}\"";
+        }
     }
 }

@@ -231,5 +231,11 @@ namespace Microsoft.MixedReality.WebRTC
             Transceiver.OnLocalTrackRemoved(this);
             Transceiver = null;
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"(LocalAudioTrack)\"{Name}\"";
+        }
     }
 }

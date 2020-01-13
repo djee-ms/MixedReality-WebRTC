@@ -473,5 +473,11 @@ namespace Microsoft.MixedReality.WebRTC
                 Source = null;
             }
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"(LocalVideoTrack)\"{Name}\"";
+        }
     }
 }

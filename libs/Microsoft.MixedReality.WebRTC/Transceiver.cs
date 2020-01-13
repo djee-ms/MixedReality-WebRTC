@@ -61,6 +61,11 @@ namespace Microsoft.MixedReality.WebRTC
         }
 
         /// <summary>
+        /// A name for the transceiver, used for logging and debugging.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
         /// Peer connection this transceiver is part of.
         /// </summary>
         public PeerConnection PeerConnection { get; } = null;

@@ -172,5 +172,11 @@ namespace Microsoft.MixedReality.WebRTC
             Transceiver.OnRemoteTrackRemoved(this);
             Transceiver = null;
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"(RemoteVideoTrack)\"{Name}\"";
+        }
     }
 }

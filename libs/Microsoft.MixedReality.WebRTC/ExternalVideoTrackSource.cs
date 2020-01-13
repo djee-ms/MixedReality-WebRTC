@@ -83,6 +83,11 @@ namespace Microsoft.MixedReality.WebRTC
     public class ExternalVideoTrackSource : IDisposable
     {
         /// <summary>
+        /// A name for the external video track source, used for logging and debugging.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
         /// List of local video tracks this source is providing raw video frames to.
         /// </summary>
         public List<LocalVideoTrack> Tracks { get; } = new List<LocalVideoTrack>();
@@ -205,6 +210,12 @@ namespace Microsoft.MixedReality.WebRTC
                 }
             }
             tracks = remainingTracks;
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"(ExternalVideoTrackSource)\"{Name}\"";
         }
     }
 }

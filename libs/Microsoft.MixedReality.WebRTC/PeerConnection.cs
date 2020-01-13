@@ -440,6 +440,11 @@ namespace Microsoft.MixedReality.WebRTC
 
 
         /// <summary>
+        /// A name for the peer connection, used for logging and debugging.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
         /// Boolean property indicating whether the peer connection has been initialized.
         /// </summary>
         public bool Initialized
@@ -1508,6 +1513,12 @@ namespace Microsoft.MixedReality.WebRTC
                 RemoteVideoTracks.Remove(track);
             }
             VideoTrackRemoved?.Invoke(track);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"(PeerConnection)\"{Name}\"";
         }
     }
 }
