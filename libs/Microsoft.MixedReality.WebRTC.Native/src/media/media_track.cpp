@@ -8,9 +8,9 @@
 
 namespace Microsoft::MixedReality::WebRTC {
 
-MediaTrack::MediaTrack(
-    PeerConnection& owner) noexcept
-    : owner_(&owner) {
+MediaTrack::MediaTrack() noexcept = default;
+
+MediaTrack::MediaTrack(PeerConnection& owner) noexcept : owner_(&owner) {
   RTC_CHECK(owner_);
 }
 

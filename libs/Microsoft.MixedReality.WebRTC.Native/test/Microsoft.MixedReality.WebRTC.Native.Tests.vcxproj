@@ -72,6 +72,7 @@
     <ClCompile Include="data_channel_tests.cpp" />
     <ClCompile Include="simple_interop.cpp" />
     <ClCompile Include="video_track_tests.cpp" />
+    <ClCompile Include="video_transceiver_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\win32\Microsoft.MixedReality.WebRTC.Native.Win32.vcxproj">

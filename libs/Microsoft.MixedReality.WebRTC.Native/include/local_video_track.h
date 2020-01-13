@@ -39,11 +39,17 @@ class VideoTransceiver;
 /// has no knowledge about how the source produces the frames.
 class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
  public:
+  /// Constructor for a track not added to any peer connection.
+  LocalVideoTrack(rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
+                  mrsLocalVideoTrackInteropHandle interop_handle) noexcept;
+
+  /// Constructor for a track added to a peer connection.
   LocalVideoTrack(PeerConnection& owner,
                   RefPtr<VideoTransceiver> transceiver,
                   rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
                   mrsLocalVideoTrackInteropHandle interop_handle) noexcept;
+
   MRS_API ~LocalVideoTrack() override;
 
   /// Get the name of the local video track.
@@ -73,9 +79,21 @@ class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
     return interop_handle_;
   }
 
-  void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
+  /// Internal callback on added to a peer connection to update the internal
+  /// state of the object.
+  void OnAddedToPeerConnection(
+      PeerConnection& owner,
+      RefPtr<VideoTransceiver> transceiver,
+      rtc::scoped_refptr<webrtc::RtpSenderInterface> sender);
 
-  void OnTransceiverChanged(RefPtr<VideoTransceiver> newTransceiver);
+  /// Internal callback on removed from a peer connection to update the internal
+  /// state of the object.
+  void OnRemovedFromPeerConnection(
+      PeerConnection& old_owner,
+      RefPtr<VideoTransceiver> old_transceiver,
+      rtc::scoped_refptr<webrtc::RtpSenderInterface> old_sender);
+
+  void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
 
  private:
   /// Underlying core implementation.

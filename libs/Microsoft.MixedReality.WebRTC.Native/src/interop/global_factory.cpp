@@ -74,10 +74,12 @@ GlobalFactory::~GlobalFactory() {
     // WebRTC object destructors are also dispatched to the signaling thread,
     // like all method calls, but the threads are stopped by the GlobalFactory
     // shutdown, so dispatching will never complete.
-    RTC_LOG(LS_ERROR) << "Shutting down the global factory while "
-                      << alive_objects_.size()
-                      << " objects are still alive. This will likely deadlock.";
-    ReportLiveObjects();
+    // NOTE: To avoid static (de)init order fiasco in RTC_LOG(), which is using
+    // a global lock, do not log anything here. This would randomly fail anyway
+    // depending on whether that lock still exists.
+#if defined(MR_SHARING_WIN)
+    DebugBreak();
+#endif
   }
   ShutdownNoLock();
 }

@@ -10,6 +10,16 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 LocalAudioTrack::LocalAudioTrack(
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
+    mrsLocalAudioTrackInteropHandle interop_handle) noexcept
+    : MediaTrack(), track_(std::move(track)), interop_handle_(interop_handle) {
+  RTC_CHECK(track_);
+  GlobalFactory::Instance()->AddObject(ObjectType::kLocalAudioTrack, this);
+  kind_ = TrackKind::kAudioTrack;
+  track_->AddSink(this);  //< FIXME - Implementation is no-op
+}
+
+LocalAudioTrack::LocalAudioTrack(
     PeerConnection& owner,
     RefPtr<AudioTransceiver> transceiver,
     rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
@@ -64,6 +74,34 @@ webrtc::RtpSenderInterface* LocalAudioTrack::sender() const {
   return sender_.get();
 }
 
+void LocalAudioTrack::OnAddedToPeerConnection(
+    PeerConnection& owner,
+    RefPtr<AudioTransceiver> transceiver,
+    rtc::scoped_refptr<webrtc::RtpSenderInterface> sender) {
+  RTC_CHECK(!owner_);
+  RTC_CHECK(!transceiver_);
+  RTC_CHECK(!sender_);
+  RTC_CHECK(transceiver);
+  RTC_CHECK(sender);
+  owner_ = &owner;
+  sender_ = std::move(sender);
+  transceiver_ = std::move(transceiver);
+  transceiver_->OnLocalTrackAdded(this);
+}
+
+void LocalAudioTrack::OnRemovedFromPeerConnection(
+    PeerConnection& old_owner,
+    RefPtr<AudioTransceiver> old_transceiver,
+    rtc::scoped_refptr<webrtc::RtpSenderInterface> old_sender) {
+  RTC_CHECK_EQ(owner_, &old_owner);
+  RTC_CHECK_EQ(transceiver_.get(), old_transceiver.get());
+  RTC_CHECK_EQ(sender_.get(), old_sender.get());
+  owner_ = nullptr;
+  sender_ = nullptr;
+  transceiver_->OnLocalTrackRemoved(this);
+  transceiver_ = nullptr;
+}
+
 void LocalAudioTrack::RemoveFromPeerConnection(
     webrtc::PeerConnectionInterface& peer) {
   if (sender_) {
@@ -73,15 +111,6 @@ void LocalAudioTrack::RemoveFromPeerConnection(
     transceiver_->OnLocalTrackRemoved(this);
     transceiver_ = nullptr;
   }
-}
-
-void LocalAudioTrack::OnTransceiverChanged(
-    RefPtr<AudioTransceiver> newTransceiver) {
-  RTC_CHECK_NE(transceiver_.get(), newTransceiver.get());
-  RTC_CHECK_NE(transceiver_.get(), (AudioTransceiver*)nullptr);
-  transceiver_->OnLocalTrackRemoved(this);
-  transceiver_ = newTransceiver;
-  transceiver_->OnLocalTrackAdded(this);
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

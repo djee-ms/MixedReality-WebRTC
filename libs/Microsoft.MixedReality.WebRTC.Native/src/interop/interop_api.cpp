@@ -10,6 +10,8 @@
 #include "interop/external_video_track_source_interop.h"
 #include "interop/global_factory.h"
 #include "interop/interop_api.h"
+#include "interop/local_audio_track_interop.h"
+#include "interop/local_video_track_interop.h"
 #include "interop/peer_connection_interop.h"
 #include "local_video_track.h"
 #include "media/external_video_track_source_impl.h"
@@ -687,6 +689,82 @@ void MRS_CALL mrsPeerConnectionRegisterDataChannelRemovedCallback(
   }
 }
 
+mrsResult MRS_CALL
+mrsLocalVideoTrackCreate(const LocalVideoTrackInitConfig* config,
+                         const char* track_name,
+                         LocalVideoTrackHandle* track_handle_out) noexcept {
+  if (IsStringNullOrEmpty(track_name)) {
+    RTC_LOG(LS_ERROR) << "Invalid empty local video track name.";
+    return Result::kInvalidParameter;
+  }
+  if (!config) {
+    RTC_LOG(LS_ERROR) << "Invalid NULL local video device configuration.";
+    return Result::kInvalidParameter;
+  }
+  if (!track_handle_out) {
+    RTC_LOG(LS_ERROR) << "Invalid NULL local video track handle.";
+    return Result::kInvalidParameter;
+  }
+  *track_handle_out = nullptr;
+
+  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  if (!pc_factory) {
+    return Result::kInvalidOperation;
+  }
+
+  // Open the video capture device
+  std::unique_ptr<cricket::VideoCapturer> video_capturer;
+  auto res = OpenVideoCaptureDevice(*config, video_capturer);
+  if (res != Result::kSuccess) {
+    RTC_LOG(LS_ERROR) << "Failed to open video capture device.";
+    return res;
+  }
+  RTC_CHECK(video_capturer.get());
+
+  // Apply the same constraints used for opening the video capturer
+  auto videoConstraints = std::make_unique<SimpleMediaConstraints>();
+  if (config->width > 0) {
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MinWidth(config->width));
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MaxWidth(config->width));
+  }
+  if (config->height > 0) {
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MinHeight(config->height));
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MaxHeight(config->height));
+  }
+  if (config->framerate > 0) {
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MinFrameRate(config->framerate));
+    videoConstraints->mandatory_.push_back(
+        SimpleMediaConstraints::MaxFrameRate(config->framerate));
+  }
+
+  // Create the video track source
+  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
+      pc_factory->CreateVideoSource(std::move(video_capturer),
+                                    videoConstraints.get());
+  if (!video_source) {
+    return Result::kUnknownError;
+  }
+
+  // Create the video track
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =
+      pc_factory->CreateVideoTrack(track_name, video_source);
+  if (!video_track) {
+    RTC_LOG(LS_ERROR) << "Failed to create local video track.";
+    return Result::kUnknownError;
+  }
+
+  // Create the video track wrapper
+  RefPtr<LocalVideoTrack> track =
+      new LocalVideoTrack(std::move(video_track), config->track_interop_handle);
+  *track_handle_out = track.release();
+  return Result::kSuccess;
+}
+
 mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
     PeerConnectionHandle peer_handle,
     const char* track_name,
@@ -849,6 +927,48 @@ mrsResult MRS_CALL mrsPeerConnectionRemoveLocalVideoTracksFromSource(
     return Result::kInvalidNativeHandle;
   }
   peer->RemoveLocalVideoTracksFromSource(*source);
+  return Result::kSuccess;
+}
+
+mrsResult MRS_CALL
+mrsLocalAudioTrackCreate(const LocalAudioTrackInitConfig* config,
+                         const char* track_name,
+                         LocalAudioTrackHandle* track_handle_out) noexcept {
+  if (IsStringNullOrEmpty(track_name)) {
+    RTC_LOG(LS_ERROR) << "Invalid empty local audio track name.";
+    return Result::kInvalidParameter;
+  }
+  if (!track_handle_out) {
+    RTC_LOG(LS_ERROR) << "Invalid NULL local audio track handle.";
+    return Result::kInvalidParameter;
+  }
+  *track_handle_out = nullptr;
+
+  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  if (!pc_factory) {
+    return Result::kInvalidOperation;
+  }
+
+  // Create the audio track source
+  rtc::scoped_refptr<webrtc::AudioSourceInterface> audio_source =
+      pc_factory->CreateAudioSource(cricket::AudioOptions());
+  if (!audio_source) {
+    RTC_LOG(LS_ERROR) << "Failed to create local audio source.";
+    return Result::kUnknownError;
+  }
+
+  // Create the audio track
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track =
+      pc_factory->CreateAudioTrack(track_name, audio_source);
+  if (!audio_track) {
+    RTC_LOG(LS_ERROR) << "Failed to create local audio track.";
+    return Result::kUnknownError;
+  }
+
+  // Create the audio track wrapper
+  RefPtr<LocalAudioTrack> track =
+      new LocalAudioTrack(std::move(audio_track), config->track_interop_handle);
+  *track_handle_out = track.release();
   return Result::kSuccess;
 }
 

@@ -64,7 +64,12 @@ VideoTransceiver* RemoteVideoTrack::GetTransceiver() const {
 
 void RemoteVideoTrack::OnTrackRemoved(PeerConnection& owner) {
   RTC_DCHECK(owner_ == &owner);
+  RTC_DCHECK(receiver_ != nullptr);
+  RTC_DCHECK(transceiver_.get() != nullptr);
   owner_ = nullptr;
+  receiver_ = nullptr;
+  transceiver_->OnRemoteTrackRemoved(this);
+  transceiver_ = nullptr;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

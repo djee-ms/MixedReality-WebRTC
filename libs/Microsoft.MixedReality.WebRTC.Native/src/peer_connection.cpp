@@ -378,6 +378,19 @@ class PeerConnectionImpl : public PeerConnection,
 
   void OnLocalDescCreated(webrtc::SessionDescriptionInterface* desc) noexcept;
 
+  //
+  // Internal
+  //
+
+  void OnLocalTrackAddedToAudioTransceiver(AudioTransceiver& transceiver,
+                                           LocalAudioTrack& track) override;
+  void OnLocalTrackRemovedFromAudioTransceiver(AudioTransceiver& transceiver,
+                                               LocalAudioTrack& track) override;
+  void OnLocalTrackAddedToVideoTransceiver(VideoTransceiver& transceiver,
+                                           LocalVideoTrack& track) override;
+  void OnLocalTrackRemovedFromVideoTransceiver(VideoTransceiver& transceiver,
+                                               LocalVideoTrack& track) override;
+
  protected:
   /// The underlying PC object from the core implementation. This is NULL
   /// after |Close()| is called.
@@ -1556,6 +1569,74 @@ void PeerConnectionImpl::OnLocalDescCreated(
   // will in turn invoke the |local_sdp_ready_to_send_callback_| registered if
   // any, or do nothing otherwise. The observer is a mandatory parameter.
   peer_->SetLocalDescription(observer, desc);
+}
+
+void PeerConnectionImpl::OnLocalTrackAddedToAudioTransceiver(
+    AudioTransceiver& transceiver,
+    LocalAudioTrack& track) {
+  rtc::CritScope lock(&tracks_mutex_);
+  RTC_DCHECK(std::find_if(audio_transceivers_.begin(),
+                          audio_transceivers_.end(),
+                          [&transceiver](const RefPtr<AudioTransceiver>& tr) {
+                            return (tr.get() == &transceiver);
+                          }) != audio_transceivers_.end());
+  RTC_DCHECK(std::find_if(local_audio_tracks_.begin(),
+                          local_audio_tracks_.end(),
+                          [&track](const RefPtr<LocalAudioTrack>& tr) {
+                            return (tr.get() == &track);
+                          }) == local_audio_tracks_.end());
+  local_audio_tracks_.push_back(&track);
+}
+
+void PeerConnectionImpl::OnLocalTrackRemovedFromAudioTransceiver(
+    AudioTransceiver& transceiver,
+    LocalAudioTrack& track) {
+  rtc::CritScope lock(&tracks_mutex_);
+  RTC_DCHECK(std::find_if(audio_transceivers_.begin(),
+                          audio_transceivers_.end(),
+                          [&transceiver](const RefPtr<AudioTransceiver>& tr) {
+                            return (tr.get() == &transceiver);
+                          }) != audio_transceivers_.end());
+  auto it = std::find_if(local_audio_tracks_.begin(), local_audio_tracks_.end(),
+                         [&track](const RefPtr<LocalAudioTrack>& tr) {
+                           return (tr.get() == &track);
+                         });
+  RTC_DCHECK(it != local_audio_tracks_.end());
+  local_audio_tracks_.erase(it);
+}
+
+void PeerConnectionImpl::OnLocalTrackAddedToVideoTransceiver(
+    VideoTransceiver& transceiver,
+    LocalVideoTrack& track) {
+  rtc::CritScope lock(&tracks_mutex_);
+  RTC_DCHECK(std::find_if(video_transceivers_.begin(),
+                          video_transceivers_.end(),
+                          [&transceiver](const RefPtr<VideoTransceiver>& tr) {
+                            return (tr.get() == &transceiver);
+                          }) != video_transceivers_.end());
+  RTC_DCHECK(std::find_if(local_video_tracks_.begin(),
+                          local_video_tracks_.end(),
+                          [&track](const RefPtr<LocalVideoTrack>& tr) {
+                            return (tr.get() == &track);
+                          }) == local_video_tracks_.end());
+  local_video_tracks_.push_back(&track);
+}
+
+void PeerConnectionImpl::OnLocalTrackRemovedFromVideoTransceiver(
+    VideoTransceiver& transceiver,
+    LocalVideoTrack& track) {
+  rtc::CritScope lock(&tracks_mutex_);
+  RTC_DCHECK(std::find_if(video_transceivers_.begin(),
+                          video_transceivers_.end(),
+                          [&transceiver](const RefPtr<VideoTransceiver>& tr) {
+                            return (tr.get() == &transceiver);
+                          }) != video_transceivers_.end());
+  auto it = std::find_if(local_video_tracks_.begin(), local_video_tracks_.end(),
+                         [&track](const RefPtr<LocalVideoTrack>& tr) {
+                           return (tr.get() == &track);
+                         });
+  RTC_DCHECK(it != local_video_tracks_.end());
+  local_video_tracks_.erase(it);
 }
 
 ErrorOr<RefPtr<AudioTransceiver>>

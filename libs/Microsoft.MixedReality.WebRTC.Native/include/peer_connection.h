@@ -392,6 +392,38 @@ class PeerConnection : public TrackedObject {
   /// interact with it. This is called automatically; so not call manually.
   virtual mrsResult RegisterInteropCallbacks(
       const mrsPeerConnectionInteropCallbacks& callbacks) noexcept = 0;
+
+  //
+  // Internal
+  //
+
+  /// Internal callback on local audio track added to an audio transceiver of
+  /// this peer connection, to add it to the internal collection of local audio
+  /// tracks.
+  virtual void OnLocalTrackAddedToAudioTransceiver(
+      AudioTransceiver& transceiver,
+      LocalAudioTrack& track) = 0;
+
+  /// Internal callback on local audio track removed from an audio transceiver
+  /// of this peer connection, to remove it from the internal collection of
+  /// local audio tracks.
+  virtual void OnLocalTrackRemovedFromAudioTransceiver(
+      AudioTransceiver& transceiver,
+      LocalAudioTrack& track) = 0;
+
+  /// Internal callback on local video track added to a video transceiver of
+  /// this peer connection, to add it to the internal collection of local video
+  /// tracks.
+  virtual void OnLocalTrackAddedToVideoTransceiver(
+      VideoTransceiver& transceiver,
+      LocalVideoTrack& track) = 0;
+
+  /// Internal callback on local video track removed from a video transceiver
+  /// of this peer connection, to remove it from the internal collection of
+  /// local video tracks.
+  virtual void OnLocalTrackRemovedFromVideoTransceiver(
+      VideoTransceiver& transceiver,
+      LocalVideoTrack& track) = 0;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

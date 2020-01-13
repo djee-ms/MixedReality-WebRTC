@@ -26,6 +26,7 @@ class PeerConnection;
 /// Base class for all audio and video tracks.
 class MediaTrack : public TrackedObject {
  public:
+  MediaTrack() noexcept;
   MediaTrack(PeerConnection& owner) noexcept;
   MRS_API ~MediaTrack() override;
 

@@ -36,11 +36,6 @@ RemoteAudioTrack::~RemoteAudioTrack() {
   RTC_CHECK(!owner_);
 }
 
-void RemoteAudioTrack::OnTrackRemoved(PeerConnection& owner) {
-  RTC_DCHECK(owner_ == &owner);
-  owner_ = nullptr;
-}
-
 webrtc::AudioTrackInterface* RemoteAudioTrack::impl() const {
   return track_.get();
 }
@@ -51,6 +46,16 @@ webrtc::RtpReceiverInterface* RemoteAudioTrack::receiver() const {
 
 AudioTransceiver* RemoteAudioTrack::GetTransceiver() const {
   return transceiver_.get();
+}
+
+void RemoteAudioTrack::OnTrackRemoved(PeerConnection& owner) {
+  RTC_DCHECK(owner_ == &owner);
+  RTC_DCHECK(receiver_ != nullptr);
+  RTC_DCHECK(transceiver_.get() != nullptr);
+  owner_ = nullptr;
+  receiver_ = nullptr;
+  transceiver_->OnRemoteTrackRemoved(this);
+  transceiver_ = nullptr;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

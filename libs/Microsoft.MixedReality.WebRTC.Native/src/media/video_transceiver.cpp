@@ -30,9 +30,13 @@ VideoTransceiver::~VideoTransceiver() {
 
 Result VideoTransceiver::SetLocalTrack(
     RefPtr<LocalVideoTrack> local_track) noexcept {
+  if (local_track_ == local_track) {
+    return Result::kSuccess;
+  }
   Result result = Result::kSuccess;
   if (transceiver_) {  // Unified Plan
-    if (!transceiver_->sender()->SetTrack(local_track->impl())) {
+    if (!transceiver_->sender()->SetTrack(local_track ? local_track->impl()
+                                                      : nullptr)) {
       result = Result::kInvalidOperation;
     }
   } else {  // Plan B
@@ -43,22 +47,42 @@ Result VideoTransceiver::SetLocalTrack(
     result = Result::kUnknownError;  //< TODO
   }
   if (result != Result::kSuccess) {
-    RTC_LOG(LS_ERROR) << "Failed to set video track " << local_track->GetName()
-                      << " to video transceiver " << GetName() << ".";
+    if (local_track) {
+      RTC_LOG(LS_ERROR) << "Failed to set local video track "
+                        << local_track->GetName() << " of video transceiver "
+                        << GetName() << ".";
+    } else {
+      RTC_LOG(LS_ERROR)
+          << "Failed to clear local video track from video transceiver "
+          << GetName() << ".";
+    }
     return result;
   }
+  if (local_track_) {
+    // Detach old local track
+    local_track_->OnRemovedFromPeerConnection(*owner_, this,
+                                              transceiver_->sender());
+    owner_->OnLocalTrackRemovedFromVideoTransceiver(*this, *local_track_);
+  }
   local_track_ = std::move(local_track);
-  local_track_->OnTransceiverChanged(this);
+  if (local_track_) {
+    // Attach new local track
+    local_track_->OnAddedToPeerConnection(*owner_, this,
+                                          transceiver_->sender());
+    owner_->OnLocalTrackAddedToVideoTransceiver(*this, *local_track_);
+  }
   return Result::kSuccess;
 }
 
 void VideoTransceiver::OnLocalTrackAdded(RefPtr<LocalVideoTrack> track) {
-  RTC_DCHECK(!local_track_);
+  // this may be called multiple times with the same track
+  RTC_DCHECK(!local_track_ || (local_track_ == track));
   local_track_ = std::move(track);
 }
 
 void VideoTransceiver::OnRemoteTrackAdded(RefPtr<RemoteVideoTrack> track) {
-  RTC_DCHECK(!remote_track_);
+  // this may be called multiple times with the same track
+  RTC_DCHECK(!remote_track_ || (remote_track_ == track));
   remote_track_ = std::move(track);
 }
 

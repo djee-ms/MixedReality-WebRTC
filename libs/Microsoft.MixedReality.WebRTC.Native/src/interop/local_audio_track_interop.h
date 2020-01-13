@@ -21,6 +21,13 @@ mrsLocalAudioTrackAddRef(LocalAudioTrackHandle handle) noexcept;
 MRS_API void MRS_CALL
 mrsLocalAudioTrackRemoveRef(LocalAudioTrackHandle handle) noexcept;
 
+/// Create a new local audio track by opening a local audio capture device
+/// (webcam).
+MRS_API mrsResult MRS_CALL
+mrsLocalAudioTrackCreate(const LocalAudioTrackInitConfig* config,
+                         const char* track_name,
+                         LocalAudioTrackHandle* track_handle_out) noexcept;
+
 /// Register a custom callback to be called when the local audio track captured
 /// a frame.
 MRS_API void MRS_CALL
