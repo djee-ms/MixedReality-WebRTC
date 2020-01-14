@@ -237,6 +237,10 @@ enum class TrackKind : uint32_t {
 };
 
 /// Callback fired when a remote audio track is added to a connection.
+/// The |audio_track| and |audio_transceiver| handle hold a reference to the
+/// underlying native object they are associated with, and therefore must be
+/// released with |mrsLocalAudioTrackRemoveRef()| and
+/// |mrsAudioTransceiverRemoveRef()|, respectively, to avoid memory leaks.
 using PeerConnectionAudioTrackAddedCallback =
     void(MRS_CALL*)(mrsPeerConnectionInteropHandle peer,
                     mrsRemoteAudioTrackInteropHandle audio_track_wrapper,
@@ -245,6 +249,10 @@ using PeerConnectionAudioTrackAddedCallback =
                     AudioTransceiverHandle audio_transceiver);
 
 /// Callback fired when a remote audio track is removed from a connection.
+/// The |audio_track| and |audio_transceiver| handle hold a reference to the
+/// underlying native object they are associated with, and therefore must be
+/// released with |mrsLocalAudioTrackRemoveRef()| and
+/// |mrsAudioTransceiverRemoveRef()|, respectively, to avoid memory leaks.
 using PeerConnectionAudioTrackRemovedCallback =
     void(MRS_CALL*)(mrsPeerConnectionInteropHandle peer,
                     mrsRemoteAudioTrackInteropHandle audio_track_wrapper,
@@ -253,6 +261,10 @@ using PeerConnectionAudioTrackRemovedCallback =
                     AudioTransceiverHandle audio_transceiver);
 
 /// Callback fired when a remote video track is added to a connection.
+/// The |video_track| and |video_transceiver| handle hold a reference to the
+/// underlying native object they are associated with, and therefore must be
+/// released with |mrsLocalVideoTrackRemoveRef()| and
+/// |mrsVideoTransceiverRemoveRef()|, respectively, to avoid memory leaks.
 using PeerConnectionVideoTrackAddedCallback =
     void(MRS_CALL*)(mrsPeerConnectionInteropHandle peer,
                     mrsRemoteVideoTrackInteropHandle video_track_wrapper,
@@ -261,6 +273,10 @@ using PeerConnectionVideoTrackAddedCallback =
                     VideoTransceiverHandle video_transceiver);
 
 /// Callback fired when a remote video track is removed from a connection.
+/// The |video_track| and |video_transceiver| handle hold a reference to the
+/// underlying native object they are associated with, and therefore must be
+/// released with |mrsLocalVideoTrackRemoveRef()| and
+/// |mrsVideoTransceiverRemoveRef()|, respectively, to avoid memory leaks.
 using PeerConnectionVideoTrackRemovedCallback =
     void(MRS_CALL*)(mrsPeerConnectionInteropHandle peer,
                     mrsRemoteVideoTrackInteropHandle video_track_wrapper,
@@ -451,6 +467,9 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterRenegotiationNeededCallback(
 
 /// Register a callback fired when a remote audio track is added to the current
 /// peer connection.
+/// Note that the arguments include some object handles, which each hold a
+/// reference to the corresponding object and therefore must be released, even
+/// if the user does not make use of them in the callback.
 MRS_API void MRS_CALL mrsPeerConnectionRegisterAudioTrackAddedCallback(
     PeerConnectionHandle peerHandle,
     PeerConnectionAudioTrackAddedCallback callback,
@@ -458,6 +477,9 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterAudioTrackAddedCallback(
 
 /// Register a callback fired when a remote audio track is removed from the
 /// current peer connection.
+/// Note that the arguments include some object handles, which each hold a
+/// reference to the corresponding object and therefore must be released, even
+/// if the user does not make use of them in the callback.
 MRS_API void MRS_CALL mrsPeerConnectionRegisterAudioTrackRemovedCallback(
     PeerConnectionHandle peerHandle,
     PeerConnectionAudioTrackRemovedCallback callback,
@@ -465,6 +487,9 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterAudioTrackRemovedCallback(
 
 /// Register a callback fired when a remote video track is added to the current
 /// peer connection.
+/// Note that the arguments include some object handles, which each hold a
+/// reference to the corresponding object and therefore must be released, even
+/// if the user does not make use of them in the callback.
 MRS_API void MRS_CALL mrsPeerConnectionRegisterVideoTrackAddedCallback(
     PeerConnectionHandle peerHandle,
     PeerConnectionVideoTrackAddedCallback callback,
@@ -472,6 +497,9 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterVideoTrackAddedCallback(
 
 /// Register a callback fired when a remote video track is removed from the
 /// current peer connection.
+/// Note that the arguments include some object handles, which each hold a
+/// reference to the corresponding object and therefore must be released, even
+/// if the user does not make use of them in the callback.
 MRS_API void MRS_CALL mrsPeerConnectionRegisterVideoTrackRemovedCallback(
     PeerConnectionHandle peerHandle,
     PeerConnectionVideoTrackRemovedCallback callback,
