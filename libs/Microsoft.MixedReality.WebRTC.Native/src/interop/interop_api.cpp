@@ -310,6 +310,14 @@ inline rtc::Thread* GetWorkerThread() {
   return GlobalFactory::Instance()->GetWorkerThread();
 }
 
+mrsResult MRS_CALL mrsStartup() noexcept {
+  return GlobalFactory::Initialize();
+}
+
+mrsResult MRS_CALL mrsShutdown(mrsShutdownOptions options) noexcept {
+  return GlobalFactory::Shutdown(options);
+}
+
 void MRS_CALL mrsCloseEnum(mrsEnumHandle* handleRef) noexcept {
   if (handleRef) {
     if (auto& handle = *handleRef) {
@@ -330,7 +338,7 @@ mrsResult MRS_CALL mrsEnumVideoCaptureDevicesAsync(
   }
 #if defined(WINUWP)
   // The UWP factory needs to be initialized for getDevices() to work.
-  if (!GlobalFactory::Instance()->GetOrCreate()) {
+  if (!GlobalFactory::Instance()->GetPeerConnectionFactory()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
     return Result::kUnknownError;
   }
@@ -703,7 +711,7 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  auto pc_factory = GlobalFactory::Instance()->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
   }
@@ -749,7 +757,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  auto pc_factory = GlobalFactory::Instance()->GetExisting();
+  auto pc_factory = GlobalFactory::Instance()->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
   }

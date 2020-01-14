@@ -26,6 +26,21 @@ using mrsResult = Microsoft::MixedReality::WebRTC::Result;
 // Generic utilities
 //
 
+enum class mrsShutdownOptions : uint32_t {
+  kNone = 0,
+  kFailOnLiveObjects = 0x1,
+  kLogLiveObjects = 0x2
+};
+
+/// Initialize the MixedReality-WebRTC library. This must be called before any
+/// other function is called, to initialize the internal WebRTC threads and
+/// global objects.
+MRS_API mrsResult MRS_CALL mrsStartup() noexcept;
+
+/// Shutdown the MixedReality-WebRTC library by terminating all WebRTC threads
+/// and releasing all global resources.
+MRS_API mrsResult MRS_CALL mrsShutdown(mrsShutdownOptions options) noexcept;
+
 /// Opaque enumerator type.
 struct mrsEnumerator;
 

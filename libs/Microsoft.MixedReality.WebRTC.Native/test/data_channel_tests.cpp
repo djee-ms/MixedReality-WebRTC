@@ -26,6 +26,7 @@ using DataAddedCallback =
 }  // namespace
 
 TEST(DataChannel, AddChannelBeforeInit) {
+  LibraryInitRaii lib;
   PCRaii pc;
   ASSERT_NE(nullptr, pc.handle());
   mrsDataChannelConfig config{};
@@ -41,6 +42,8 @@ TEST(DataChannel, AddChannelBeforeInit) {
 }
 
 TEST(DataChannel, InBand) {
+  LibraryInitRaii lib;
+
   // Create PC
   PeerConnectionConfiguration config{};  // local connection only
   PCRaii pc1(config);
@@ -181,6 +184,7 @@ TEST(DataChannel, InBand) {
 }
 
 TEST(DataChannel, MultiThreadCreate) {
+  LibraryInitRaii lib;
   PCRaii pc;
   constexpr int kNumThreads = 16;
   std::thread threads[kNumThreads];
@@ -208,6 +212,8 @@ TEST(DataChannel, MultiThreadCreate) {
 //        so is prone to false errors. This is still useful for local testing.
 //
 // TEST(DataChannel, Buffering) {
+//  LibraryInitRaii lib;
+//
 //  // Create PC
 //  LocalPeerPairRaii pair;
 //  ASSERT_NE(nullptr, pair.pc1());

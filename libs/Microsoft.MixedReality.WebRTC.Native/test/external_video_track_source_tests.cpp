@@ -119,6 +119,7 @@ using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
 }  // namespace
 
 TEST(ExternalVideoTrackSource, Simple) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // Grab the handle of the remote track from the remote peer (#2) via the

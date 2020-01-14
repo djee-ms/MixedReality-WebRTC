@@ -1410,9 +1410,9 @@ void PeerConnectionImpl::OnAddTrack(
         transceiver->GetInteropHandle();
 
     // Create the native object
-    RefPtr<RemoteAudioTrack> remote_audio_track = new RemoteAudioTrack(
-        *this, transceiver, std::move(audio_track),
-        std::move(receiver), interop_handle);
+    RefPtr<RemoteAudioTrack> remote_audio_track =
+        new RemoteAudioTrack(*this, transceiver, std::move(audio_track),
+                             std::move(receiver), interop_handle);
     {
       rtc::CritScope lock(&tracks_mutex_);
       remote_audio_tracks_.emplace_back(remote_audio_track);
@@ -1455,9 +1455,9 @@ void PeerConnectionImpl::OnAddTrack(
         transceiver->GetInteropHandle();
 
     // Create the native object
-    RefPtr<RemoteVideoTrack> remote_video_track = new RemoteVideoTrack(
-        *this, transceiver, std::move(video_track),
-        std::move(receiver), interop_handle);
+    RefPtr<RemoteVideoTrack> remote_video_track =
+        new RemoteVideoTrack(*this, transceiver, std::move(video_track),
+                             std::move(receiver), interop_handle);
     {
       rtc::CritScope lock(&tracks_mutex_);
       remote_video_tracks_.emplace_back(remote_video_track);
@@ -1918,15 +1918,9 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   SetFrameHeightRoundMode(FrameHeightRoundMode::kCrop);
 
   // Ensure the factory exists
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory;
-  {
-    mrsResult res = GlobalFactory::Instance()->GetOrCreate(factory);
-    if (res != Result::kSuccess) {
-      RTC_LOG(LS_ERROR) << "Failed to initialize the peer connection factory.";
-      return Error(res);
-    }
-  }
-  if (!factory.get()) {
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory =
+      GlobalFactory::Instance()->GetPeerConnectionFactory();
+  if (!factory) {
     return Error(Result::kUnknownError);
   }
 

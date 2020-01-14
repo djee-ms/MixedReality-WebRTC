@@ -91,6 +91,7 @@ bool IsSilent_int16(const int16_t* data,
 //
 
 TEST(AudioTrack, Simple) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
@@ -247,6 +248,7 @@ TEST(AudioTrack, Simple) {
 }
 
 TEST(AudioTrack, Muted) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the

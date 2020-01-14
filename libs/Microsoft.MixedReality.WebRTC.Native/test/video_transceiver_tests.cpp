@@ -45,6 +45,7 @@ using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
 }  // namespace
 
 TEST(VideoTransceiver, Simple) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
@@ -133,6 +134,7 @@ TEST(VideoTransceiver, Simple) {
   // Wait for remote track to be added on #2
   ASSERT_TRUE(track_added2_ev.WaitFor(5s));
   ASSERT_NE(nullptr, track_handle2);
+  ASSERT_NE(nullptr, transceiver_handle2);
 
   // Register a frame callback for the remote video of #2
   uint32_t frame_count = 0;
@@ -152,6 +154,8 @@ TEST(VideoTransceiver, Simple) {
 
   mrsRemoteVideoTrackRegisterI420AFrameCallback(track_handle2, nullptr,
                                                 nullptr);
+  mrsRemoteVideoTrackRemoveRef(track_handle2);
+  mrsVideoTransceiverRemoveRef(transceiver_handle2);
   mrsLocalVideoTrackRemoveRef(track_handle1);
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }

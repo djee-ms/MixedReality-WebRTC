@@ -6,6 +6,7 @@
 #include "interop/interop_api.h"
 
 TEST(PeerConnection, LocalNoIce) {
+  LibraryInitRaii lib;
   for (int i = 0; i < 3; ++i) {
     // Create PC
     PeerConnectionConfiguration config{};  // local connection only
@@ -44,6 +45,7 @@ TEST(PeerConnection, LocalNoIce) {
 }
 
 TEST(PeerConnection, LocalIce) {
+  LibraryInitRaii lib;
   for (int i = 0; i < 3; ++i) {
     // Create PC
     PeerConnectionConfiguration config{};  // local connection only

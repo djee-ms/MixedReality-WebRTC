@@ -24,22 +24,19 @@ enum class ObjectType : int {
 /// the peer connection factory, and on UWP the so-called "WebRTC factory".
 class GlobalFactory {
  public:
-  ~GlobalFactory();
+  static mrsResult Initialize() noexcept;
+  static mrsResult Shutdown(mrsShutdownOptions options =
+                                mrsShutdownOptions::kLogLiveObjects) noexcept;
 
   /// Global factory of all global objects, including the peer connection
   /// factory itself, with added thread safety.
   static const std::unique_ptr<GlobalFactory>& Instance();
 
-  /// Get or create the peer connection factory.
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> GetOrCreate();
-
-  /// Get or create the peer connection factory.
-  mrsResult GetOrCreate(
-      rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>& factory);
+  ~GlobalFactory();
 
   /// Get the existing peer connection factory, or NULL if not created.
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-  GetExisting() noexcept;
+  GetPeerConnectionFactory() noexcept;
 
   /// Get the worker thread. This is only valid if initialized.
   rtc::Thread* GetWorkerThread() noexcept;
@@ -64,8 +61,10 @@ class GlobalFactory {
 #endif  // defined(WINUWP)
 
  private:
-  mrsResult Initialize();
-  void ShutdownNoLock();
+  static std::unique_ptr<GlobalFactory>& MutableInstance();
+  mrsResult InitializeImpl();
+  mrsResult ShutdownImpl(mrsShutdownOptions options);
+  void ReportLiveObjectsNoLock();
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_

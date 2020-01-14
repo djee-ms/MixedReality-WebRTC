@@ -107,6 +107,7 @@ void CheckIsTestFrame(const I420AVideoFrame& frame) {
 }  // namespace
 
 TEST(VideoTrack, Simple) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
@@ -242,6 +243,7 @@ TEST(VideoTrack, Simple) {
 }
 
 TEST(VideoTrack, Muted) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
@@ -374,6 +376,7 @@ void MRS_CALL enumDeviceCallbackCompleted(void* user_data) {
 //}
 
 TEST(VideoTrack, DeviceIdInvalid) {
+  LibraryInitRaii lib;
   LocalVideoTrackInitConfig config{};
   LocalVideoTrackHandle track_handle{};
   config.video_device_id = "[[INVALID DEVICE ID]]";
@@ -383,6 +386,7 @@ TEST(VideoTrack, DeviceIdInvalid) {
 }
 
 TEST(VideoTrack, Multi) {
+  LibraryInitRaii lib;
   SimpleInterop simple_interop1;
   SimpleInterop simple_interop2;
 
@@ -524,6 +528,7 @@ TEST(VideoTrack, Multi) {
 }
 
 TEST(VideoTrack, ExternalI420) {
+  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
