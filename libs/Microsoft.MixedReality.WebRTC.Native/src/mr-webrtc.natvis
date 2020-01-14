@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Microsoft::MixedReality::WebRTC::TrackedObject">
+    <DisplayString>TrackedObject ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::PeerConnection">
+    <DisplayString>PeerConnection ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::AudioTransceiver">
+    <DisplayString>AudioTransceiver ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::VideoTransceiver">
+    <DisplayString>VideoTransceiver ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::LocalAudioTrack">
+    <DisplayString>LocalAudioTrack ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::LocalVideoTrack">
+    <DisplayString>LocalVideoTrack ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::RemoteAudioTrack">
+    <DisplayString>RemoteAudioTrack ({ref_count_,d} refs)</DisplayString>
+  </Type>
+  <Type Name="Microsoft::MixedReality::WebRTC::RemoteVideoTrack">
+    <DisplayString>RemoteVideoTrack ({ref_count_,d} refs)</DisplayString>
+  </Type>
+</AutoVisualizer>

@@ -177,4 +177,7 @@
       <UniqueIdentifier>{f75c7170-eb40-43f9-b14a-45a8ef81b975}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\mr-webrtc.natvis" />
+  </ItemGroup>
 </Project>
