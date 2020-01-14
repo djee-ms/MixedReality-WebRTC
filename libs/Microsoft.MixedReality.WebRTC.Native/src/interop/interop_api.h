@@ -557,10 +557,6 @@ struct VideoTransceiverInitConfig {
 /// Configuration for opening a local audio capture device and creating a local
 /// audio track.
 struct LocalAudioTrackInitConfig {
-  /// Handle of the audio transceiver interop wrapper, if any, which will be
-  /// associated with the native audio transceiver object.
-  mrsAudioTransceiverInteropHandle transceiver_interop_handle{};
-
   /// Handle of the local audio track interop wrapper, if any, which will be
   /// associated with the native local audio track object.
   mrsLocalAudioTrackInteropHandle track_interop_handle{};
@@ -569,10 +565,6 @@ struct LocalAudioTrackInitConfig {
 /// Configuration for opening a local video capture device and creating a local
 /// video track.
 struct LocalVideoTrackInitConfig {
-  /// Handle of the video transceiver interop wrapper, if any, which will be
-  /// associated with the native video transceiver object.
-  mrsVideoTransceiverInteropHandle transceiver_interop_handle{};
-
   /// Handle of the local video track interop wrapper, if any, which will be
   /// associated with the native local video track object.
   mrsLocalVideoTrackInteropHandle track_interop_handle{};
@@ -624,10 +616,6 @@ struct LocalVideoTrackInitConfig {
 
 /// Configuration for creating a local video track from an external source.
 struct LocalVideoTrackFromExternalSourceInitConfig {
-  /// Handle of the video transceiver interop wrapper, if any, which will be
-  /// associated with the native video transceiver object.
-  mrsVideoTransceiverInteropHandle transceiver_interop_handle{};
-
   /// Handle of the local video track interop wrapper, if any, which will be
   /// associated with the native local video track object.
   mrsLocalVideoTrackInteropHandle track_interop_handle{};
@@ -635,21 +623,6 @@ struct LocalVideoTrackFromExternalSourceInitConfig {
   /// Handle to the native source.
   ExternalVideoTrackSourceHandle source_handle{};
 };
-
-/// Add a local video track from a local video capture device (webcam) to
-/// the collection of tracks to send to the remote peer.
-/// |video_device_id| specifies the unique identifier of a video capture
-/// device to open, as obtained by enumerating devices with
-/// mrsEnumVideoCaptureDevicesAsync(), or null for any device.
-/// |enable_mrc| allows enabling Mixed Reality Capture on HoloLens devices, and
-/// is otherwise ignored for other video capture devices. On UWP this must be
-/// invoked from another thread than the main UI thread.
-MRS_API mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrack(
-    PeerConnectionHandle peerHandle,
-    const char* track_name,
-    const LocalVideoTrackInitConfig* config,
-    LocalVideoTrackHandle* track_handle_out,
-    VideoTransceiverHandle* transceiver_handle_out) noexcept;
 
 using mrsRequestExternalI420AVideoFrameCallback =
     mrsResult(MRS_CALL*)(void* user_data,
@@ -662,47 +635,6 @@ using mrsRequestExternalArgb32VideoFrameCallback =
                          ExternalVideoTrackSourceHandle source_handle,
                          uint32_t request_id,
                          int64_t timestamp_ms);
-
-/// Add a local video track from a custom video source external to the
-/// implementation. This allows feeding into WebRTC frames from any source,
-/// including generated or synthetic frames, for example for testing.
-/// The track source initially starts as capuring. Capture can be stopped with
-/// |mrsExternalVideoTrackSourceShutdown|.
-/// This returns a handle to a newly allocated object, which must be released
-/// once not used anymore with |mrsLocalVideoTrackRemoveRef()|.
-MRS_API mrsResult MRS_CALL
-mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
-    PeerConnectionHandle peer_handle,
-    const char* track_name,
-    const LocalVideoTrackFromExternalSourceInitConfig* config,
-    LocalVideoTrackHandle* track_handle_out,
-    VideoTransceiverHandle* transceiver_handle_out) noexcept;
-
-/// Remove a local video track from the given peer connection and destroy it.
-/// After this call returned, the video track handle is invalid.
-MRS_API mrsResult MRS_CALL mrsPeerConnectionRemoveLocalVideoTrack(
-    PeerConnectionHandle peer_handle,
-    LocalVideoTrackHandle track_handle) noexcept;
-
-/// Remove all local video tracks backed by the given video track source from
-/// the given peer connection and destroy the video track source.
-/// After this call returned, the video track source handle is invalid.
-MRS_API mrsResult MRS_CALL mrsPeerConnectionRemoveLocalVideoTracksFromSource(
-    PeerConnectionHandle peer_handle,
-    ExternalVideoTrackSourceHandle source_handle) noexcept;
-
-/// Add a local audio track from a local audio capture device (microphone) to
-/// the collection of tracks to send to the remote peer.
-MRS_API mrsResult MRS_CALL mrsPeerConnectionAddLocalAudioTrack(
-    PeerConnectionHandle peer_handle,
-    const char* track_name,
-    const LocalAudioTrackInitConfig* config,
-    LocalAudioTrackHandle* track_handle_out,
-    AudioTransceiverHandle* transceiver_handle_out) noexcept;
-
-MRS_API mrsResult MRS_CALL mrsPeerConnectionRemoveLocalAudioTrack(
-    PeerConnectionHandle peer_handle,
-    LocalAudioTrackHandle track_handle) noexcept;
 
 struct mrsAudioTransceiverConfig {};
 

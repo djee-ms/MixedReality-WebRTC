@@ -632,43 +632,10 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             in VideoTransceiverInterop.InitConfig config, out VideoTransceiverHandle transceiverHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
-            EntryPoint = "mrsPeerConnectionAddLocalVideoTrack")]
-        public static extern uint PeerConnection_AddLocalVideoTrack(PeerConnectionHandle peerHandle,
-            string trackName, in LocalVideoTrackInteropInitConfig config, out LocalVideoTrackHandle trackHandle,
-            out VideoTransceiverHandle transceiverHandle);
-
-        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
-            EntryPoint = "mrsPeerConnectionAddLocalVideoTrackFromExternalSource")]
-        public static extern uint PeerConnection_AddLocalVideoTrackFromExternalSource(
-            PeerConnectionHandle peerHandle, string trackName, in LocalVideoTrackFromExternalSourceInteropInitConfig config,
-            out LocalVideoTrackHandle trackHandle, out VideoTransceiverHandle transceiverHandle);
-
-        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
-            EntryPoint = "mrsPeerConnectionAddLocalAudioTrack")]
-        public static extern uint PeerConnection_AddLocalAudioTrack(PeerConnectionHandle peerHandle,
-            string trackName, in LocalAudioTrackInteropInitConfig config, out LocalAudioTrackHandle trackHandle,
-            out AudioTransceiverHandle transceiverHandle);
-
-        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionAddDataChannel")]
         public static extern uint PeerConnection_AddDataChannel(PeerConnectionHandle peerHandle, IntPtr dataChannel,
             DataChannelInterop.CreateConfig config, DataChannelInterop.Callbacks callbacks,
             ref IntPtr dataChannelHandle);
-
-        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
-            EntryPoint = "mrsPeerConnectionRemoveLocalAudioTrack")]
-        public static extern void PeerConnection_RemoveLocalAudioTrack(PeerConnectionHandle peerHandle,
-            LocalAudioTrackHandle trackHandle);
-
-        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
-            EntryPoint = "mrsPeerConnectionRemoveLocalVideoTrack")]
-        public static extern uint PeerConnection_RemoveLocalVideoTrack(PeerConnectionHandle peerHandle,
-            LocalVideoTrackHandle trackHandle);
-
-        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
-            EntryPoint = "mrsPeerConnectionRemoveLocalVideoTracksFromSource")]
-        public static extern uint PeerConnection_RemoveLocalVideoTracksFromSource(PeerConnectionHandle peerHandle,
-            ExternalVideoTrackSourceHandle sourceHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsPeerConnectionRemoveDataChannel")]
