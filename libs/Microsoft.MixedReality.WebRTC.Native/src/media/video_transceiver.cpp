@@ -12,7 +12,7 @@ VideoTransceiver::VideoTransceiver(
     PeerConnection& owner,
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kVideo, owner), interop_handle_(interop_handle) {
-  GlobalFactory::Instance()->AddObject(ObjectType::kVideoTransceiver, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kVideoTransceiver, this);
 }
 
 VideoTransceiver::VideoTransceiver(
@@ -21,11 +21,12 @@ VideoTransceiver::VideoTransceiver(
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kVideo, owner, transceiver),
       interop_handle_(interop_handle) {
-  GlobalFactory::Instance()->AddObject(ObjectType::kVideoTransceiver, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kVideoTransceiver, this);
 }
 
 VideoTransceiver::~VideoTransceiver() {
-  GlobalFactory::Instance()->RemoveObject(ObjectType::kVideoTransceiver, this);
+  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kVideoTransceiver,
+                                             this);
 }
 
 Result VideoTransceiver::SetLocalTrack(

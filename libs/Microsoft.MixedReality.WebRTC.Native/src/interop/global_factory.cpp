@@ -54,47 +54,30 @@ std::string ObjectToString(ObjectType type, TrackedObject* obj) {
   return builder.str();
 }
 
+mrsShutdownOptions g_shutdown_options = mrsShutdownOptions::kFailOnLiveObjects |
+                                        mrsShutdownOptions::kLogLiveObjects;
+
 }  // namespace
 
 namespace Microsoft::MixedReality::WebRTC {
 
-mrsResult GlobalFactory::Initialize() noexcept {
-  std::unique_ptr<GlobalFactory>& factory = GlobalFactory::MutableInstance();
-  if (!factory) {
-    try {
-      factory = std::make_unique<GlobalFactory>();
-      return factory->InitializeImpl();
-    } catch (...) {
-      return Result::kUnknownError;
-    }
+void GlobalFactory::SetShutdownOptions(mrsShutdownOptions options) noexcept {
+  g_shutdown_options = options;
+  auto const& factory = MutableInstance();
+  if (factory) {
+    factory->shutdown_options_ = g_shutdown_options;
   }
-  return Result::kInvalidOperation;
 }
 
-mrsResult GlobalFactory::Shutdown(mrsShutdownOptions options) noexcept {
-  std::unique_ptr<GlobalFactory>& factory = GlobalFactory::MutableInstance();
+RefPtr<GlobalFactory> GlobalFactory::InstancePtr() {
+  auto& factory = MutableInstance();
   if (!factory) {
-    return Result::kInvalidOperation;
-  }
-  mrsResult result;
-  try {
-    result = factory->ShutdownImpl(options);
-    if (result == Result::kSuccess) {
-      factory = nullptr;
-      return Result::kSuccess;
+    factory = std::make_unique<GlobalFactory>();
+    if (factory->InitializeImpl() != Result::kSuccess) {
+      return nullptr;
     }
-  } catch (...) {
-    return Result::kUnknownError;
   }
-  return result;
-}
-
-const std::unique_ptr<GlobalFactory>& GlobalFactory::Instance() {
-  auto const& ret = MutableInstance();
-  if (!ret) {
-    RTC_LOG(LS_ERROR) << "MixedReality-WebRTC library not initialized.";
-  }
-  return ret;
+  return RefPtr<GlobalFactory>(factory.get());
 }
 
 std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance() {
@@ -107,18 +90,7 @@ std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance() {
 }
 
 GlobalFactory::~GlobalFactory() {
-  std::scoped_lock lock(mutex_);
-  if (!alive_objects_.empty()) {
-    // WebRTC object destructors are also dispatched to the signaling thread,
-    // like all method calls, but the threads are stopped by the GlobalFactory
-    // shutdown, so dispatching will never complete.
-    // NOTE: To avoid static (de)init order fiasco in RTC_LOG(), which is using
-    // a global lock, do not log anything here. This would randomly fail anyway
-    // depending on whether that lock still exists.
-#if defined(MR_SHARING_WIN)
-    DebugBreak();
-#endif
-  }
+  ForceShutdownImpl();
 }
 
 rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
@@ -156,6 +128,22 @@ void GlobalFactory::RemoveObject(ObjectType type, TrackedObject* obj) noexcept {
   }
 }
 
+bool GlobalFactory::TryShutdown() noexcept {
+  std::unique_ptr<GlobalFactory>& factory = GlobalFactory::MutableInstance();
+  if (!factory) {
+    return false;  // not shutdown by this call
+  }
+  try {
+    if (factory->TryShutdownImpl()) {
+      factory = nullptr;
+      return true;
+    }
+  } catch (...) {
+    // fall through...
+  }
+  return false;
+}
+
 void GlobalFactory::ReportLiveObjects() {
   std::scoped_lock lock(mutex_);
   ReportLiveObjectsNoLock();
@@ -169,7 +157,7 @@ using WebRtcFactoryPtr =
 WebRtcFactoryPtr GlobalFactory::get() {
   std::scoped_lock lock(mutex_);
   if (!impl_) {
-    if (Initialize() != Result::kSuccess) {
+    if (InitializeImpl() != Result::kSuccess) {
       return nullptr;
     }
   }
@@ -180,7 +168,7 @@ mrsResult GlobalFactory::GetOrCreateWebRtcFactory(WebRtcFactoryPtr& factory) {
   factory.reset();
   std::scoped_lock lock(mutex_);
   if (!impl_) {
-    mrsResult res = Initialize();
+    mrsResult res = InitializeImpl();
     if (res != Result::kSuccess) {
       return res;
     }
@@ -262,21 +250,29 @@ mrsResult GlobalFactory::InitializeImpl() {
   return (factory_.get() != nullptr ? Result::kSuccess : Result::kUnknownError);
 }
 
-mrsResult GlobalFactory::ShutdownImpl(mrsShutdownOptions options) {
+void GlobalFactory::ForceShutdownImpl() {
   std::scoped_lock lock(mutex_);
+  if (!factory_) {
+    return;
+  }
 
-  // Check live objects
+  // WebRTC object destructors are also dispatched to the signaling thread,
+  // like all method calls, but the threads are stopped by the GlobalFactory
+  // shutdown, so dispatching will never complete.
   if (!alive_objects_.empty()) {
     RTC_LOG(LS_ERROR)
         << "Shutting down the global MixedReality-WebRTC factory while "
         << alive_objects_.size()
         << " objects are still alive. This will likely deadlock.";
-    if ((int)options & (int)mrsShutdownOptions::kLogLiveObjects) {
+    if ((shutdown_options_ & mrsShutdownOptions::kLogLiveObjects) != 0) {
       ReportLiveObjectsNoLock();
     }
-    if ((int)options & (int)mrsShutdownOptions::kFailOnLiveObjects) {
-      return Result::kInvalidOperation;
+    if ((shutdown_options_ & mrsShutdownOptions::kFailOnLiveObjects) != 0) {
+      return;
     }
+#if defined(MR_SHARING_WIN)
+    DebugBreak();
+#endif
   }
 
   // Shutdown
@@ -288,8 +284,25 @@ mrsResult GlobalFactory::ShutdownImpl(mrsShutdownOptions options) {
   worker_thread_.reset();
   signaling_thread_.reset();
 #endif  // defined(WINUWP)
+}
 
-  return Result::kSuccess;
+bool GlobalFactory::TryShutdownImpl() {
+  std::scoped_lock lock(mutex_);
+  if (!factory_) {
+    return false;
+  }
+  if (!alive_objects_.empty()) {
+    return false;
+  }
+  factory_ = nullptr;
+#if defined(WINUWP)
+  impl_ = nullptr;
+#else   // defined(WINUWP)
+  network_thread_.reset();
+  worker_thread_.reset();
+  signaling_thread_.reset();
+#endif  // defined(WINUWP)
+  return true;
 }
 
 void GlobalFactory::ReportLiveObjectsNoLock() {

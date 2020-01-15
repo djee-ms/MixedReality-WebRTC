@@ -266,6 +266,8 @@ namespace TestAppUwp
         {
             this.InitializeComponent();
 
+            Library.SetShutdownOptions(Library.ShutdownOptions.FailOnLiveObjects | Library.ShutdownOptions.LogLiveObjects);
+
             muteLocalVideoStroke.Visibility = Visibility.Collapsed;
             muteLocalAudioStroke.Visibility = Visibility.Collapsed;
 
@@ -541,8 +543,6 @@ namespace TestAppUwp
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             LogMessage("Initializing the WebRTC native plugin...");
-
-            await Task.Run(() => Library.Startup());
 
             // Populate the combo box with the PeerConnection.VideoProfileKind enum
             {

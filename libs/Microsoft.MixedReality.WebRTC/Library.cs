@@ -32,24 +32,14 @@ namespace Microsoft.MixedReality.WebRTC
         }
 
         /// <summary>
-        /// Intialize the MixedReality-WebRTC library. This must be called before all other APIs.
-        /// </summary>
-        public static void Startup()
-        {
-            uint res = Utils.LibraryStartup();
-            Utils.ThrowOnErrorCode(res);
-        }
-
-        /// <summary>
         /// Shutdown the MixedReality-WebRTC library. This must be called once all objects have been
         /// disposed, to shutdown the internal threads and release the global resources, and allow the
         /// library's module to be unloaded.
         /// </summary>
         /// <param name="options">Options for shutdown.</param>
-        public static void Shutdown(ShutdownOptions options = ShutdownOptions.FailOnLiveObjects | ShutdownOptions.LogLiveObjects)
+        public static void SetShutdownOptions(ShutdownOptions options)
         {
-            uint res = Utils.LibraryShutdown(options);
-            Utils.ThrowOnErrorCode(res);
+            Utils.LibrarySetShutdownOptions(options);
         }
     }
 }

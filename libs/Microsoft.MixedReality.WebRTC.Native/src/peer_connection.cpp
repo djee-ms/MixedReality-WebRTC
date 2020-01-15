@@ -178,12 +178,13 @@ class PeerConnectionImpl : public PeerConnection,
 
   PeerConnectionImpl(mrsPeerConnectionInteropHandle interop_handle)
       : interop_handle_(interop_handle) {
-    GlobalFactory::Instance()->AddObject(ObjectType::kPeerConnection, this);
+    GlobalFactory::InstancePtr()->AddObject(ObjectType::kPeerConnection, this);
   }
 
   ~PeerConnectionImpl() noexcept {
     Close();
-    GlobalFactory::Instance()->RemoveObject(ObjectType::kPeerConnection, this);
+    GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kPeerConnection,
+                                               this);
   }
 
   void SetPeerImpl(rtc::scoped_refptr<webrtc::PeerConnectionInterface> impl) {
@@ -1918,8 +1919,9 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   SetFrameHeightRoundMode(FrameHeightRoundMode::kCrop);
 
   // Ensure the factory exists
+  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory =
-      GlobalFactory::Instance()->GetPeerConnectionFactory();
+      global_factory->GetPeerConnectionFactory();
   if (!factory) {
     return Error(Result::kUnknownError);
   }

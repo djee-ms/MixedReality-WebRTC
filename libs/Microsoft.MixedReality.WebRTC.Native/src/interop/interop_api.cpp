@@ -100,10 +100,10 @@ mrsResult OpenVideoCaptureDevice(
     std::unique_ptr<cricket::VideoCapturer>& capturer_out) noexcept {
   capturer_out.reset();
 #if defined(WINUWP)
+  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
   WebRtcFactoryPtr uwp_factory;
   {
-    mrsResult res =
-        GlobalFactory::Instance()->GetOrCreateWebRtcFactory(uwp_factory);
+    mrsResult res = global_factory->GetOrCreateWebRtcFactory(uwp_factory);
     if (res != Result::kSuccess) {
       RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
       return res;
@@ -307,15 +307,11 @@ uint32_t FourCCFromVideoType(webrtc::VideoType videoType) {
 }  // namespace
 
 inline rtc::Thread* GetWorkerThread() {
-  return GlobalFactory::Instance()->GetWorkerThread();
+  return GlobalFactory::InstancePtr()->GetWorkerThread();
 }
 
-mrsResult MRS_CALL mrsStartup() noexcept {
-  return GlobalFactory::Initialize();
-}
-
-mrsResult MRS_CALL mrsShutdown(mrsShutdownOptions options) noexcept {
-  return GlobalFactory::Shutdown(options);
+void MRS_CALL mrsSetShutdownOptions(mrsShutdownOptions options) noexcept {
+  GlobalFactory::SetShutdownOptions(options);
 }
 
 void MRS_CALL mrsCloseEnum(mrsEnumHandle* handleRef) noexcept {
@@ -337,8 +333,9 @@ mrsResult MRS_CALL mrsEnumVideoCaptureDevicesAsync(
     return Result::kInvalidParameter;
   }
 #if defined(WINUWP)
+  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
   // The UWP factory needs to be initialized for getDevices() to work.
-  if (!GlobalFactory::Instance()->GetPeerConnectionFactory()) {
+  if (!global_factory->GetPeerConnectionFactory()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
     return Result::kUnknownError;
   }
@@ -401,11 +398,11 @@ mrsResult MRS_CALL mrsEnumVideoCaptureFormatsAsync(
   }
 
 #if defined(WINUWP)
+  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
   // The UWP factory needs to be initialized for getDevices() to work.
   WebRtcFactoryPtr uwp_factory;
   {
-    mrsResult res =
-        GlobalFactory::Instance()->GetOrCreateWebRtcFactory(uwp_factory);
+    mrsResult res = global_factory->GetOrCreateWebRtcFactory(uwp_factory);
     if (res != Result::kSuccess) {
       RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
       return res;
@@ -711,7 +708,8 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  auto pc_factory = GlobalFactory::Instance()->GetPeerConnectionFactory();
+  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
   }
@@ -757,7 +755,8 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  auto pc_factory = GlobalFactory::Instance()->GetPeerConnectionFactory();
+  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
   }

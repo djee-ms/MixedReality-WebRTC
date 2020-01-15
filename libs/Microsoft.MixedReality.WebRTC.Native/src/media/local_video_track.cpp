@@ -14,7 +14,7 @@ LocalVideoTrack::LocalVideoTrack(
     mrsLocalVideoTrackInteropHandle interop_handle) noexcept
     : MediaTrack(), track_(std::move(track)), interop_handle_(interop_handle) {
   RTC_CHECK(track_);
-  GlobalFactory::Instance()->AddObject(ObjectType::kLocalVideoTrack, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalVideoTrack, this);
   kind_ = TrackKind::kVideoTrack;
   rtc::VideoSinkWants sink_settings{};
   sink_settings.rotation_applied = true;
@@ -36,7 +36,7 @@ LocalVideoTrack::LocalVideoTrack(
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
-  GlobalFactory::Instance()->AddObject(ObjectType::kLocalVideoTrack, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalVideoTrack, this);
   kind_ = TrackKind::kVideoTrack;
   transceiver_->OnLocalTrackAdded(this);
   rtc::VideoSinkWants sink_settings{};
@@ -49,7 +49,8 @@ LocalVideoTrack::~LocalVideoTrack() {
   if (owner_) {
     owner_->RemoveLocalVideoTrack(*this);
   }
-  GlobalFactory::Instance()->RemoveObject(ObjectType::kLocalVideoTrack, this);
+  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kLocalVideoTrack,
+                                             this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }

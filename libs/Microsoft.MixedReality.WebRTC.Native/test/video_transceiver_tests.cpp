@@ -45,7 +45,6 @@ using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
 }  // namespace
 
 TEST(VideoTransceiver, Simple) {
-  LibraryInitRaii lib;
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the

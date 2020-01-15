@@ -155,7 +155,6 @@ struct RaiiBuffer {
 // Check mrsSdpForceCodecs() forces the audio codec, without adding an
 // unsupported video codec.
 TEST(SdpUtils, ForceCodecs) {
-  LibraryInitRaii lib;
   uint64_t len = sizeof(kSdpFullString) * 2;
   RaiiBuffer buffer((size_t)len);
   ASSERT_NE(nullptr, buffer._data);
@@ -172,7 +171,6 @@ TEST(SdpUtils, ForceCodecs) {
 
 // No-op if codecs are not supported
 TEST(SdpUtils, ForceCodecsNotSupported) {
-  LibraryInitRaii lib;
   uint64_t len = sizeof(kSdpFullString) * 2;
   RaiiBuffer buffer((size_t)len);
   ASSERT_NE(nullptr, buffer._data);
@@ -187,7 +185,6 @@ TEST(SdpUtils, ForceCodecsNotSupported) {
 
 // Buffer too small
 TEST(SdpUtils, ForceCodecsShortBuffer) {
-  LibraryInitRaii lib;
   uint64_t len = 32;  // too short on purpose
   char buffer[32];
   SdpFilter audio_filter{"opus", ""};

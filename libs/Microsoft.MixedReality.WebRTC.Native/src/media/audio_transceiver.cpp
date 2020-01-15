@@ -13,7 +13,7 @@ AudioTransceiver::AudioTransceiver(
     PeerConnection& owner,
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kAudio, owner), interop_handle_(interop_handle) {
-  GlobalFactory::Instance()->AddObject(ObjectType::kAudioTransceiver, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kAudioTransceiver, this);
 }
 
 AudioTransceiver::AudioTransceiver(
@@ -22,11 +22,12 @@ AudioTransceiver::AudioTransceiver(
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kAudio, owner, transceiver),
       interop_handle_(interop_handle) {
-  GlobalFactory::Instance()->AddObject(ObjectType::kAudioTransceiver, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kAudioTransceiver, this);
 }
 
 AudioTransceiver::~AudioTransceiver() {
-  GlobalFactory::Instance()->RemoveObject(ObjectType::kAudioTransceiver, this);
+  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kAudioTransceiver,
+                                             this);
 }
 
 Result AudioTransceiver::SetLocalTrack(

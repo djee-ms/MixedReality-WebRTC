@@ -26,20 +26,30 @@ using mrsResult = Microsoft::MixedReality::WebRTC::Result;
 // Generic utilities
 //
 
+/// Global MixedReality-WebRTC library shutdown options.
 enum class mrsShutdownOptions : uint32_t {
   kNone = 0,
+
+  /// Fail to shutdown if some objects are still alive. This is set by default
+  /// and provides safety against deadlocking, since WebRTC calls are proxied on
+  /// background threads which would be destroyed by the shutdown, causing
+  /// objects still alive to deadlock when making such calls. Note however that
+  /// keeping the library alive, and in particular the WebRTC background
+  /// threads, means that the module (DLL) cannot be unloaded, which might be
+  /// problematic in some use cases (e.g. Unity Editor hot-reload).
   kFailOnLiveObjects = 0x1,
+
+  /// Log some report about live objects when trying to shutdown, to help
+  /// debugging.
   kLogLiveObjects = 0x2
 };
 
-/// Initialize the MixedReality-WebRTC library. This must be called before any
-/// other function is called, to initialize the internal WebRTC threads and
-/// global objects.
-MRS_API mrsResult MRS_CALL mrsStartup() noexcept;
-
-/// Shutdown the MixedReality-WebRTC library by terminating all WebRTC threads
-/// and releasing all global resources.
-MRS_API mrsResult MRS_CALL mrsShutdown(mrsShutdownOptions options) noexcept;
+/// Set options for the automatic shutdown of the MixedReality-WebRTC library.
+/// This enables controlling the behavior of the library when it is shut down as
+/// a result of all tracked objects being released, or when the program
+/// terminates.
+MRS_API void MRS_CALL
+mrsSetShutdownOptions(mrsShutdownOptions options) noexcept;
 
 /// Opaque enumerator type.
 struct mrsEnumerator;
@@ -848,3 +858,21 @@ MRS_API void MRS_CALL mrsMemCpyStride(void* dst,
                                       int32_t elem_count) noexcept;
 
 }  // extern "C"
+
+inline mrsShutdownOptions operator|(mrsShutdownOptions a,
+                                    mrsShutdownOptions b) noexcept {
+  return (mrsShutdownOptions)((uint32_t)a | (uint32_t)b);
+}
+
+inline mrsShutdownOptions operator&(mrsShutdownOptions a,
+                                    mrsShutdownOptions b) noexcept {
+  return (mrsShutdownOptions)((uint32_t)a & (uint32_t)b);
+}
+
+inline bool operator==(mrsShutdownOptions a, uint32_t b) noexcept {
+  return ((uint32_t)a == b);
+}
+
+inline bool operator!=(mrsShutdownOptions a, uint32_t b) noexcept {
+  return ((uint32_t)a != b);
+}

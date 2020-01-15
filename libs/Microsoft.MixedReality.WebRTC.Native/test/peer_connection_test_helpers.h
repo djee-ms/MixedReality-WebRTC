@@ -75,15 +75,7 @@ struct Semaphore {
 
 /// RAII helper to initialize and shutdown the library.
 struct LibraryInitRaii {
-  LibraryInitRaii() { Startup(); }
-  ~LibraryInitRaii() { Shutdown(); }
-  void Startup() { ASSERT_EQ(Result::kSuccess, mrsStartup()); }
-  void Shutdown() {
-    const mrsShutdownOptions options =
-        (mrsShutdownOptions)((int)mrsShutdownOptions::kLogLiveObjects |
-                             (int)mrsShutdownOptions::kFailOnLiveObjects);
-    ASSERT_EQ(Result::kSuccess, mrsShutdown(options));
-  }
+// TODO - remove this
 };
 
 /// Wrapper around an interop callback taking an extra raw pointer argument, to

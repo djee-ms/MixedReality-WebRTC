@@ -14,7 +14,7 @@ LocalAudioTrack::LocalAudioTrack(
     mrsLocalAudioTrackInteropHandle interop_handle) noexcept
     : MediaTrack(), track_(std::move(track)), interop_handle_(interop_handle) {
   RTC_CHECK(track_);
-  GlobalFactory::Instance()->AddObject(ObjectType::kLocalAudioTrack, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
   track_->AddSink(this);  //< FIXME - Implementation is no-op
 }
@@ -34,7 +34,7 @@ LocalAudioTrack::LocalAudioTrack(
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
-  GlobalFactory::Instance()->AddObject(ObjectType::kLocalAudioTrack, this);
+  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
   transceiver_->OnLocalTrackAdded(this);
   track_->AddSink(this);  //< FIXME - Implementation is no-op
@@ -45,7 +45,8 @@ LocalAudioTrack::~LocalAudioTrack() {
   if (owner_) {
     owner_->RemoveLocalAudioTrack(*this);
   }
-  GlobalFactory::Instance()->RemoveObject(ObjectType::kLocalAudioTrack, this);
+  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kLocalAudioTrack,
+                                             this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }
