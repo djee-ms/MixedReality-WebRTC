@@ -130,7 +130,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// For manual <see cref="Mode"/>, kind of video profile to use among a list of predefined
         /// ones, or an empty string to leave unconstrained.
         /// </summary>
-        public WebRTC.PeerConnection.VideoProfileKind VideoProfileKind = WebRTC.PeerConnection.VideoProfileKind.Unspecified;
+        public VideoProfileKind VideoProfileKind = VideoProfileKind.Unspecified;
 
         /// <summary>
         /// Video track added to the peer connection that this component encapsulates.
@@ -194,7 +194,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 VideoStreamStopped.Invoke();
                 Track.I420AVideoFrameReady -= I420ALocalVideoFrameReady;
-                nativePeer.RemoveLocalVideoTrack(Track);
+                Track.Transceiver.RemoteTrack = null; //nativePeer.RemoveLocalVideoTrack(Track);
                 Track.Dispose();
                 Track = null;
                 _frameQueue.Clear();
@@ -285,7 +285,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
             _frameQueue.Clear();
 
-            var trackSettings = new WebRTC.PeerConnection.LocalVideoTrackSettings
+            var transceiver = nativePeer.AddVideoTransceiver();
+
+            var trackSettings = new LocalVideoTrackSettings
             {
                 trackName = trackName,
                 videoDevice = default,
@@ -297,9 +299,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 enableMrc = EnableMixedRealityCapture,
                 enableMrcRecordingIndicator = EnableMRCRecordingIndicator
             };
-            Track = await nativePeer.AddLocalVideoTrackAsync(trackSettings);
+            Track = await LocalVideoTrack.CreateFromDeviceAsync(trackSettings);
             if (Track != null)
             {
+                transceiver.LocalTrack = Track;
                 VideoStreamStarted.Invoke();
             }
         }
@@ -311,7 +314,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 VideoStreamStopped.Invoke();
                 Track.I420AVideoFrameReady -= I420ALocalVideoFrameReady;
                 var nativePeer = PeerConnection.Peer;
-                nativePeer.RemoveLocalVideoTrack(Track);
+                Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalVideoTrack(Track);
                 Track.Dispose();
                 Track = null;
             }

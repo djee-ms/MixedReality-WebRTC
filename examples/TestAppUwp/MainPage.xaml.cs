@@ -265,6 +265,7 @@ namespace TestAppUwp
         public MainPage()
         {
             this.InitializeComponent();
+
             muteLocalVideoStroke.Visibility = Visibility.Collapsed;
             muteLocalAudioStroke.Visibility = Visibility.Collapsed;
 
@@ -298,11 +299,6 @@ namespace TestAppUwp
             _peerConnection.AudioTrackRemoved += Peer_RemoteAudioTrackRemoved;
             _peerConnection.VideoTrackAdded += Peer_RemoteVideoTrackAdded;
             _peerConnection.VideoTrackRemoved += Peer_RemoteVideoTrackRemoved;
-
-            // Add one audio and one video transceiver to signal the connection that it needs
-            // to negotiate one audio transport and one video transport with the remote peer.
-            _audioTransceiver = _peerConnection.AddAudioTransceiver();
-            _videoTransceiver = _peerConnection.AddVideoTransceiver();
 
             //Window.Current.Closed += Shutdown; // doesn't work
 
@@ -546,6 +542,8 @@ namespace TestAppUwp
         {
             LogMessage("Initializing the WebRTC native plugin...");
 
+            await Task.Run(() => Library.Startup());
+
             // Populate the combo box with the PeerConnection.VideoProfileKind enum
             {
                 var values = Enum.GetValues(typeof(VideoProfileKind));
@@ -625,6 +623,11 @@ namespace TestAppUwp
                 config.SdpSemantic = (sdpSemanticUnifiedPlan.IsChecked.GetValueOrDefault(true)
                     ? SdpSemantic.UnifiedPlan : SdpSemantic.PlanB);
                 await _peerConnection.InitializeAsync(config);
+
+                // Add one audio and one video transceiver to signal the connection that it needs
+                // to negotiate one audio transport and one video transport with the remote peer.
+                _audioTransceiver = _peerConnection.AddAudioTransceiver();
+                _videoTransceiver = _peerConnection.AddVideoTransceiver();
             }
             catch (Exception ex)
             {

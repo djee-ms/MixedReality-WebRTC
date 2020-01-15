@@ -440,6 +440,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         private Task InitializePluginAsync(CancellationToken token)
         {
+            Library.Startup();
+
             Debug.Log("Initializing WebRTC plugin...");
             var config = new PeerConnectionConfiguration();
             foreach (var server in IceServers)

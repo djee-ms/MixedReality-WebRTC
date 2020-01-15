@@ -74,7 +74,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 AudioStreamStopped.Invoke();
                 //Track.AudioFrameReady -= AudioFrameReady;
-                nativePeer.RemoveLocalAudioTrack(Track);
+                Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalAudioTrack(Track);
                 Track.Dispose();
                 Track = null;
                 //_frameQueue.Clear();
@@ -111,11 +111,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 nativePeer.PreferredAudioCodec = PreferredAudioCodec;
 
                 //FrameQueue.Clear();
-                var settings = new WebRTC.PeerConnection.LocalAudioTrackSettings
+
+                var transceiver = nativePeer.AddAudioTransceiver();
+
+                var settings = new LocalAudioTrackSettings
                 {
                     trackName = "LocalAudioSource", //< TODO
                 };
-                Track = await nativePeer.AddLocalAudioTrackAsync(settings);
+                Track = await LocalAudioTrack.CreateFromDeviceAsync(settings);
+                transceiver.LocalTrack = Track;
+
                 AudioStreamStarted.Invoke();
             }
         }
@@ -127,7 +132,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 AudioStreamStopped.Invoke();
                 //Track.AudioFrameReady -= AudioFrameReady;
                 var nativePeer = PeerConnection.Peer;
-                nativePeer.RemoveLocalAudioTrack(Track);
+                Track.Transceiver.LocalTrack = null; // nativePeer.RemoveLocalAudioTrack(Track);
                 Track.Dispose();
                 Track = null;
             }
