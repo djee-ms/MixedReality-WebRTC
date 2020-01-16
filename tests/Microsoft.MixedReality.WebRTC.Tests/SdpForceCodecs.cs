@@ -1,7 +1,8 @@
-using System;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.MixedReality.WebRTC;
 using Microsoft.MixedReality.WebRTC.Interop;
 using NUnit.Framework;
 using NUnit.Framework.Internal;

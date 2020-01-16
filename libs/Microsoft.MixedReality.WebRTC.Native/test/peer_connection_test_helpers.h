@@ -23,6 +23,10 @@ struct Event {
     signaled_ = true;
     cv_.notify_all();
   }
+  bool IsSignaled() const {
+    std::unique_lock<std::mutex> lk(m_);
+    return signaled_;
+  }
   void Wait() {
     std::unique_lock<std::mutex> lk(m_);
     if (!signaled_) {
@@ -36,7 +40,7 @@ struct Event {
     }
     return true;
   }
-  std::mutex m_;
+  mutable std::mutex m_;
   std::condition_variable cv_;
   bool signaled_{false};
 };

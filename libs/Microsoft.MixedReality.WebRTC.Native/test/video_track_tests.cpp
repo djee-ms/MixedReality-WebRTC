@@ -116,6 +116,14 @@ TEST(VideoTrack, Simple) {
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionRegisterInteropCallbacks(pair.pc2(), &interop));
 
+  // Register event for renegotiation needed
+  Event renegotiation_needed1_ev;
+  InteropCallback renegotiation_needed1_cb = [&renegotiation_needed1_ev]() {
+    renegotiation_needed1_ev.Set();
+  };
+  mrsPeerConnectionRegisterRenegotiationNeededCallback(
+      pair.pc1(), CB(renegotiation_needed1_cb));
+
   // Grab the handle of the remote track from the remote peer (#2) via the
   // VideoTrackAdded callback.
   RemoteVideoTrackHandle track_handle2{};
@@ -137,11 +145,14 @@ TEST(VideoTrack, Simple) {
   // Create the video transceiver #1
   VideoTransceiverHandle transceiver_handle1{};
   {
+    renegotiation_needed1_ev.Reset();
     VideoTransceiverInitConfig config{};
     config.name = "transceiver #1";
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddVideoTransceiver(
                                     pair.pc1(), &config, &transceiver_handle1));
     ASSERT_NE(nullptr, transceiver_handle1);
+    ASSERT_TRUE(renegotiation_needed1_ev.WaitFor(1s));
+    renegotiation_needed1_ev.Reset();
   }
 
   // Check video transceiver #1 consistency
@@ -172,9 +183,14 @@ TEST(VideoTrack, Simple) {
   // New tracks are enabled by default
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
 
-  // Add the local track #1 on the transceiver #1
+  // Add the local track #1 on the transceiver #1.
+  ASSERT_FALSE(renegotiation_needed1_ev.IsSignaled());
   ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverSetLocalTrack(
                                   transceiver_handle1, track_handle1));
+  ASSERT_FALSE(
+      renegotiation_needed1_ev
+          .IsSignaled());  // TODO: why? because transceiver starts in SendRecv
+                           // mode, so didn't change direction?
 
   // Check video transceiver #1 consistency
   {

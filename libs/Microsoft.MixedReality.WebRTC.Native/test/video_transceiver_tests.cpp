@@ -54,6 +54,14 @@ TEST(VideoTransceiver, Simple) {
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionRegisterInteropCallbacks(pair.pc2(), &interop));
 
+  // Register event for renegotiation needed
+  Event renegotiation_needed1_ev;
+  InteropCallback renegotiation_needed1_cb = [&renegotiation_needed1_ev]() {
+    renegotiation_needed1_ev.Set();
+  };
+  mrsPeerConnectionRegisterRenegotiationNeededCallback(
+      pair.pc1(), CB(renegotiation_needed1_cb));
+
   // Grab the handle of the remote track from the remote peer (#2) via the
   // VideoTrackAdded callback.
   RemoteVideoTrackHandle track_handle2{};
@@ -78,10 +86,13 @@ TEST(VideoTransceiver, Simple) {
   transceiver_config.name = "video_transceiver";
   transceiver_config.transceiver_interop_handle =
       kFakeInteropVideoTransceiverHandle;
+  renegotiation_needed1_ev.Reset();
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddVideoTransceiver(
                 pair.pc1(), &transceiver_config, &transceiver_handle1));
   ASSERT_NE(nullptr, transceiver_handle1);
+  ASSERT_TRUE(renegotiation_needed1_ev.IsSignaled());
+  renegotiation_needed1_ev.Reset();
 
   // Check video transceiver #1 consistency
   {
@@ -102,6 +113,7 @@ TEST(VideoTransceiver, Simple) {
   pair.ConnectAndWait();
 
   // Create a new local track object for #1, but do not add it yet
+  renegotiation_needed1_ev.Reset();
   LocalVideoTrackInitConfig track_config{};
   LocalVideoTrackHandle track_handle1{};
   ASSERT_EQ(Result::kSuccess,
@@ -109,10 +121,16 @@ TEST(VideoTransceiver, Simple) {
                 &track_config, "local_video_track", &track_handle1));
   ASSERT_NE(nullptr, track_handle1);
 
-  // Set the video track of the transceiver on #1, which will add it to the peer
-  // connection and send to the remote peer once negotiated.
+  // Track is not added yet to peer connection
+  ASSERT_FALSE(renegotiation_needed1_ev.IsSignaled());
+
+  // Set the video track of the transceiver on #1, which will add it to the
+  // peer connection and send to the remote peer once negotiated.
   ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverSetLocalTrack(
                                   transceiver_handle1, track_handle1));
+
+  // Transceiver track replacement do not require renegotiation.
+  ASSERT_FALSE(renegotiation_needed1_ev.IsSignaled());
 
   // Check video transceiver #1 consistency
   {
@@ -153,6 +171,16 @@ TEST(VideoTransceiver, Simple) {
 
   mrsRemoteVideoTrackRegisterI420AFrameCallback(track_handle2, nullptr,
                                                 nullptr);
+
+  // Remove track
+  renegotiation_needed1_ev.Reset();
+  ASSERT_EQ(Result::kSuccess,
+            mrsVideoTransceiverSetLocalTrack(transceiver_handle1, nullptr));
+
+  // Transceiver track replacement do not require renegotiation.
+  ASSERT_FALSE(renegotiation_needed1_ev.IsSignaled());
+
+  // Clean-up
   mrsRemoteVideoTrackRemoveRef(track_handle2);
   mrsVideoTransceiverRemoveRef(transceiver_handle2);
   mrsLocalVideoTrackRemoveRef(track_handle1);
