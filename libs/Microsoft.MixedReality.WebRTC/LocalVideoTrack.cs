@@ -474,6 +474,11 @@ namespace Microsoft.MixedReality.WebRTC
             }
         }
 
+        internal void OnMute(bool muted)
+        {
+
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {

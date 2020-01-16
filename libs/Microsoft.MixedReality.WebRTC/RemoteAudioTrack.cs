@@ -123,7 +123,7 @@ namespace Microsoft.MixedReality.WebRTC
             }
 
             // Remove the track from the peer connection, if any
-            //PeerConnection?.RemoveRemoteAudioTrack(this);
+            //Transceiver?.SetRemoteTrack(null);
             Debug.Assert(PeerConnection == null); // see OnTrackRemoved
 
             UnregisterInteropCallbacks();
@@ -156,6 +156,11 @@ namespace Microsoft.MixedReality.WebRTC
             PeerConnection = null;
             Transceiver.OnRemoteTrackRemoved(this);
             Transceiver = null;
+        }
+
+        internal void OnMute(bool muted)
+        {
+
         }
 
         /// <inheritdoc/>

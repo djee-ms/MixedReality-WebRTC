@@ -8,6 +8,11 @@
 
 extern "C" {
 
+using mrsAudioTransceiverStateUpdatedCallback =
+    void(MRS_CALL*)(void* user_data,
+                    mrsTransceiverDirection negotiated_direction,
+                    mrsTransceiverDirection desired_direction);
+
 /// Add a reference to the native object associated with the given handle.
 MRS_API void MRS_CALL
 mrsAudioTransceiverAddRef(AudioTransceiverHandle handle) noexcept;
@@ -15,6 +20,16 @@ mrsAudioTransceiverAddRef(AudioTransceiverHandle handle) noexcept;
 /// Remove a reference from the native object associated with the given handle.
 MRS_API void MRS_CALL
 mrsAudioTransceiverRemoveRef(AudioTransceiverHandle handle) noexcept;
+
+MRS_API void MRS_CALL mrsAudioTransceiverRegisterStateUpdatedCallback(
+    AudioTransceiverHandle handle,
+    mrsAudioTransceiverStateUpdatedCallback callback,
+    void* user_data) noexcept;
+
+/// Set the new desired transceiver direction.
+MRS_API mrsResult MRS_CALL
+mrsAudioTransceiverSetDirection(AudioTransceiverHandle transceiver_handle,
+                                mrsTransceiverDirection new_direction) noexcept;
 
 /// Set the local audio track associated with this transceiver. This new track
 /// replaces the existing one, if any. This doesn't require any SDP

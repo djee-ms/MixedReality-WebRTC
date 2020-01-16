@@ -8,6 +8,11 @@
 
 extern "C" {
 
+using mrsVideoTransceiverStateUpdatedCallback =
+    void(MRS_CALL*)(void* user_data,
+                    mrsTransceiverDirection negotiated_direction,
+                    mrsTransceiverDirection desired_direction);
+
 /// Add a reference to the native object associated with the given handle.
 MRS_API void MRS_CALL
 mrsVideoTransceiverAddRef(VideoTransceiverHandle handle) noexcept;
@@ -16,8 +21,18 @@ mrsVideoTransceiverAddRef(VideoTransceiverHandle handle) noexcept;
 MRS_API void MRS_CALL
 mrsVideoTransceiverRemoveRef(VideoTransceiverHandle handle) noexcept;
 
-/// Set the local video track associated with this transceiver. This new track
-/// replaces the existing one, if any. This doesn't require any SDP
+MRS_API void MRS_CALL mrsVideoTransceiverRegisterStateUpdatedCallback(
+    VideoTransceiverHandle handle,
+    mrsVideoTransceiverStateUpdatedCallback callback,
+    void* user_data) noexcept;
+
+/// Set the new desired transceiver direction.
+MRS_API mrsResult MRS_CALL
+mrsVideoTransceiverSetDirection(VideoTransceiverHandle transceiver_handle,
+                                mrsTransceiverDirection new_direction) noexcept;
+
+/// Set the local video track associated with this transceiver. This new
+/// track replaces the existing one, if any. This doesn't require any SDP
 /// renegotiation.
 MRS_API mrsResult MRS_CALL
 mrsVideoTransceiverSetLocalTrack(VideoTransceiverHandle transceiver_handle,

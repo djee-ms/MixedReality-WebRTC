@@ -373,6 +373,9 @@ class PeerConnectionImpl : public PeerConnection,
       const std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>&
           streams) noexcept override;
 
+  void OnTrack(rtc::scoped_refptr<webrtc::RtpTransceiverInterface>
+                   transceiver) noexcept override;
+
   /// Callback on remote track removed.
   void OnRemoveTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface>
                          receiver) noexcept override;
@@ -566,6 +569,9 @@ class PeerConnectionImpl : public PeerConnection,
   /// associated with this peer connection.
   ErrorOr<RefPtr<VideoTransceiver>> GetOrCreateVideoTransceiverForReceiver(
       webrtc::RtpReceiverInterface* receiver);
+
+  RefPtr<Transceiver> FindTransceiver(
+      webrtc::RtpTransceiverInterface* rtp_transceiver) const;
 };
 
 void StreamObserver::OnChanged() {
@@ -630,7 +636,9 @@ class SessionDescObserver : public webrtc::SetSessionDescriptionObserver {
 struct SetRemoteSessionDescObserver
     : public webrtc::SetRemoteDescriptionObserverInterface {
  public:
-  void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {}
+  void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {
+    RTC_LOG(LS_INFO) << "Remote description set. err=" << error.message();
+  }
 };
 
 const std::string kAudioVideoStreamId("local_av_stream");
@@ -1479,6 +1487,34 @@ void PeerConnectionImpl::OnAddTrack(
   }
 }
 
+void PeerConnectionImpl::OnTrack(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept {
+  RTC_LOG(LS_INFO) << "Added transceiver mid=#" << transceiver->mid().value()
+                   << " of type " << (int)transceiver->media_type()
+                   << " with desired direction "
+                   << (int)transceiver->direction();
+  auto receiver = transceiver->receiver();
+  if (auto track = receiver->track()) {
+    RTC_LOG(LS_INFO) << "Recv with track #" << track->id()
+                     << " enabled=" << track->enabled();
+  } else {
+    RTC_LOG(LS_INFO) << "Recv with NULL track";
+  }
+  for (auto&& id : receiver->stream_ids()) {
+    RTC_LOG(LS_INFO) << "+ Stream #" << id;
+  }
+  auto sender = transceiver->sender();
+  if (auto track = sender->track()) {
+    RTC_LOG(LS_INFO) << "Send #" << track->id()
+                     << " enabled=" << track->enabled();
+  } else {
+    RTC_LOG(LS_INFO) << "Send with NULL track";
+  }
+  for (auto&& id : sender->stream_ids()) {
+    RTC_LOG(LS_INFO) << "+ Stream #" << id;
+  }
+}
+
 void PeerConnectionImpl::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) noexcept {
   RTC_LOG(LS_INFO) << "Removed track #" << receiver->id() << " of type "
@@ -1550,22 +1586,29 @@ void PeerConnectionImpl::OnLocalDescCreated(
   if (!peer_) {
     return;
   }
-  auto lock = std::scoped_lock{local_sdp_ready_to_send_callback_mutex_};
-  auto cb = local_sdp_ready_to_send_callback_;
-  rtc::scoped_refptr<webrtc::SetSessionDescriptionObserver> observer;
-  if (cb) {
-    std::string type{SdpTypeToString(desc->GetType())};
-    ensureNullTerminatedCString(type);
-    std::string sdp;
-    desc->ToString(&sdp);
-    ensureNullTerminatedCString(sdp);
-    observer = new rtc::RefCountedObject<SessionDescObserver>(
-        [cb, type = std::move(type), sdp = std::move(sdp)] {
-          cb(type.c_str(), sdp.c_str());
-        });
-  } else {
-    observer = new rtc::RefCountedObject<SessionDescObserver>();
-  }
+  rtc::scoped_refptr<webrtc::SetSessionDescriptionObserver> observer =
+      new rtc::RefCountedObject<SessionDescObserver>([this] {
+        // Inspect transceiver directions, check for changes to update the
+        // interop layer with the actually negotiated direction.
+        std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+            changed_transceivers;
+        for (auto&& tr : peer_->GetTransceivers()) {
+          RefPtr<Transceiver> transceiver = FindTransceiver(tr);
+          transceiver->OnLocalDescUpdated();
+        }
+
+        // Fire interop callback, if any
+        {
+          auto lock = std::scoped_lock{local_sdp_ready_to_send_callback_mutex_};
+          if (auto cb = local_sdp_ready_to_send_callback_) {
+            auto desc = peer_->local_description();
+            std::string type{SdpTypeToString(desc->GetType())};
+            std::string sdp;
+            desc->ToString(&sdp);
+            cb(type.c_str(), sdp.c_str());
+          }
+        }
+      });
   // SetLocalDescription will invoke observer.OnSuccess() once done, which
   // will in turn invoke the |local_sdp_ready_to_send_callback_| registered if
   // any, or do nothing otherwise. The observer is a mandatory parameter.
@@ -1884,6 +1927,31 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForReceiver(
   }
   return Error(Result::kUnknownError,
                "Failed to create a new transceiver for remote video track.");
+}
+
+RefPtr<Transceiver> PeerConnectionImpl::FindTransceiver(
+    webrtc::RtpTransceiverInterface* rtp_transceiver) const {
+  switch (rtp_transceiver->media_type()) {
+    case cricket::MediaType::MEDIA_TYPE_AUDIO: {
+      rtc::CritScope lock(&tracks_mutex_);
+      for (auto&& tr : audio_transceivers_) {
+        if (tr->impl() == rtp_transceiver) {
+          return tr;
+        }
+      }
+    } break;
+    case cricket::MediaType::MEDIA_TYPE_VIDEO: {
+      rtc::CritScope lock(&tracks_mutex_);
+      for (auto&& tr : video_transceivers_) {
+        if (tr->impl() == rtp_transceiver) {
+          return tr;
+        }
+      }
+    } break;
+    default:
+      break;
+  }
+  return nullptr;
 }
 
 webrtc::PeerConnectionInterface::IceTransportsType ICETransportTypeToNative(

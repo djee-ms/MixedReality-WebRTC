@@ -661,6 +661,17 @@ using mrsRequestExternalArgb32VideoFrameCallback =
                          uint32_t request_id,
                          int64_t timestamp_ms);
 
+/// Flow direction of the media inside the transceiver. This maps to whether
+/// local and/or remote tracks are attached to the transceiver. The local
+/// track corresponds to the send direction, and the remote track to the
+/// receive direction.
+enum class mrsTransceiverDirection : int32_t {
+  kSendRecv = 0,
+  kSendOnly = 1,
+  kRecvOnly = 2,
+  kInactive = 3
+};
+
 struct mrsAudioTransceiverConfig {};
 
 struct mrsVideoTransceiverConfig {};

@@ -9,55 +9,51 @@ namespace Microsoft.MixedReality.WebRTC
     /// Transceiver of a peer connection.
     /// 
     /// A transceiver is a media "pipe" connecting the local and remote peers, and used to transmit media
-    /// data (audio or video) between the peers. The transceiver is sending media data if a local track is
-    /// attached to it, and is receiving media data if a remote track is attached to it. If no track is
-    /// attached, the transceiver is inactive.
+    /// data (audio or video) between the peers. The transceiver has a media flow direction indicated whether
+    /// it is sending and/or receiving any media, or is inactive. When sending some media, the transceiver
+    /// local track is used as the source of the media. Conversely, when receiving some media, that media is
+    /// delivered to the remote media track of the transceiver. As a convenience, both tracks can be null to
+    /// avoid sending or ignore the received media, although this does not influence the media flow direction.
     /// </summary>
     /// <remarks>
     /// This object corresponds roughly to the same-named notion in the WebRTC standard when using the
-    /// Unified Plan SDP semantic, with the difference that the low-level RTP transceiver implementation
-    /// always has an RTP sender and an RTP receiver, but tracks can be removed from this wrapper.
+    /// Unified Plan SDP semantic.
     /// For Plan B, where RTP transceivers are not available, this wrapper tries to emulate the Unified Plan
     /// transceiver concept, and is therefore providing an abstraction over the WebRTC concept of transceivers.
     /// 
     /// Note that this object is not disposable because the lifetime of the native transceiver is tied to the
     /// lifetime of the peer connection (cannot be removed), and therefore the two collections
     /// <see cref="PeerConnection.AudioTransceivers"/> and <see cref="PeerConnection.VideoTransceivers"/> own
-    /// their objects and should continue to be filled with the list of wrappers for the native transceivers.
+    /// their objects and should continue to contain the list of wrappers for the native transceivers.
     /// </remarks>
     /// <seealso cref="AudioTransceiver"/>
     /// <seealso cref="VideoTransceiver"/>
     public abstract class Transceiver
     {
         /// <summary>
-        /// Transceiver direction.
+        /// Direction of the media flowing inside the transceiver.
         /// </summary>
-        [Flags]
         public enum Direction
         {
             /// <summary>
-            /// Transceiver is inactive, neither sending nor receiving any media data, and has neither local
-            /// nor remote tracks attached to it.
+            /// Transceiver is both sending to and receiving from the remote peer connection.
             /// </summary>
-            Inactive = 0,
+            SendReceive = 0,
 
             /// <summary>
-            /// Transceiver has only a local track and is sending to the remote peer, but is not receiving
-            /// any media from the remote peer.
+            /// Transceiver is sending to the remote peer, but is not receiving any media from the remote peer.
             /// </summary>
-            SendOnly = 0x1,
+            SendOnly = 1,
 
             /// <summary>
-            /// Transceiver has only a remote track and is receiving from the remote peer, but is not
-            /// sending any media to the remote peer.
+            /// Transceiver is receiving from the remote peer, but is not sending any media to the remote peer.
             /// </summary>
-            ReceiveOnly = 0x2,
+            ReceiveOnly = 2,
 
             /// <summary>
-            /// Transceiver has both a local and remote tracks and is both sending to and receiving from
-            /// the remote peer connection.
+            /// Transceiver is inactive, neither sending nor receiving any media data.
             /// </summary>
-            SendReceive = 0x3
+            Inactive = 3,
         }
 
         /// <summary>
@@ -71,19 +67,40 @@ namespace Microsoft.MixedReality.WebRTC
         public PeerConnection PeerConnection { get; } = null;
 
         /// <summary>
-        /// Transceiver direction mapping 1:1 to the configuration of the local and remote tracks.
+        /// Transceiver direction desired by the user.
         /// If a negotiation is pending, then this is the next direction that will be negotiated when
         /// calling <see cref="PeerConnection.CreateOffer"/> or <see cref="PeerConnection.CreateAnswer"/>.
         /// Otherwise this is equal to <see cref="NegotiatedDirection"/>.
         /// </summary>
-        public Direction DesiredDirection { get; protected set; } = Direction.Inactive;
+        /// <seealso cref="SetDirection(Direction)"/>
+        public Direction DesiredDirection
+        {
+            get { return _desiredDirection; }
+            set { SetDirection(value); }
+        }
 
         /// <summary>
         /// Last negotiated transceiver direction. This is equal to <see cref="DesiredDirection"/>
         /// after a negotiation is completed, but remains constant until the next SDP negotiation
-        /// even if local and remote tracks are changed on the transceiver.
+        /// when changing the desired direction with <see cref="SetDirection(Direction)"/>.
         /// </summary>
+        /// <seealso cref="DesiredDirection"/>
+        /// <seealso cref="SetDirection(Direction)"/>
         public Direction NegotiatedDirection { get; protected set; } = Direction.Inactive;
+
+        /// <summary>
+        /// Change the media flowing direction of the transceiver.
+        /// This triggers a renegotiation needed event to synchronize with the remote peer.
+        /// </summary>
+        /// <param name="newDirection">The new flowing direction.</param>
+        /// <seealso cref="DesiredDirection"/>
+        /// <seealso cref="NegotiatedDirection"/>
+        public abstract void SetDirection(Direction newDirection);
+
+        /// <summary>
+        /// Backing field for <see cref="DesiredDirection"/>.
+        /// </summary>
+        protected Direction _desiredDirection = Direction.Inactive;
 
         /// <summary>
         /// Create a new transceiver associated with a given peer connection.
@@ -92,6 +109,16 @@ namespace Microsoft.MixedReality.WebRTC
         protected Transceiver(PeerConnection peerConnection)
         {
             PeerConnection = peerConnection;
+        }
+
+        protected static bool HasSend(Direction dir)
+        {
+            return (dir == Direction.SendOnly) || (dir == Direction.SendReceive);
+        }
+
+        protected static bool HasRecv(Direction dir)
+        {
+            return (dir == Direction.ReceiveOnly) || (dir == Direction.SendReceive);
         }
     }
 }

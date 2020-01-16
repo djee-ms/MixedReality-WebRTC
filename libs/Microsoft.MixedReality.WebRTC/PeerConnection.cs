@@ -901,6 +901,24 @@ namespace Microsoft.MixedReality.WebRTC
             // but will be handled at some point anyway, even if the PeerConnection managed instance is gone.
             _nativePeerhandle.Close();
 
+            // Notify tracks they have been removed
+            foreach (var track in LocalAudioTracks)
+            {
+                track.OnTrackRemoved(this);
+            }
+            foreach (var track in LocalVideoTracks)
+            {
+                track.OnTrackRemoved(this);
+            }
+            foreach (var track in RemoteAudioTracks)
+            {
+                track.OnTrackRemoved(this);
+            }
+            foreach (var track in RemoteVideoTracks)
+            {
+                track.OnTrackRemoved(this);
+            }
+
             // Complete shutdown sequence and re-enable InitializeAsync()
             lock (_openCloseLock)
             {
@@ -942,6 +960,7 @@ namespace Microsoft.MixedReality.WebRTC
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
+            AudioTransceivers.Add(transceiver);
             AudioTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
@@ -968,6 +987,7 @@ namespace Microsoft.MixedReality.WebRTC
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
+            VideoTransceivers.Add(transceiver);
             VideoTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
@@ -1495,7 +1515,6 @@ namespace Microsoft.MixedReality.WebRTC
             MainEventSource.Log.VideoTrackAdded(track.Name);
             lock (_tracksLock)
             {
-                RemoteVideoTracks.Add(track);
                 if (!VideoTransceivers.Contains(transceiver))
                 {
                     VideoTransceivers.Add(transceiver);
@@ -1513,6 +1532,94 @@ namespace Microsoft.MixedReality.WebRTC
                 RemoteVideoTracks.Remove(track);
             }
             VideoTrackRemoved?.Invoke(track);
+        }
+
+        internal void OnLocalTrackAdded(LocalAudioTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(!LocalAudioTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                LocalAudioTracks.Add(track);
+            }
+        }
+
+        internal void OnLocalTrackRemoved(LocalAudioTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(LocalAudioTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                LocalAudioTracks.Remove(track);
+            }
+        }
+
+        internal void OnLocalTrackAdded(LocalVideoTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(!LocalVideoTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                LocalVideoTracks.Add(track);
+            }
+        }
+
+        internal void OnLocalTrackRemoved(LocalVideoTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(LocalVideoTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                LocalVideoTracks.Remove(track);
+            }
+        }
+
+        internal void OnRemoteTrackAdded(RemoteAudioTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(!RemoteAudioTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                RemoteAudioTracks.Add(track);
+            }
+        }
+
+        internal void OnRemoteTrackRemoved(RemoteAudioTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(RemoteAudioTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                RemoteAudioTracks.Remove(track);
+            }
+        }
+
+        internal void OnRemoteTrackAdded(RemoteVideoTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(!RemoteVideoTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                RemoteVideoTracks.Add(track);
+            }
+        }
+
+        internal void OnRemoteTrackRemoved(RemoteVideoTrack track)
+        {
+            lock (_tracksLock)
+            {
+                Debug.Assert(RemoteVideoTracks.Contains(track));
+                Debug.Assert(track.Transceiver != null);
+                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                RemoteVideoTracks.Remove(track);
+            }
         }
 
         /// <inheritdoc/>

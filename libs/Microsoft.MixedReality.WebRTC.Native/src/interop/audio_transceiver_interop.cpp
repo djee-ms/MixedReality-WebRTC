@@ -12,8 +12,8 @@ using namespace Microsoft::MixedReality::WebRTC;
 
 void MRS_CALL
 mrsAudioTransceiverAddRef(AudioTransceiverHandle handle) noexcept {
-  if (auto peer = static_cast<AudioTransceiver*>(handle)) {
-    peer->AddRef();
+  if (auto transceiver = static_cast<AudioTransceiver*>(handle)) {
+    transceiver->AddRef();
   } else {
     RTC_LOG(LS_WARNING)
         << "Trying to add reference to NULL AudioTransceiver object.";
@@ -22,18 +22,37 @@ mrsAudioTransceiverAddRef(AudioTransceiverHandle handle) noexcept {
 
 void MRS_CALL
 mrsAudioTransceiverRemoveRef(AudioTransceiverHandle handle) noexcept {
-  if (auto peer = static_cast<AudioTransceiver*>(handle)) {
-    peer->RemoveRef();
+  if (auto transceiver = static_cast<AudioTransceiver*>(handle)) {
+    transceiver->RemoveRef();
   } else {
     RTC_LOG(LS_WARNING)
         << "Trying to remove reference from NULL AudioTransceiver object.";
   }
 }
 
+void MRS_CALL mrsAudioTransceiverRegisterStateUpdatedCallback(
+    AudioTransceiverHandle handle,
+    mrsAudioTransceiverStateUpdatedCallback callback,
+    void* user_data) noexcept {
+  if (auto transceiver = static_cast<AudioTransceiver*>(handle)) {
+    transceiver->RegisterStateUpdatedCallback(
+        Transceiver::StateUpdatedCallback{callback, user_data});
+  }
+}
+
+mrsResult MRS_CALL mrsAudioTransceiverSetDirection(
+    AudioTransceiverHandle transceiver_handle,
+    mrsTransceiverDirection new_direction) noexcept {
+  if (auto transceiver = static_cast<AudioTransceiver*>(transceiver_handle)) {
+    return transceiver->SetDirection(new_direction);
+  }
+  return Result::kInvalidNativeHandle;
+}
+
 mrsResult MRS_CALL
 mrsAudioTransceiverSetLocalTrack(AudioTransceiverHandle transceiver_handle,
                                  LocalAudioTrackHandle track_handle) noexcept {
-  if (!transceiver_handle || !track_handle) {
+  if (!transceiver_handle) {
     return Result::kInvalidNativeHandle;
   }
   auto transceiver = static_cast<AudioTransceiver*>(transceiver_handle);

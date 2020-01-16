@@ -30,10 +30,29 @@ mrsVideoTransceiverRemoveRef(VideoTransceiverHandle handle) noexcept {
   }
 }
 
+void MRS_CALL mrsVideoTransceiverRegisterStateUpdatedCallback(
+    VideoTransceiverHandle handle,
+    mrsVideoTransceiverStateUpdatedCallback callback,
+    void* user_data) noexcept {
+  if (auto transceiver = static_cast<VideoTransceiver*>(handle)) {
+    transceiver->RegisterStateUpdatedCallback(
+        Transceiver::StateUpdatedCallback{callback, user_data});
+  }
+}
+
+mrsResult MRS_CALL mrsVideoTransceiverSetDirection(
+    VideoTransceiverHandle transceiver_handle,
+    mrsTransceiverDirection new_direction) noexcept {
+  if (auto transceiver = static_cast<VideoTransceiver*>(transceiver_handle)) {
+    return transceiver->SetDirection(new_direction);
+  }
+  return Result::kInvalidNativeHandle;
+}
+
 mrsResult MRS_CALL
 mrsVideoTransceiverSetLocalTrack(VideoTransceiverHandle transceiver_handle,
                                  LocalVideoTrackHandle track_handle) noexcept {
-  if (!transceiver_handle || !track_handle) {
+  if (!transceiver_handle) {
     return Result::kInvalidNativeHandle;
   }
   auto transceiver = static_cast<VideoTransceiver*>(transceiver_handle);

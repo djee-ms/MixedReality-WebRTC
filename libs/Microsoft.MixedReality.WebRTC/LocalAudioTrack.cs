@@ -232,6 +232,11 @@ namespace Microsoft.MixedReality.WebRTC
             Transceiver = null;
         }
 
+        internal void OnMute(bool muted)
+        {
+
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {

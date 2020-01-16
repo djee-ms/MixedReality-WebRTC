@@ -26,11 +26,7 @@ enum class MediaKind : uint32_t { kAudio, kVideo };
 /// Base class for audio and video transceivers.
 class Transceiver : public TrackedObject {
  public:
-  /// Flow direction of the media inside the transceiver. This maps to whether
-  /// local and/or remote tracks are attached to the transceiver. The local
-  /// track corresponds to the send direction, and the remote track to the
-  /// receive direction.
-  enum class Direction { kSendRecv, kSendOnly, kRecvOnly, kInactive };
+  using Direction = mrsTransceiverDirection;
 
   /// Construct a Plan B transceiver abstraction which tries to mimic a
   /// transceiver for Plan B despite the fact that this semantic doesn't have
@@ -58,11 +54,34 @@ class Transceiver : public TrackedObject {
   MRS_API Direction GetDirection() const noexcept { return direction_; }
 
   //
+  // Interop callbacks
+  //
+
+  /// Callback invoked when the internal state of the transceiver has
+  /// been updated.
+  using StateUpdatedCallback = Callback<Direction, Direction>;
+
+  void RegisterStateUpdatedCallback(StateUpdatedCallback&& callback) noexcept {
+    auto lock = std::scoped_lock{cb_mutex_};
+    state_updated_callback_ = std::move(callback);
+  }
+
+  //
   // Advanced
   //
 
   [[nodiscard]] rtc::scoped_refptr<webrtc::RtpTransceiverInterface> impl()
       const;
+
+  /// Callback on local description updated, to check for any change in the
+  /// transceiver direction and update its state.
+  void OnLocalDescUpdated();
+
+ protected:
+  [[nodiscard]] static webrtc::RtpTransceiverDirection ToRtp(
+      Direction direction);
+  [[nodiscard]] static Direction FromRtp(
+      webrtc::RtpTransceiverDirection rtp_direction);
 
  protected:
   /// Weak reference to the PeerConnection object owning this transceiver.
@@ -79,9 +98,20 @@ class Transceiver : public TrackedObject {
   /// of "preferred direction" |webrtc::RtpTransceiverInterface::direction()|.
   Direction direction_ = Direction::kInactive;
 
+  /// Next desired direction, as set by user via |SetDirection()|.
+  Direction desired_direction_ = Direction::kInactive;
+
   /// If the owner PeerConnection uses Unified Plan, pointer to the actual
   /// transceiver implementation object. Otherwise NULL for Plan B.
+  /// This is also used as a cache of which Plan is in use, to avoid querying
+  /// the peer connection.
   rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver_;
+
+  /// Interop callback invoked when the internal state of the transceiver has
+  /// been updated.
+  StateUpdatedCallback state_updated_callback_ RTC_GUARDED_BY(cb_mutex_);
+
+  std::mutex cb_mutex_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

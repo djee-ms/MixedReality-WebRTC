@@ -28,6 +28,8 @@ class AudioTransceiver : public Transceiver {
       mrsAudioTransceiverInteropHandle interop_handle) noexcept;
   MRS_API ~AudioTransceiver() override;
 
+  Result SetDirection(Direction new_direction) noexcept;
+
   MRS_API Result SetLocalTrack(RefPtr<LocalAudioTrack> local_track) noexcept;
 
   MRS_API RefPtr<LocalAudioTrack> GetLocalTrack() noexcept {

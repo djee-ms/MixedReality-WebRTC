@@ -67,6 +67,16 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static unsafe extern void VideoTransceiver_RemoveRef(IntPtr handle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsVideoTransceiverRegisterStateUpdatedCallback")]
+        public static unsafe extern uint VideoTransceiver_RegisterStateUpdatedCallback(VideoTransceiverHandle handle,
+            StateUpdatedDelegate callback);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsVideoTransceiverSetDirection")]
+        public static unsafe extern uint VideoTransceiver_SetDirection(VideoTransceiverHandle handle,
+            Transceiver.Direction newDirection);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsVideoTransceiverSetLocalTrack")]
         public static unsafe extern uint VideoTransceiver_SetLocalTrack(VideoTransceiverHandle handle,
             LocalVideoTrackHandle trackHandle);
@@ -110,8 +120,14 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         #region Native callbacks
 
+        public static readonly StateUpdatedDelegate StateUpdatedCallback = VideoTransceiverStateUpdatedCallback;
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public delegate IntPtr CreateObjectCallback(IntPtr peer, in CreateConfig config);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        public delegate void StateUpdatedDelegate(IntPtr transceiver,
+            Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection);
 
         [MonoPInvokeCallback(typeof(CreateObjectCallback))]
         public static IntPtr VideoTransceiverCreateObjectCallback(IntPtr peer, in CreateConfig config)
@@ -119,6 +135,14 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
             var videoTranceiverWrapper = CreateWrapper(peerWrapper, in config);
             return Utils.MakeWrapperRef(videoTranceiverWrapper);
+        }
+
+        [MonoPInvokeCallback(typeof(StateUpdatedDelegate))]
+        private static void VideoTransceiverStateUpdatedCallback(IntPtr transceiver,
+            Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection)
+        {
+            var videoTranceiverWrapper = Utils.ToWrapper<VideoTransceiver>(transceiver);
+            videoTranceiverWrapper.OnStateUpdated(negotiatedDirection, desiredDirection);
         }
 
         #endregion
@@ -129,6 +153,16 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static VideoTransceiver CreateWrapper(PeerConnection parent, in CreateConfig config)
         {
             return new VideoTransceiver(parent);
+        }
+
+        public static void RegisterCallbacks(VideoTransceiverHandle handle)
+        {
+            VideoTransceiver_RegisterStateUpdatedCallback(handle, StateUpdatedCallback);
+        }
+
+        public static void UnregisterCallbacks(VideoTransceiverHandle handle)
+        {
+            VideoTransceiver_RegisterStateUpdatedCallback(handle, null);
         }
 
         #endregion

@@ -30,6 +30,20 @@ AudioTransceiver::~AudioTransceiver() {
                                              this);
 }
 
+Result AudioTransceiver::SetDirection(Direction new_direction) noexcept {
+  if (transceiver_) {  // Unified Plan
+    if (new_direction == desired_direction_) {
+      return Result::kSuccess;
+    }
+    transceiver_->SetDirection(ToRtp(new_direction));
+  } else {  // Plan B
+    //< TODO
+    return Result::kUnknownError;
+  }
+  desired_direction_ = new_direction;
+  return Result::kSuccess;
+}
+
 Result AudioTransceiver::SetLocalTrack(
     RefPtr<LocalAudioTrack> local_track) noexcept {
   if (local_track_ == local_track) {

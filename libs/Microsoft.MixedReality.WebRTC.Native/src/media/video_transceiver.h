@@ -29,6 +29,8 @@ class VideoTransceiver : public Transceiver {
 
   MRS_API ~VideoTransceiver() override;
 
+  Result SetDirection(Direction new_direction) noexcept;
+
   MRS_API Result SetLocalTrack(RefPtr<LocalVideoTrack> local_track) noexcept;
 
   MRS_API RefPtr<LocalVideoTrack> GetLocalTrack() noexcept {

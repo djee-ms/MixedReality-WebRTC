@@ -37,4 +37,59 @@ rtc::scoped_refptr<webrtc::RtpTransceiverInterface> Transceiver::impl() const {
   return transceiver_;
 }
 
+webrtc::RtpTransceiverDirection Transceiver::ToRtp(Direction direction) {
+  using RtpDir = webrtc::RtpTransceiverDirection;
+  static_assert((int)Direction::kSendRecv == (int)RtpDir::kSendRecv, "");
+  static_assert((int)Direction::kSendOnly == (int)RtpDir::kSendOnly, "");
+  static_assert((int)Direction::kRecvOnly == (int)RtpDir::kRecvOnly, "");
+  static_assert((int)Direction::kInactive == (int)RtpDir::kInactive, "");
+  return (RtpDir)direction;
+}
+
+Transceiver::Direction Transceiver::FromRtp(
+    webrtc::RtpTransceiverDirection rtp_direction) {
+  using RtpDir = webrtc::RtpTransceiverDirection;
+  static_assert((int)Direction::kSendRecv == (int)RtpDir::kSendRecv, "");
+  static_assert((int)Direction::kSendOnly == (int)RtpDir::kSendOnly, "");
+  static_assert((int)Direction::kRecvOnly == (int)RtpDir::kRecvOnly, "");
+  static_assert((int)Direction::kInactive == (int)RtpDir::kInactive, "");
+  return (Direction)rtp_direction;
+}
+
+void Transceiver::OnLocalDescUpdated() {
+  // Parse state to check for changes
+  bool changed = false;
+  if (transceiver_) {  // Unified Plan
+    // Check negotiated direction
+    auto negotiated = transceiver_->current_direction();
+    if (negotiated.has_value()) {
+      auto newValue = FromRtp(negotiated.value());
+      if (newValue != direction_) {
+        direction_ = newValue;
+        changed = true;
+      }
+    }
+
+    // Check desired direciton
+    auto desired = transceiver_->direction();
+    {
+      auto newValue = FromRtp(desired);
+      if (newValue != desired_direction_) {
+        desired_direction_ = newValue;
+        changed = true;
+      }
+    }
+  } else {
+    assert(false);  // not called in Plan B for now...
+  }
+
+  // Invoke interop callback if any
+  if (changed) {
+    auto lock = std::scoped_lock{cb_mutex_};
+    if (auto cb = state_updated_callback_) {
+      cb(direction_, desired_direction_);
+    }
+  }
+}
+
 }  // namespace Microsoft::MixedReality::WebRTC

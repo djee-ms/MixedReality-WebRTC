@@ -62,26 +62,55 @@ namespace Microsoft.MixedReality.WebRTC
             if (_nativeHandle != handle)
             {
                 _nativeHandle = handle;
+                VideoTransceiverInterop.RegisterCallbacks(handle);
             }
+        }
+
+        /// <summary>
+        /// Change the media flowing direction of the transceiver.
+        /// This triggers a renegotiation needed event to synchronize with the remote peer.
+        /// </summary>
+        /// <param name="newDirection">The new flowing direction.</param>
+        public override void SetDirection(Direction newDirection)
+        {
+            if (newDirection == _desiredDirection)
+            {
+                return;
+            }
+            var res = VideoTransceiverInterop.VideoTransceiver_SetDirection(_nativeHandle, newDirection);
+            Utils.ThrowOnErrorCode(res);
+            _desiredDirection = newDirection;
         }
 
         /// <summary>
         /// Change the local video track sending data to the remote peer.
         /// This detach the previous local video track if any, and attach the new one instead.
+        /// This change is transparent to the session, and does not trigger any renegotiation.
         /// </summary>
-        /// <param name="track">The new local video track sending data to the remote peer.</param>
+        /// <param name="track">The new local video track sending data to the remote peer.
+        /// Passing <c>null</c> is allowed, and will mute the track, but keep it active.</param>
         public void SetLocalTrack(LocalVideoTrack track)
         {
             if (track == _localTrack)
             {
                 return;
             }
-            if ((track.PeerConnection != null) && (track.PeerConnection != PeerConnection))
+
+            if (track != null)
             {
-                throw new InvalidOperationException($"Cannot set track {track} of peer connection {track.PeerConnection} on video transceiver {this} of different peer connection {PeerConnection}.");
+                if ((track.PeerConnection != null) && (track.PeerConnection != PeerConnection))
+                {
+                    throw new InvalidOperationException($"Cannot set track {track} of peer connection {track.PeerConnection} on video transceiver {this} of different peer connection {PeerConnection}.");
+                }
+                var res = VideoTransceiverInterop.VideoTransceiver_SetLocalTrack(_nativeHandle, track._nativeHandle);
+                Utils.ThrowOnErrorCode(res);
             }
-            var res = VideoTransceiverInterop.VideoTransceiver_SetLocalTrack(_nativeHandle, track._nativeHandle);
-            Utils.ThrowOnErrorCode(res);
+            else
+            {
+                // Note: Cannot pass null for SafeHandle parameter value (ArgumentNullException)
+                var res = VideoTransceiverInterop.VideoTransceiver_SetLocalTrack(_nativeHandle, new LocalVideoTrackHandle());
+                Utils.ThrowOnErrorCode(res);
+            }
 
             // Capture peer connection; it gets reset during track manipulation below
             var peerConnection = PeerConnection;
@@ -104,24 +133,24 @@ namespace Microsoft.MixedReality.WebRTC
             }
 
             // Update direction
-            switch (DesiredDirection)
+            switch (_desiredDirection)
             {
-            case Direction.Inactive:
-            case Direction.ReceiveOnly:
-                if (_localTrack != null)
-                {
-                    // Add send bit
-                    DesiredDirection |= Direction.SendOnly;
-                }
-                break;
-            case Direction.SendOnly:
-            case Direction.SendReceive:
-                if (_localTrack == null)
-                {
-                    // Remove send bit
-                    DesiredDirection &= Direction.ReceiveOnly;
-                }
-                break;
+                case Direction.Inactive:
+                case Direction.ReceiveOnly:
+                    if (_localTrack != null)
+                    {
+                        // Add send bit
+                        _desiredDirection |= Direction.SendOnly;
+                    }
+                    break;
+                case Direction.SendOnly:
+                case Direction.SendReceive:
+                    if (_localTrack == null)
+                    {
+                        // Remove send bit
+                        _desiredDirection &= Direction.ReceiveOnly;
+                    }
+                    break;
             }
         }
 
@@ -139,24 +168,49 @@ namespace Microsoft.MixedReality.WebRTC
         {
             Debug.Assert(_localTrack == null);
             _localTrack = track;
+            PeerConnection.OnLocalTrackAdded(track);
         }
 
         internal void OnLocalTrackRemoved(LocalVideoTrack track)
         {
             Debug.Assert(_localTrack == track);
             _localTrack = null;
+            PeerConnection.OnLocalTrackRemoved(track);
         }
 
         internal void OnRemoteTrackAdded(RemoteVideoTrack track)
         {
             Debug.Assert(_remoteTrack == null);
             _remoteTrack = track;
+            PeerConnection.OnRemoteTrackAdded(track);
         }
 
         internal void OnRemoteTrackRemoved(RemoteVideoTrack track)
         {
             Debug.Assert(_remoteTrack == track);
             _remoteTrack = null;
+            PeerConnection.OnRemoteTrackRemoved(track);
+        }
+
+        internal void OnStateUpdated(Direction negotiatedDirection, Direction desiredDirection)
+        {
+            Debug.Assert(desiredDirection == _desiredDirection);
+            if (negotiatedDirection != NegotiatedDirection)
+            {
+                NegotiatedDirection = negotiatedDirection;
+                bool hadSendBefore = HasSend(NegotiatedDirection);
+                bool hasSendNow = HasSend(negotiatedDirection);
+                if (hadSendBefore != hasSendNow)
+                {
+                    LocalTrack?.OnMute(!hasSendNow);
+                }
+                bool hadRecvBefore = HasRecv(NegotiatedDirection);
+                bool hasRecvNow = HasRecv(negotiatedDirection);
+                if (hadRecvBefore != hasRecvNow)
+                {
+                    RemoteTrack?.OnMute(!hasRecvNow);
+                }
+            }
         }
 
         /// <inheritdoc/>
