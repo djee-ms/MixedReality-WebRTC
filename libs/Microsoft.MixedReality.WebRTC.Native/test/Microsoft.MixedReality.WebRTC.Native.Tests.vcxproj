@@ -59,6 +59,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="peer_connection_test_helpers.h" />
     <ClInclude Include="simple_interop.h" />
+    <ClInclude Include="video_test_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="audio_track_tests.cpp" />
@@ -72,6 +73,7 @@
     </ClCompile>
     <ClCompile Include="data_channel_tests.cpp" />
     <ClCompile Include="simple_interop.cpp" />
+    <ClCompile Include="video_test_utils.cpp" />
     <ClCompile Include="video_track_tests.cpp" />
     <ClCompile Include="video_transceiver_tests.cpp" />
   </ItemGroup>

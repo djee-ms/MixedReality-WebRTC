@@ -3,10 +3,10 @@
 
 #include "pch.h"
 
+#include "interop/audio_transceiver_interop.h"
 #include "interop/interop_api.h"
 #include "interop/local_audio_track_interop.h"
 #include "interop/remote_audio_track_interop.h"
-#include "interop/audio_transceiver_interop.h"
 
 #include "simple_interop.h"
 
@@ -88,11 +88,12 @@ TEST(AudioTransceiver, SetDirection) {
   Event state_updated1_ev_remote;
   Event state_updated1_ev_setdir;
   mrsTransceiverDirection dir_desired1 = mrsTransceiverDirection::kInactive;
-  mrsTransceiverDirection dir_negotiated1 = mrsTransceiverDirection::kInactive;
-  InteropCallback<mrsTransceiverStateUpdatedReason, mrsTransceiverDirection,
+  mrsTransceiverOptDirection dir_negotiated1 =
+      mrsTransceiverOptDirection::kNotSet;
+  InteropCallback<mrsTransceiverStateUpdatedReason, mrsTransceiverOptDirection,
                   mrsTransceiverDirection>
       state_updated1_cb = [&](mrsTransceiverStateUpdatedReason reason,
-                              mrsTransceiverDirection negotiated,
+                              mrsTransceiverOptDirection negotiated,
                               mrsTransceiverDirection desired) {
         dir_negotiated1 = negotiated;
         dir_desired1 = desired;
@@ -114,7 +115,7 @@ TEST(AudioTransceiver, SetDirection) {
   // Check audio transceiver #1 consistency
   {
     // Default values inchanged (callback was just registered)
-    ASSERT_EQ(mrsTransceiverDirection::kInactive, dir_negotiated1);
+    ASSERT_EQ(mrsTransceiverOptDirection::kNotSet, dir_negotiated1);
     ASSERT_EQ(mrsTransceiverDirection::kInactive, dir_desired1);
 
     // Local audio track is NULL
@@ -148,7 +149,7 @@ TEST(AudioTransceiver, SetDirection) {
   {
     // Desired state is Send+Receive, negotiated is Send only because the remote
     // peer refused to send (no track added for that).
-    ASSERT_EQ(mrsTransceiverDirection::kSendOnly, dir_negotiated1);
+    ASSERT_EQ(mrsTransceiverOptDirection::kSendOnly, dir_negotiated1);
     ASSERT_EQ(mrsTransceiverDirection::kSendRecv, dir_desired1);
   }
 
@@ -162,7 +163,7 @@ TEST(AudioTransceiver, SetDirection) {
   // Check audio transceiver #1 consistency
   {
     // Desired state is Receive, negotiated is still Send+Receive
-    ASSERT_EQ(mrsTransceiverDirection::kSendOnly,
+    ASSERT_EQ(mrsTransceiverOptDirection::kSendOnly,
               dir_negotiated1);  // no change
     ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);
   }
@@ -184,7 +185,7 @@ TEST(AudioTransceiver, SetDirection) {
   {
     // Desired state is Receive, negotiated is Inactive because remote peer
     // refused to send (no track added for that).
-    ASSERT_EQ(mrsTransceiverDirection::kInactive, dir_negotiated1);
+    ASSERT_EQ(mrsTransceiverOptDirection::kInactive, dir_negotiated1);
     ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);
   }
 
