@@ -133,26 +133,26 @@ namespace Microsoft.MixedReality.WebRTC
                 Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
             }
 
-            // Update direction
-            switch (_desiredDirection)
-            {
-                case Direction.Inactive:
-                case Direction.ReceiveOnly:
-                    if (_localTrack != null)
-                    {
-                        // Add send bit
-                        _desiredDirection |= Direction.SendOnly;
-                    }
-                    break;
-                case Direction.SendOnly:
-                case Direction.SendReceive:
-                    if (_localTrack == null)
-                    {
-                        // Remove send bit
-                        _desiredDirection &= Direction.ReceiveOnly;
-                    }
-                    break;
-            }
+            //// Update direction
+            //switch (_desiredDirection)
+            //{
+            //    case Direction.Inactive:
+            //    case Direction.ReceiveOnly:
+            //        if (_localTrack != null)
+            //        {
+            //            // Add send bit
+            //            _desiredDirection |= Direction.SendOnly;
+            //        }
+            //        break;
+            //    case Direction.SendOnly:
+            //    case Direction.SendReceive:
+            //        if (_localTrack == null)
+            //        {
+            //            // Remove send bit
+            //            _desiredDirection &= Direction.ReceiveOnly;
+            //        }
+            //        break;
+            //}
         }
 
         /// <summary>
