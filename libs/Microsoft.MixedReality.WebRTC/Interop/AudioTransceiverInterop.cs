@@ -153,6 +153,9 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public delegate IntPtr CreateObjectDelegate(IntPtr peer, in CreateConfig config);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        public delegate void FinishCreateDelegate(IntPtr transceiver, IntPtr interopHandle);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public delegate void StateUpdatedDelegate(IntPtr transceiver, StateUpdatedReason reason,
             Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection);
 
@@ -162,6 +165,13 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
             var audioTranceiverWrapper = CreateWrapper(peerWrapper, in config);
             return Utils.MakeWrapperRef(audioTranceiverWrapper);
+        }
+
+        [MonoPInvokeCallback(typeof(FinishCreateDelegate))]
+        public static void AudioTransceiverFinishCreateCallback(IntPtr transceiver, IntPtr interopHandle)
+        {
+            var transceiverWrapper = Utils.ToWrapper<AudioTransceiver>(transceiver);
+            transceiverWrapper.SetHandle(new AudioTransceiverHandle(interopHandle));
         }
 
         [MonoPInvokeCallback(typeof(StateUpdatedDelegate))]

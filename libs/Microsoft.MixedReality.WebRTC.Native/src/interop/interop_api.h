@@ -72,6 +72,36 @@ struct mrsRemoteVideoTrackConfig;
 struct mrsDataChannelConfig;
 struct mrsDataChannelCallbacks;
 
+/// Opaque handle to a native PeerConnection C++ object.
+using PeerConnectionHandle = void*;
+
+/// Opaque handle to a native MediaTrack C++ object.
+using MediaTrackHandle = void*;
+
+/// Opaque handle to a native AudioTransceiver C++ object.
+using AudioTransceiverHandle = void*;
+
+/// Opaque handle to a native VideoTransceiver C++ object.
+using VideoTransceiverHandle = void*;
+
+/// Opaque handle to a native LocalAudioTrack C++ object.
+using LocalAudioTrackHandle = void*;
+
+/// Opaque handle to a native LocalVideoTrack C++ object.
+using LocalVideoTrackHandle = void*;
+
+/// Opaque handle to a native RemoteAudioTrack C++ object.
+using RemoteAudioTrackHandle = void*;
+
+/// Opaque handle to a native RemoteVideoTrack C++ object.
+using RemoteVideoTrackHandle = void*;
+
+/// Opaque handle to a native DataChannel C++ object.
+using DataChannelHandle = void*;
+
+/// Opaque handle to a native ExternalVideoTrackSource C++ object.
+using ExternalVideoTrackSourceHandle = void*;
+
 /// Opaque handle to the interop wrapper of a peer connection.
 using mrsPeerConnectionInteropHandle = void*;
 
@@ -96,17 +126,33 @@ using mrsRemoteVideoTrackInteropHandle = void*;
 /// Opaque handle to the interop wrapper of a data channel.
 using mrsDataChannelInteropHandle = void*;
 
-/// Callback to create an interop wrapper for an audio tranceiver.
+/// Callback to create an interop wrapper for an audio transceiver.
+/// The callback must return the handle of the created interop wrapper.
 using mrsAudioTransceiverCreateObjectCallback =
     mrsAudioTransceiverInteropHandle(MRS_CALL*)(
         mrsPeerConnectionInteropHandle parent,
         const mrsAudioTransceiverConfig& config) noexcept;
 
-/// Callback to create an interop wrapper for a video tranceiver.
+/// Callback to finish the creation of the interop wrapper by assigning to it
+/// the handle of the AudioTransceiver native object it wraps.
+/// This is called shortly after |mrsAudioTransceiverCreateObjectCallback|, with
+/// the same |mrsAudioTransceiverInteropHandle| returned by that callback.
+using mrsAudioTransceiverFinishCreateCallback =
+    void(MRS_CALL*)(mrsAudioTransceiverInteropHandle, AudioTransceiverHandle);
+
+/// Callback to create an interop wrapper for a video transceiver.
+/// The callback must return the handle of the created interop wrapper.
 using mrsVideoTransceiverCreateObjectCallback =
     mrsVideoTransceiverInteropHandle(MRS_CALL*)(
         mrsPeerConnectionInteropHandle parent,
         const mrsVideoTransceiverConfig& config) noexcept;
+
+/// Callback to finish the creation of the interop wrapper by assigning to it
+/// the handle of the VideoTransceiver native object it wraps.
+/// This is called shortly after |mrsVideoTransceiverCreateObjectCallback|, with
+/// the same |mrsVideoTransceiverInteropHandle| returned by that callback.
+using mrsVideoTransceiverFinishCreateCallback =
+    void(MRS_CALL*)(mrsVideoTransceiverInteropHandle, VideoTransceiverHandle);
 
 /// Callback to create an interop wrapper for a remote audio track.
 using mrsRemoteAudioTrackCreateObjectCallback =
@@ -174,36 +220,6 @@ MRS_API mrsResult MRS_CALL mrsEnumVideoCaptureFormatsAsync(
 //
 // Peer connection
 //
-
-/// Opaque handle to a native PeerConnection C++ object.
-using PeerConnectionHandle = void*;
-
-/// Opaque handle to a native MediaTrack C++ object.
-using MediaTrackHandle = void*;
-
-/// Opaque handle to a native AudioTransceiver C++ object.
-using AudioTransceiverHandle = void*;
-
-/// Opaque handle to a native VideoTransceiver C++ object.
-using VideoTransceiverHandle = void*;
-
-/// Opaque handle to a native LocalAudioTrack C++ object.
-using LocalAudioTrackHandle = void*;
-
-/// Opaque handle to a native LocalVideoTrack C++ object.
-using LocalVideoTrackHandle = void*;
-
-/// Opaque handle to a native RemoteAudioTrack C++ object.
-using RemoteAudioTrackHandle = void*;
-
-/// Opaque handle to a native RemoteVideoTrack C++ object.
-using RemoteVideoTrackHandle = void*;
-
-/// Opaque handle to a native DataChannel C++ object.
-using DataChannelHandle = void*;
-
-/// Opaque handle to a native ExternalVideoTrackSource C++ object.
-using ExternalVideoTrackSourceHandle = void*;
 
 /// Callback fired when the peer connection is connected, that is it finished
 /// the JSEP offer/answer exchange successfully.
@@ -432,8 +448,14 @@ struct mrsPeerConnectionInteropCallbacks {
   /// Construct an interop object for an AudioTransceiver instance.
   mrsAudioTransceiverCreateObjectCallback audio_transceiver_create_object{};
 
+  /// Finish the construction of the interop object of an AudioTransceiver.
+  mrsAudioTransceiverFinishCreateCallback audio_transceiver_finish_create{};
+
   /// Construct an interop object for a VideoTransceiver instance.
   mrsVideoTransceiverCreateObjectCallback video_transceiver_create_object{};
+
+  /// Finish the construction of the interop object of a VideoTransceiver.
+  mrsVideoTransceiverFinishCreateCallback video_transceiver_finish_create{};
 
   /// Construct an interop object for a RemoteAudioTrack instance.
   mrsRemoteAudioTrackCreateObjectCallback remote_audio_track_create_object{};

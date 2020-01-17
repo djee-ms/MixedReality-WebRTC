@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -135,7 +136,9 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         {
             public PeerConnection Peer;
             public AudioTransceiverInterop.CreateObjectDelegate AudioTransceiverCreateObjectCallback;
+            public AudioTransceiverInterop.FinishCreateDelegate AudioTransceiverFinishCreateCallbak;
             public VideoTransceiverInterop.CreateObjectDelegate VideoTransceiverCreateObjectCallback;
+            public VideoTransceiverInterop.FinishCreateDelegate VideoTransceiverFinishCreateCallbak;
             public RemoteAudioTrackInterop.CreateObjectDelegate RemoteAudioTrackCreateObjectCallback;
             public RemoteVideoTrackInterop.CreateObjectDelegate RemoteVideoTrackCreateObjectCallback;
             public DataChannelInterop.CreateObjectDelegate DataChannelCreateObjectCallback;
@@ -232,15 +235,15 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static void AudioTrackAddedCallback(IntPtr peer, IntPtr audioTrack, IntPtr audioTrackHandle,
             IntPtr audioTransceiver, IntPtr audioTransceiverHandle)
         {
+            AudioTransceiverInterop.AudioTransceiver_RemoveRef(audioTransceiverHandle); // unused
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
             var audioTrackWrapper = Utils.ToWrapper<RemoteAudioTrack>(audioTrack);
             var audioTransceiverWrapper = Utils.ToWrapper<AudioTransceiver>(audioTransceiver);
+            Debug.Assert(!audioTransceiverWrapper._nativeHandle.IsClosed);
             // Ensure that the RemoteAudioTrack wrapper knows about its native object.
             // This is not always the case, if created via the interop constructor,
             // as the wrapper is created before the native object exists.
             audioTrackWrapper.SetHandle(new RemoteAudioTrackHandle(audioTrackHandle));
-            // Same for transceiver.
-            audioTransceiverWrapper.SetHandle(new AudioTransceiverHandle(audioTransceiverHandle));
             peerWrapper.OnAudioTrackAdded(audioTrackWrapper, audioTransceiverWrapper);
         }
 
@@ -256,15 +259,15 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static void VideoTrackAddedCallback(IntPtr peer, IntPtr videoTrack, IntPtr videoTrackHandle,
             IntPtr videoTransceiver, IntPtr videoTransceiverHandle)
         {
+            VideoTransceiverInterop.VideoTransceiver_RemoveRef(videoTransceiverHandle); // unused
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
             var videoTrackWrapper = Utils.ToWrapper<RemoteVideoTrack>(videoTrack);
             var videoTransceiverWrapper = Utils.ToWrapper<VideoTransceiver>(videoTransceiver);
+            Debug.Assert(!videoTransceiverWrapper._nativeHandle.IsClosed);
             // Ensure that the RemoteVideoTrack wrapper knows about its native object.
             // This is not always the case, if created via the interop constructor,
             // as the wrapper is created before the native object exists.
             videoTrackWrapper.SetHandle(new RemoteVideoTrackHandle(videoTrackHandle));
-            // Same for transceiver.
-            videoTransceiverWrapper.SetHandle(new VideoTransceiverHandle(videoTransceiverHandle));
             peerWrapper.OnVideoTrackAdded(videoTrackWrapper, videoTransceiverWrapper);
         }
 
@@ -287,7 +290,9 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         internal struct MarshaledInteropCallbacks
         {
             public AudioTransceiverInterop.CreateObjectDelegate AudioTransceiverCreateObjectCallback;
+            public AudioTransceiverInterop.FinishCreateDelegate AudioTransceiverFinishCreateCallbak;
             public VideoTransceiverInterop.CreateObjectDelegate VideoTransceiverCreateObjectCallback;
+            public VideoTransceiverInterop.FinishCreateDelegate VideoTransceiverFinishCreateCallbak;
             public RemoteAudioTrackInterop.CreateObjectDelegate RemoteAudioTrackCreateObjectCallback;
             public RemoteVideoTrackInterop.CreateObjectDelegate RemoteVideoTrackCreateObjectCallback;
             public DataChannelInterop.CreateObjectDelegate DataChannelCreateObjectCallback;

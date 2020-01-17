@@ -560,7 +560,7 @@ class PeerConnectionImpl : public PeerConnection,
   /// transceiver already, and this only takes care of finding/creating a
   /// wrapper for it, so should never fail as long as the receiver is indeed
   /// associated with this peer connection.
-  ErrorOr<RefPtr<AudioTransceiver>> GetOrCreateAudioTransceiverForReceiver(
+  ErrorOr<RefPtr<AudioTransceiver>> GetAudioTransceiverForReceiver(
       webrtc::RtpReceiverInterface* receiver);
 
   /// Get an existing or create a new |VideoTransceiver| wrapper for a given RTP
@@ -568,11 +568,14 @@ class PeerConnectionImpl : public PeerConnection,
   /// transceiver already, and this only takes care of finding/creating a
   /// wrapper for it, so should never fail as long as the receiver is indeed
   /// associated with this peer connection.
-  ErrorOr<RefPtr<VideoTransceiver>> GetOrCreateVideoTransceiverForReceiver(
+  ErrorOr<RefPtr<VideoTransceiver>> GetVideoTransceiverForReceiver(
       webrtc::RtpReceiverInterface* receiver);
 
-  RefPtr<Transceiver> FindTransceiver(
-      webrtc::RtpTransceiverInterface* rtp_transceiver) const;
+  /// Get an existing or create a new |Transceiver| instance (either audio or
+  /// video) wrapper for a given RTP transceiver just created as part of a local
+  /// or remote description applied.
+  ErrorOr<RefPtr<Transceiver>> GetOrCreateTransceiver(
+      webrtc::RtpTransceiverInterface* rtp_transceiver);
 };
 
 void StreamObserver::OnChanged() {
@@ -1235,8 +1238,9 @@ bool PeerConnectionImpl::SetRemoteDescriptionAsync(
         std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
             changed_transceivers;
         for (auto&& tr : peer_->GetTransceivers()) {
-          RefPtr<Transceiver> transceiver = FindTransceiver(tr);
-          transceiver->OnSessionDescUpdated(/*remote=*/true);
+          ErrorOr<RefPtr<Transceiver>> err = GetOrCreateTransceiver(tr);
+          RTC_DCHECK(err.ok());
+          err.value()->OnSessionDescUpdated(/*remote=*/true);
         }
         // Fire completed callback to signal remote description was applied.
         callback();
@@ -1440,7 +1444,7 @@ void PeerConnectionImpl::OnAddTrack(
     }
 
     // Find the transceiver of the receiver
-    auto ret = GetOrCreateAudioTransceiverForReceiver(receiver);
+    auto ret = GetAudioTransceiverForReceiver(receiver);
     if (!ret.ok()) {
       return;
     }
@@ -1485,7 +1489,7 @@ void PeerConnectionImpl::OnAddTrack(
     }
 
     // Find the transceiver of the receiver
-    auto ret = GetOrCreateVideoTransceiverForReceiver(receiver);
+    auto ret = GetVideoTransceiverForReceiver(receiver);
     if (!ret.ok()) {
       return;
     }
@@ -1628,8 +1632,9 @@ void PeerConnectionImpl::OnLocalDescCreated(
         std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
             changed_transceivers;
         for (auto&& tr : peer_->GetTransceivers()) {
-          RefPtr<Transceiver> transceiver = FindTransceiver(tr);
-          transceiver->OnSessionDescUpdated(/*remote=*/false);
+          ErrorOr<RefPtr<Transceiver>> err = GetOrCreateTransceiver(tr);
+          RTC_DCHECK(err.ok());
+          err.value()->OnSessionDescUpdated(/*remote=*/false);
         }
 
         // Fire interop callback, if any
@@ -1837,11 +1842,9 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForSender(
 }
 
 ErrorOr<RefPtr<AudioTransceiver>>
-PeerConnectionImpl::GetOrCreateAudioTransceiverForReceiver(
+PeerConnectionImpl::GetAudioTransceiverForReceiver(
     webrtc::RtpReceiverInterface* receiver) {
   RTC_DCHECK(receiver->media_type() == cricket::MediaType::MEDIA_TYPE_AUDIO);
-
-  // Find existing transceiver for sender
   auto it = std::find_if(audio_transceivers_.begin(), audio_transceivers_.end(),
                          [receiver](const RefPtr<AudioTransceiver>& tr) {
                            return (tr->impl()->receiver() == receiver);
@@ -1849,63 +1852,13 @@ PeerConnectionImpl::GetOrCreateAudioTransceiverForReceiver(
   if (it != audio_transceivers_.end()) {
     return RefPtr<AudioTransceiver>(*it);
   }
-
-  // Create new transceiver for audio track
-  RefPtr<AudioTransceiver> transceiver;
-  switch (peer_->GetConfiguration().sdp_semantics) {
-    case webrtc::SdpSemantics::kPlanB: {
-      assert(false);  //< TODO...
-    } break;
-    case webrtc::SdpSemantics::kUnifiedPlan: {
-      // Find transceiver implementation. It doesn't seem like there is a direct
-      // back-link, so iterate over all the peer connection transceivers.
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> impl;
-      for (auto&& tr : peer_->GetTransceivers()) {
-        if (tr->receiver() == receiver) {
-          impl = tr;
-          break;
-        }
-      }
-      if (!impl) {
-        return Error(Result::kInvalidOperation,
-                     "Cannot match receiver with transceiver.");
-      }
-
-      // Create an interop wrapper for the new native object if needed
-      mrsAudioTransceiverInteropHandle interop_handle{};
-      if (auto create_cb = interop_callbacks_.audio_transceiver_create_object) {
-        mrsAudioTransceiverConfig config;
-        interop_handle = (*create_cb)(interop_handle_, config);
-      }
-
-      // Create the transceiver wrapper
-      transceiver =
-          new AudioTransceiver(*this, std::move(impl), interop_handle);
-
-      // Note: at this point the native wrapper knows about the interop wrapper,
-      // but not the opposite. Normally we'd fire another "created-callback"
-      // with the native wrapper handle to sync the interop wrapper, but here it
-      // is being created as part of a remote track creation, so we bundle that
-      // with the "track-created" event.
-    } break;
-    default:
-      return Error(Result::kUnknownError, "Unknown SDP semantic");
-  }
-  if (transceiver) {
-    rtc::CritScope lock(&tracks_mutex_);
-    audio_transceivers_.push_back(transceiver);
-    return transceiver;
-  }
-  return Error(Result::kUnknownError,
-               "Failed to create a new transceiver for remote audio track.");
+  return Error(Result::kNotFound);
 }
 
 ErrorOr<RefPtr<VideoTransceiver>>
-PeerConnectionImpl::GetOrCreateVideoTransceiverForReceiver(
+PeerConnectionImpl::GetVideoTransceiverForReceiver(
     webrtc::RtpReceiverInterface* receiver) {
   RTC_DCHECK(receiver->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO);
-
-  // Find existing transceiver for sender
   auto it = std::find_if(video_transceivers_.begin(), video_transceivers_.end(),
                          [receiver](const RefPtr<VideoTransceiver>& tr) {
                            return (tr->impl()->receiver() == receiver);
@@ -1913,80 +1866,106 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForReceiver(
   if (it != video_transceivers_.end()) {
     return RefPtr<VideoTransceiver>(*it);
   }
-
-  // Create new transceiver for video track
-  RefPtr<VideoTransceiver> transceiver;
-  switch (peer_->GetConfiguration().sdp_semantics) {
-    case webrtc::SdpSemantics::kPlanB: {
-      assert(false);  //< TODO...
-    } break;
-    case webrtc::SdpSemantics::kUnifiedPlan: {
-      // Find transceiver implementation. It doesn't seem like there is a direct
-      // back-link, so iterate over all the peer connection transceivers.
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> impl;
-      for (auto&& tr : peer_->GetTransceivers()) {
-        if (tr->receiver() == receiver) {
-          impl = tr;
-          break;
-        }
-      }
-      if (!impl) {
-        return Error(Result::kInvalidOperation,
-                     "Cannot match sender with transceiver.");
-      }
-
-      // Create an interop wrapper for the new native object if needed
-      mrsVideoTransceiverInteropHandle interop_handle{};
-      if (auto create_cb = interop_callbacks_.video_transceiver_create_object) {
-        mrsVideoTransceiverConfig config;
-        interop_handle = (*create_cb)(interop_handle_, config);
-      }
-
-      // Create the transceiver wrapper
-      transceiver =
-          new VideoTransceiver(*this, std::move(impl), interop_handle);
-
-      // Note: at this point the native wrapper knows about the interop wrapper,
-      // but not the opposite. Normally we'd fire another "created-callback"
-      // with the native wrapper handle to sync the interop wrapper, but here it
-      // is being created as part of a remote track creation, so we bundle that
-      // with the "track-created" event.
-    } break;
-    default:
-      return Error(Result::kUnknownError, "Unknown SDP semantic");
-  }
-  if (transceiver) {
-    rtc::CritScope lock(&tracks_mutex_);
-    video_transceivers_.push_back(transceiver);
-    return transceiver;
-  }
-  return Error(Result::kUnknownError,
-               "Failed to create a new transceiver for remote video track.");
+  return Error(Result::kNotFound);
 }
 
-RefPtr<Transceiver> PeerConnectionImpl::FindTransceiver(
-    webrtc::RtpTransceiverInterface* rtp_transceiver) const {
+ErrorOr<RefPtr<Transceiver>> PeerConnectionImpl::GetOrCreateTransceiver(
+    webrtc::RtpTransceiverInterface* rtp_transceiver) {
+  // Find an existing transceiver wrapper
+  bool audio;
   switch (rtp_transceiver->media_type()) {
     case cricket::MediaType::MEDIA_TYPE_AUDIO: {
+      audio = true;
       rtc::CritScope lock(&tracks_mutex_);
       for (auto&& tr : audio_transceivers_) {
         if (tr->impl() == rtp_transceiver) {
-          return tr;
+          return RefPtr<Transceiver>(tr);
         }
       }
     } break;
     case cricket::MediaType::MEDIA_TYPE_VIDEO: {
+      audio = false;
       rtc::CritScope lock(&tracks_mutex_);
       for (auto&& tr : video_transceivers_) {
         if (tr->impl() == rtp_transceiver) {
-          return tr;
+          return RefPtr<Transceiver>(tr);
         }
       }
     } break;
     default:
-      break;
+      return Error(Result::kUnknownError, "Unknown SDP semantic");
   }
-  return nullptr;
+
+  // Create a new wrapper for a transceiver just added
+  if (audio) {
+    // Create an interop wrapper for the new native object if needed
+    mrsAudioTransceiverInteropHandle interop_handle{};
+    if (auto create_cb = interop_callbacks_.audio_transceiver_create_object) {
+      mrsAudioTransceiverConfig config;
+      interop_handle = (*create_cb)(interop_handle_, config);
+    }
+
+    // Create new transceiver for audio track
+    RefPtr<AudioTransceiver> transceiver;
+    switch (peer_->GetConfiguration().sdp_semantics) {
+      case webrtc::SdpSemantics::kPlanB: {
+        assert(false);  //< TODO...
+      } break;
+      case webrtc::SdpSemantics::kUnifiedPlan: {
+        // Create the transceiver wrapper
+        transceiver =
+            new AudioTransceiver(*this, rtp_transceiver, interop_handle);
+
+        // Synchronize the interop wrapper with the current object.
+        if (auto cb = interop_callbacks_.audio_transceiver_finish_create) {
+          transceiver->AddRef();
+          cb(interop_handle, transceiver.get());
+        }
+      } break;
+      default:
+        return Error(Result::kUnknownError, "Unknown SDP semantic");
+    }
+    if (transceiver) {
+      rtc::CritScope lock(&tracks_mutex_);
+      audio_transceivers_.push_back(transceiver);
+      return RefPtr<Transceiver>(std::move(transceiver));
+    }
+  } else {
+    // Create an interop wrapper for the new native object if needed
+    mrsVideoTransceiverInteropHandle interop_handle{};
+    if (auto create_cb = interop_callbacks_.video_transceiver_create_object) {
+      mrsVideoTransceiverConfig config;
+      interop_handle = (*create_cb)(interop_handle_, config);
+    }
+
+    // Create new transceiver for video track
+    RefPtr<VideoTransceiver> transceiver;
+    switch (peer_->GetConfiguration().sdp_semantics) {
+      case webrtc::SdpSemantics::kPlanB: {
+        assert(false);  //< TODO...
+      } break;
+      case webrtc::SdpSemantics::kUnifiedPlan: {
+        // Create the transceiver wrapper
+        transceiver =
+            new VideoTransceiver(*this, rtp_transceiver, interop_handle);
+
+        // Synchronize the interop wrapper with the current object.
+        if (auto cb = interop_callbacks_.video_transceiver_finish_create) {
+          transceiver->AddRef();
+          cb(interop_handle, transceiver.get());
+        }
+      } break;
+      default:
+        return Error(Result::kUnknownError, "Unknown SDP semantic");
+    }
+    if (transceiver) {
+      rtc::CritScope lock(&tracks_mutex_);
+      video_transceivers_.push_back(transceiver);
+      return RefPtr<Transceiver>(std::move(transceiver));
+    }
+  }
+  return Error(Result::kUnknownError,
+               "Failed to create a new transceiver wrapper.");
 }
 
 webrtc::PeerConnectionInterface::IceTransportsType ICETransportTypeToNative(

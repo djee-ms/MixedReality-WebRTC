@@ -701,7 +701,9 @@ namespace Microsoft.MixedReality.WebRTC
                 {
                     Peer = this,
                     AudioTransceiverCreateObjectCallback = AudioTransceiverInterop.AudioTransceiverCreateObjectCallback,
+                    AudioTransceiverFinishCreateCallbak = AudioTransceiverInterop.AudioTransceiverFinishCreateCallback,
                     VideoTransceiverCreateObjectCallback = VideoTransceiverInterop.VideoTransceiverCreateObjectCallback,
+                    VideoTransceiverFinishCreateCallbak = VideoTransceiverInterop.VideoTransceiverFinishCreateCallback,
                     RemoteAudioTrackCreateObjectCallback = RemoteAudioTrackInterop.RemoteAudioTrackCreateObjectCallback,
                     RemoteVideoTrackCreateObjectCallback = RemoteVideoTrackInterop.RemoteVideoTrackCreateObjectCallback,
                     DataChannelCreateObjectCallback = DataChannelInterop.DataChannelCreateObjectCallback,
@@ -793,7 +795,9 @@ namespace Microsoft.MixedReality.WebRTC
                         var interopCallbacks = new PeerConnectionInterop.MarshaledInteropCallbacks
                         {
                             AudioTransceiverCreateObjectCallback = _interopCallbacks.AudioTransceiverCreateObjectCallback,
+                            AudioTransceiverFinishCreateCallbak = _interopCallbacks.AudioTransceiverFinishCreateCallbak,
                             VideoTransceiverCreateObjectCallback = _interopCallbacks.VideoTransceiverCreateObjectCallback,
+                            VideoTransceiverFinishCreateCallbak = _interopCallbacks.VideoTransceiverFinishCreateCallbak,
                             RemoteAudioTrackCreateObjectCallback = _interopCallbacks.RemoteAudioTrackCreateObjectCallback,
                             RemoteVideoTrackCreateObjectCallback = _interopCallbacks.RemoteVideoTrackCreateObjectCallback,
                             DataChannelCreateObjectCallback = _interopCallbacks.DataChannelCreateObjectCallback

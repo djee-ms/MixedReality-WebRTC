@@ -168,9 +168,10 @@ class PeerConnection : public TrackedObject {
   /// remote peer. The parameters correspond to the SDP message data provided by
   /// the |LocalSdpReadytoSendCallback|, after being transmitted to the
   /// other peer.
-  virtual bool MRS_API SetRemoteDescriptionAsync(const char* type,
-                                            const char* sdp,
-                                            Callback<> callback) noexcept = 0;
+  virtual bool MRS_API
+  SetRemoteDescriptionAsync(const char* type,
+                            const char* sdp,
+                            Callback<> callback) noexcept = 0;
 
   //
   // Connection
