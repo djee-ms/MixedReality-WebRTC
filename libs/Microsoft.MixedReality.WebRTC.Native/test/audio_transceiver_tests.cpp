@@ -3,11 +3,10 @@
 
 #include "pch.h"
 
-#include "interop/external_video_track_source_interop.h"
 #include "interop/interop_api.h"
-#include "interop/local_video_track_interop.h"
-#include "interop/remote_video_track_interop.h"
-#include "interop/video_transceiver_interop.h"
+#include "interop/local_audio_track_interop.h"
+#include "interop/remote_audio_track_interop.h"
+#include "interop/audio_transceiver_interop.h"
 
 #include "simple_interop.h"
 
@@ -16,39 +15,39 @@ namespace {
 const mrsPeerConnectionInteropHandle kFakeInteropPeerConnectionHandle =
     (void*)0x1;
 
-const mrsRemoteVideoTrackInteropHandle kFakeInteropRemoteVideoTrackHandle =
+const mrsRemoteAudioTrackInteropHandle kFakeInteropRemoteAudioTrackHandle =
     (void*)0x2;
 
-const mrsVideoTransceiverInteropHandle kFakeInteropVideoTransceiverHandle =
+const mrsAudioTransceiverInteropHandle kFakeInteropAudioTransceiverHandle =
     (void*)0x3;
 
-/// Fake interop callback always returning the same fake remote video track
+/// Fake interop callback always returning the same fake remote audio track
 /// interop handle, for tests which do not care about it.
-mrsRemoteVideoTrackInteropHandle MRS_CALL FakeIterop_RemoteVideoTrackCreate(
+mrsRemoteAudioTrackInteropHandle MRS_CALL FakeIterop_RemoteAudioTrackCreate(
     mrsPeerConnectionInteropHandle /*parent*/,
-    const mrsRemoteVideoTrackConfig& /*config*/) noexcept {
-  return kFakeInteropRemoteVideoTrackHandle;
+    const mrsRemoteAudioTrackConfig& /*config*/) noexcept {
+  return kFakeInteropRemoteAudioTrackHandle;
 }
 
-// PeerConnectionVideoTrackAddedCallback
-using VideoTrackAddedCallback =
-    InteropCallback<mrsRemoteVideoTrackInteropHandle,
-                    RemoteVideoTrackHandle,
-                    mrsVideoTransceiverInteropHandle,
-                    VideoTransceiverHandle>;
+// PeerConnectionAudioTrackAddedCallback
+using AudioTrackAddedCallback =
+    InteropCallback<mrsRemoteAudioTrackInteropHandle,
+                    RemoteAudioTrackHandle,
+                    mrsAudioTransceiverInteropHandle,
+                    AudioTransceiverHandle>;
 
-// PeerConnectionI420VideoFrameCallback
-using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
+// PeerConnectionI420AudioFrameCallback
+using I420AudioFrameCallback = InteropCallback<const AudioFrame&>;
 
 }  // namespace
 
-TEST(VideoTransceiver, SetDirection) {
+TEST(AudioTransceiver, SetDirection) {
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
   // necessary interop callbacks.
   mrsPeerConnectionInteropCallbacks interop{};
-  interop.remote_video_track_create_object = &FakeIterop_RemoteVideoTrackCreate;
+  interop.remote_audio_track_create_object = &FakeIterop_RemoteAudioTrackCreate;
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionRegisterInteropCallbacks(pair.pc1(), &interop));
   ASSERT_EQ(Result::kSuccess,
@@ -69,15 +68,15 @@ TEST(VideoTransceiver, SetDirection) {
       pair.pc2(), CB(renegotiation_needed2_cb));
 
   // Add a transceiver to the local peer (#1)
-  VideoTransceiverHandle transceiver_handle1{};
+  AudioTransceiverHandle transceiver_handle1{};
   {
-    VideoTransceiverInitConfig transceiver_config{};
-    transceiver_config.name = "video_transceiver_1";
+    AudioTransceiverInitConfig transceiver_config{};
+    transceiver_config.name = "audio_transceiver_1";
     transceiver_config.transceiver_interop_handle =
-        kFakeInteropVideoTransceiverHandle;
+        kFakeInteropAudioTransceiverHandle;
     renegotiation_needed1_ev.Reset();
     ASSERT_EQ(Result::kSuccess,
-              mrsPeerConnectionAddVideoTransceiver(
+              mrsPeerConnectionAddAudioTransceiver(
                   pair.pc1(), &transceiver_config, &transceiver_handle1));
     ASSERT_NE(nullptr, transceiver_handle1);
     ASSERT_TRUE(renegotiation_needed1_ev.IsSignaled());
@@ -109,24 +108,24 @@ TEST(VideoTransceiver, SetDirection) {
             break;
         }
       };
-  mrsVideoTransceiverRegisterStateUpdatedCallback(transceiver_handle1,
+  mrsAudioTransceiverRegisterStateUpdatedCallback(transceiver_handle1,
                                                   CB(state_updated1_cb));
 
-  // Check video transceiver #1 consistency
+  // Check audio transceiver #1 consistency
   {
     // Default values inchanged (callback was just registered)
     ASSERT_EQ(mrsTransceiverDirection::kInactive, dir_negotiated1);
     ASSERT_EQ(mrsTransceiverDirection::kInactive, dir_desired1);
 
-    // Local video track is NULL
-    LocalVideoTrackHandle track_handle_local{};
-    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
+    // Local audio track is NULL
+    LocalAudioTrackHandle track_handle_local{};
+    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
                                     transceiver_handle1, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
-    // Remote video track is NULL
-    RemoteVideoTrackHandle track_handle_remote{};
-    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
+    // Remote audio track is NULL
+    RemoteAudioTrackHandle track_handle_remote{};
+    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
                                     transceiver_handle1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
   }
@@ -145,7 +144,7 @@ TEST(VideoTransceiver, SetDirection) {
   ASSERT_TRUE(state_updated1_ev_remote.WaitFor(10s));
   state_updated1_ev_remote.Reset();
 
-  // Check video transceiver #1 consistency
+  // Check audio transceiver #1 consistency
   {
     // Desired state is Send+Receive, negotiated is Send only because the remote
     // peer refused to send (no track added for that).
@@ -155,12 +154,12 @@ TEST(VideoTransceiver, SetDirection) {
 
   // Set transceiver #1 direction to Receive
   ASSERT_EQ(Result::kSuccess,
-            mrsVideoTransceiverSetDirection(
+            mrsAudioTransceiverSetDirection(
                 transceiver_handle1, mrsTransceiverDirection::kRecvOnly));
   ASSERT_TRUE(state_updated1_ev_setdir.IsSignaled());
   state_updated1_ev_setdir.Reset();
 
-  // Check video transceiver #1 consistency
+  // Check audio transceiver #1 consistency
   {
     // Desired state is Receive, negotiated is still Send+Receive
     ASSERT_EQ(mrsTransceiverDirection::kSendOnly,
@@ -181,7 +180,7 @@ TEST(VideoTransceiver, SetDirection) {
   ASSERT_TRUE(state_updated1_ev_remote.WaitFor(10s));
   state_updated1_ev_remote.Reset();
 
-  // Check video transceiver #1 consistency
+  // Check audio transceiver #1 consistency
   {
     // Desired state is Receive, negotiated is Inactive because remote peer
     // refused to send (no track added for that).
@@ -190,6 +189,5 @@ TEST(VideoTransceiver, SetDirection) {
   }
 
   // Clean-up
-  mrsVideoTransceiverRemoveRef(transceiver_handle1);
+  mrsAudioTransceiverRemoveRef(transceiver_handle1);
 }
-

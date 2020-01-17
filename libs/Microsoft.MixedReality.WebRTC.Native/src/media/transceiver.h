@@ -59,7 +59,8 @@ class Transceiver : public TrackedObject {
 
   /// Callback invoked when the internal state of the transceiver has
   /// been updated.
-  using StateUpdatedCallback = Callback<Direction, Direction>;
+  using StateUpdatedCallback =
+      Callback<mrsTransceiverStateUpdatedReason, Direction, Direction>;
 
   void RegisterStateUpdatedCallback(StateUpdatedCallback&& callback) noexcept {
     auto lock = std::scoped_lock{cb_mutex_};
@@ -75,13 +76,21 @@ class Transceiver : public TrackedObject {
 
   /// Callback on local description updated, to check for any change in the
   /// transceiver direction and update its state.
-  void OnLocalDescUpdated();
+  void OnSessionDescUpdated(bool remote);
 
- protected:
+  /// Fire the StateUpdated event, invoking the |state_updated_callback_| if
+  /// any is registered.
+  void FireStateUpdatedEvent(mrsTransceiverStateUpdatedReason reason);
+
   [[nodiscard]] static webrtc::RtpTransceiverDirection ToRtp(
       Direction direction);
   [[nodiscard]] static Direction FromRtp(
       webrtc::RtpTransceiverDirection rtp_direction);
+
+  [[nodiscard]] static std::vector<std::string> DecodeStreamIDs(
+      const char* encoded_stream_ids);
+  [[nodiscard]] static std::string EncodeStreamIDs(
+      const std::vector<std::string>& stream_ids);
 
  protected:
   /// Weak reference to the PeerConnection object owning this transceiver.

@@ -10,6 +10,7 @@ extern "C" {
 
 using mrsVideoTransceiverStateUpdatedCallback =
     void(MRS_CALL*)(void* user_data,
+                    mrsTransceiverStateUpdatedReason reason,
                     mrsTransceiverDirection negotiated_direction,
                     mrsTransceiverDirection desired_direction);
 

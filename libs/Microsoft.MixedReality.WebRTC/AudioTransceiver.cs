@@ -43,10 +43,11 @@ namespace Microsoft.MixedReality.WebRTC
         /// <remarks>
         /// In native land this is a <code>Microsoft::MixedReality::WebRTC::AudioTransceiverHandle</code>.
         /// </remarks>
-        protected AudioTransceiverHandle _nativeHandle = new AudioTransceiverHandle();
+        internal AudioTransceiverHandle _nativeHandle = new AudioTransceiverHandle();
 
         private LocalAudioTrack _localTrack = null;
         private RemoteAudioTrack _remoteTrack = null;
+        private IntPtr _argsRef = IntPtr.Zero;
 
         // Constructor for interop-based creation; SetHandle() will be called later
         internal AudioTransceiver(PeerConnection peerConnection)
@@ -62,7 +63,7 @@ namespace Microsoft.MixedReality.WebRTC
             if (_nativeHandle != handle)
             {
                 _nativeHandle = handle;
-                AudioTransceiverInterop.RegisterCallbacks(handle);
+                AudioTransceiverInterop.RegisterCallbacks(this, out _argsRef);
             }
         }
 

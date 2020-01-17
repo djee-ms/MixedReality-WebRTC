@@ -40,6 +40,7 @@ Result VideoTransceiver::SetDirection(Direction new_direction) noexcept {
     return Result::kUnknownError;
   }
   desired_direction_ = new_direction;
+  FireStateUpdatedEvent(mrsTransceiverStateUpdatedReason::kSetDirection);
   return Result::kSuccess;
 }
 

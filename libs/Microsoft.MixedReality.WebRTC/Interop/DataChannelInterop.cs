@@ -45,7 +45,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         #region Native callbacks
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-        public delegate IntPtr CreateObjectCallback(IntPtr peer, CreateConfig config,
+        public delegate IntPtr CreateObjectDelegate(IntPtr peer, CreateConfig config,
             out Callbacks callbacks);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
@@ -71,7 +71,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public StateCallback StateCallback;
         }
 
-        [MonoPInvokeCallback(typeof(CreateObjectCallback))]
+        [MonoPInvokeCallback(typeof(CreateObjectDelegate))]
         public static IntPtr DataChannelCreateObjectCallback(IntPtr peer, CreateConfig config,
             out Callbacks callbacks)
         {

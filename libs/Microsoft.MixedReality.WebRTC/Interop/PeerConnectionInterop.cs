@@ -132,11 +132,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public class InteropCallbacks
         {
             public PeerConnection Peer;
-            public AudioTransceiverInterop.CreateObjectCallback AudioTransceiverCreateObjectCallback;
-            public VideoTransceiverInterop.CreateObjectCallback VideoTransceiverCreateObjectCallback;
-            public RemoteAudioTrackInterop.CreateObjectCallback RemoteAudioTrackCreateObjectCallback;
-            public RemoteVideoTrackInterop.CreateObjectCallback RemoteVideoTrackCreateObjectCallback;
-            public DataChannelInterop.CreateObjectCallback DataChannelCreateObjectCallback;
+            public AudioTransceiverInterop.CreateObjectDelegate AudioTransceiverCreateObjectCallback;
+            public VideoTransceiverInterop.CreateObjectDelegate VideoTransceiverCreateObjectCallback;
+            public RemoteAudioTrackInterop.CreateObjectDelegate RemoteAudioTrackCreateObjectCallback;
+            public RemoteVideoTrackInterop.CreateObjectDelegate RemoteVideoTrackCreateObjectCallback;
+            public DataChannelInterop.CreateObjectDelegate DataChannelCreateObjectCallback;
         }
 
         /// <summary>
@@ -277,11 +277,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         internal struct MarshaledInteropCallbacks
         {
-            public AudioTransceiverInterop.CreateObjectCallback AudioTransceiverCreateObjectCallback;
-            public VideoTransceiverInterop.CreateObjectCallback VideoTransceiverCreateObjectCallback;
-            public RemoteAudioTrackInterop.CreateObjectCallback RemoteAudioTrackCreateObjectCallback;
-            public RemoteVideoTrackInterop.CreateObjectCallback RemoteVideoTrackCreateObjectCallback;
-            public DataChannelInterop.CreateObjectCallback DataChannelCreateObjectCallback;
+            public AudioTransceiverInterop.CreateObjectDelegate AudioTransceiverCreateObjectCallback;
+            public VideoTransceiverInterop.CreateObjectDelegate VideoTransceiverCreateObjectCallback;
+            public RemoteAudioTrackInterop.CreateObjectDelegate RemoteAudioTrackCreateObjectCallback;
+            public RemoteVideoTrackInterop.CreateObjectDelegate RemoteVideoTrackCreateObjectCallback;
+            public DataChannelInterop.CreateObjectDelegate DataChannelCreateObjectCallback;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]

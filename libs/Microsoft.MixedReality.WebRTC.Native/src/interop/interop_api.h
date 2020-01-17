@@ -559,10 +559,35 @@ enum class VideoProfileKind : int32_t {
   kVideoHdr8,
 };
 
+enum class mrsTransceiverStateUpdatedReason : int32_t {
+  kLocalDesc,
+  kRemoteDesc,
+  kSetDirection
+};
+
+/// Flow direction of the media inside the transceiver. This maps to whether
+/// local and/or remote tracks are attached to the transceiver. The local
+/// track corresponds to the send direction, and the remote track to the
+/// receive direction.
+enum class mrsTransceiverDirection : int32_t {
+  kSendRecv = 0,
+  kSendOnly = 1,
+  kRecvOnly = 2,
+  kInactive = 3
+};
+
 /// Configuration for creating a new audio transceiver.
 struct AudioTransceiverInitConfig {
   /// Name of the audio transceiver.
   const char* name = nullptr;
+
+  /// Initial desired direction of the transceiver media when created.
+  mrsTransceiverDirection desired_direction =
+      mrsTransceiverDirection::kSendRecv;
+
+  /// Semi-colon separated list of stream IDs associated with the transceiver.
+  /// Use |Transceiver::DecodeStreamIDs()| and |Transceiver::EncodeStreamIDs()|.
+  const char* stream_ids = nullptr;
 
   /// Handle of the audio transceiver interop wrapper, if any, which will be
   /// associated with the native audio transceiver object.
@@ -573,6 +598,14 @@ struct AudioTransceiverInitConfig {
 struct VideoTransceiverInitConfig {
   /// Name of the video transceiver.
   const char* name = nullptr;
+
+  /// Initial desired direction of the transceiver media when created.
+  mrsTransceiverDirection desired_direction =
+      mrsTransceiverDirection::kSendRecv;
+
+  /// Semi-colon separated list of stream IDs associated with the transceiver.
+  /// Use |Transceiver::DecodeStreamIDs()| and |Transceiver::EncodeStreamIDs()|.
+  const char* stream_ids = nullptr;
 
   /// Handle of the video transceiver interop wrapper, if any, which will be
   /// associated with the native video transceiver object.
@@ -660,17 +693,6 @@ using mrsRequestExternalArgb32VideoFrameCallback =
                          ExternalVideoTrackSourceHandle source_handle,
                          uint32_t request_id,
                          int64_t timestamp_ms);
-
-/// Flow direction of the media inside the transceiver. This maps to whether
-/// local and/or remote tracks are attached to the transceiver. The local
-/// track corresponds to the send direction, and the remote track to the
-/// receive direction.
-enum class mrsTransceiverDirection : int32_t {
-  kSendRecv = 0,
-  kSendOnly = 1,
-  kRecvOnly = 2,
-  kInactive = 3
-};
 
 struct mrsAudioTransceiverConfig {};
 
@@ -869,6 +891,10 @@ MRS_API void MRS_CALL mrsMemCpyStride(void* dst,
                                       int32_t elem_count) noexcept;
 
 }  // extern "C"
+
+inline bool IsStringNullOrEmpty(const char* str) noexcept {
+  return ((str == nullptr) || (str[0] == '\0'));
+}
 
 inline mrsShutdownOptions operator|(mrsShutdownOptions a,
                                     mrsShutdownOptions b) noexcept {

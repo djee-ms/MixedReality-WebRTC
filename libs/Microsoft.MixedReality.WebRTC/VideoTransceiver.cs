@@ -43,10 +43,11 @@ namespace Microsoft.MixedReality.WebRTC
         /// <remarks>
         /// In native land this is a <code>Microsoft::MixedReality::WebRTC::VideoTransceiverHandle</code>.
         /// </remarks>
-        protected VideoTransceiverHandle _nativeHandle = new VideoTransceiverHandle();
+        internal VideoTransceiverHandle _nativeHandle = new VideoTransceiverHandle();
 
         private LocalVideoTrack _localTrack = null;
         private RemoteVideoTrack _remoteTrack = null;
+        private IntPtr _argsRef = IntPtr.Zero;
 
         // Constructor for interop-based creation; SetHandle() will be called later
         internal VideoTransceiver(PeerConnection peerConnection)
@@ -62,7 +63,7 @@ namespace Microsoft.MixedReality.WebRTC
             if (_nativeHandle != handle)
             {
                 _nativeHandle = handle;
-                VideoTransceiverInterop.RegisterCallbacks(handle);
+                VideoTransceiverInterop.RegisterCallbacks(this, out _argsRef);
             }
         }
 
@@ -194,18 +195,22 @@ namespace Microsoft.MixedReality.WebRTC
 
         internal void OnStateUpdated(Direction negotiatedDirection, Direction desiredDirection)
         {
-            Debug.Assert(desiredDirection == _desiredDirection);
+            // Desync generally happens only on first update
+            _desiredDirection = desiredDirection;
+
             if (negotiatedDirection != NegotiatedDirection)
             {
-                NegotiatedDirection = negotiatedDirection;
                 bool hadSendBefore = HasSend(NegotiatedDirection);
                 bool hasSendNow = HasSend(negotiatedDirection);
+                bool hadRecvBefore = HasRecv(NegotiatedDirection);
+                bool hasRecvNow = HasRecv(negotiatedDirection);
+
+                NegotiatedDirection = negotiatedDirection;
+
                 if (hadSendBefore != hasSendNow)
                 {
                     LocalTrack?.OnMute(!hasSendNow);
                 }
-                bool hadRecvBefore = HasRecv(NegotiatedDirection);
-                bool hasRecvNow = HasRecv(negotiatedDirection);
                 if (hadRecvBefore != hasRecvNow)
                 {
                     RemoteTrack?.OnMute(!hasRecvNow);

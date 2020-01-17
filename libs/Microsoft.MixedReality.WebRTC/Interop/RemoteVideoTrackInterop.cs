@@ -98,9 +98,9 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         #region Native callbacks
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-        public delegate IntPtr CreateObjectCallback(IntPtr peer, in CreateConfig config);
+        public delegate IntPtr CreateObjectDelegate(IntPtr peer, in CreateConfig config);
 
-        [MonoPInvokeCallback(typeof(CreateObjectCallback))]
+        [MonoPInvokeCallback(typeof(CreateObjectDelegate))]
         public static IntPtr RemoteVideoTrackCreateObjectCallback(IntPtr peer, in CreateConfig config)
         {
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);

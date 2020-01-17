@@ -282,7 +282,11 @@ namespace Microsoft.MixedReality.WebRTC
 
     public class TransceiverInitSettings
     {
+        public string Name;
 
+        public Transceiver.Direction? DesiredDirection;
+
+        public List<string> StreamIDs;
     }
 
     public class AudioTransceiverInitSettings : TransceiverInitSettings

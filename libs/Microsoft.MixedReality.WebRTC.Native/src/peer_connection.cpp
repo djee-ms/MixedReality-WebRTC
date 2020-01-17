@@ -617,8 +617,9 @@ class SessionDescObserver : public webrtc::SetSessionDescriptionObserver {
   SessionDescObserver(Closure&& callback)
       : callback_(std::forward<Closure>(callback)) {}
   void OnSuccess() override {
-    if (callback_)
+    if (callback_) {
       callback_();
+    }
   }
   void OnFailure(webrtc::RTCError error) override {
     RTC_LOG(LS_ERROR) << "Error setting session description: "
@@ -636,9 +637,19 @@ class SessionDescObserver : public webrtc::SetSessionDescriptionObserver {
 struct SetRemoteSessionDescObserver
     : public webrtc::SetRemoteDescriptionObserverInterface {
  public:
+  SetRemoteSessionDescObserver() = default;
+  template <typename Closure>
+  SetRemoteSessionDescObserver(Closure&& callback)
+      : callback_(std::forward<Closure>(callback)) {}
   void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {
     RTC_LOG(LS_INFO) << "Remote description set. err=" << error.message();
+    if (error.ok() && callback_) {
+      callback_();
+    }
   }
+
+ protected:
+  std::function<void()> callback_;
 };
 
 const std::string kAudioVideoStreamId("local_av_stream");
@@ -697,8 +708,12 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
       // Create the low-level implementation object
+      webrtc::RtpTransceiverInit init{};
+      init.direction = Transceiver::ToRtp(config.desired_direction);
+      init.stream_ids = Transceiver::DecodeStreamIDs(config.stream_ids);
       webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-          ret = peer_->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO);
+          ret =
+              peer_->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, init);
       if (!ret.ok()) {
         return ErrorFromRTCError(ret.MoveError());
       }
@@ -805,8 +820,12 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
       // Create the low-level implementation object
+      webrtc::RtpTransceiverInit init{};
+      init.direction = Transceiver::ToRtp(config.desired_direction);
+      init.stream_ids = Transceiver::DecodeStreamIDs(config.stream_ids);
       webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-          ret = peer_->AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO);
+          ret =
+              peer_->AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, init);
       if (!ret.ok()) {
         return ErrorFromRTCError(ret.MoveError());
       }
@@ -1207,7 +1226,16 @@ bool PeerConnectionImpl::SetRemoteDescription(const char* type,
   if (!session_description)
     return false;
   rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface> observer =
-      new rtc::RefCountedObject<SetRemoteSessionDescObserver>();
+      new rtc::RefCountedObject<SetRemoteSessionDescObserver>([this] {
+        // Inspect transceiver directions, check for changes to update the
+        // interop layer with the actually negotiated direction.
+        std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+            changed_transceivers;
+        for (auto&& tr : peer_->GetTransceivers()) {
+          RefPtr<Transceiver> transceiver = FindTransceiver(tr);
+          transceiver->OnSessionDescUpdated(/*remote=*/true);
+        }
+      });
   peer_->SetRemoteDescription(std::move(session_description),
                               std::move(observer));
   return true;
@@ -1535,21 +1563,22 @@ void PeerConnectionImpl::OnRemoveTrack(
                      [&receiver](const RefPtr<RemoteAudioTrack>& remote_track) {
                        return (remote_track->receiver() == receiver);
                      });
-    RefPtr<RemoteAudioTrack> audio_track;
-    if (it != remote_audio_tracks_.end()) {
-      audio_track = std::move(*it);
-      remote_audio_tracks_.erase(it);
-      audio_track->OnTrackRemoved(*this);
+    if (it == remote_audio_tracks_.end()) {
+      return;
     }
+    RefPtr<RemoteAudioTrack> audio_track = std::move(*it);
+    RefPtr<AudioTransceiver> audio_transceiver = audio_track->GetTransceiver();
+    remote_audio_tracks_.erase(it);
+    audio_track->OnTrackRemoved(*this);
+
     // Invoke the TrackRemoved callback
     if (auto interop_handle = audio_track->GetInteropHandle()) {
       auto lock = std::scoped_lock{media_track_callback_mutex_};
       auto cb = audio_track_removed_callback_;
       if (cb) {
-        auto transceiver = audio_track->GetTransceiver();
-        auto transceiver_interop_handle = transceiver->GetInteropHandle();
+        auto transceiver_interop_handle = audio_transceiver->GetInteropHandle();
         cb(interop_handle, audio_track.get(), transceiver_interop_handle,
-           transceiver);
+           audio_transceiver.get());
       }
     }
     // |audio_track| goes out of scope and destroys the C++ instance
@@ -1560,21 +1589,22 @@ void PeerConnectionImpl::OnRemoveTrack(
                      [&receiver](const RefPtr<RemoteVideoTrack>& remote_track) {
                        return (remote_track->receiver() == receiver);
                      });
-    RefPtr<RemoteVideoTrack> video_track;
-    if (it != remote_video_tracks_.end()) {
-      video_track = std::move(*it);
-      remote_video_tracks_.erase(it);
-      video_track->OnTrackRemoved(*this);
+    if (it == remote_video_tracks_.end()) {
+      return;
     }
+    RefPtr<RemoteVideoTrack> video_track = std::move(*it);
+    RefPtr<VideoTransceiver> video_transceiver = video_track->GetTransceiver();
+    remote_video_tracks_.erase(it);
+    video_track->OnTrackRemoved(*this);
+
     // Invoke the TrackRemoved callback
     if (auto interop_handle = video_track->GetInteropHandle()) {
       auto lock = std::scoped_lock{media_track_callback_mutex_};
       auto cb = video_track_removed_callback_;
       if (cb) {
-        auto transceiver = video_track->GetTransceiver();
-        auto transceiver_interop_handle = transceiver->GetInteropHandle();
+        auto transceiver_interop_handle = video_transceiver->GetInteropHandle();
         cb(interop_handle, video_track.get(), transceiver_interop_handle,
-           transceiver);
+           video_transceiver.get());
       }
     }
     // |video_track| goes out of scope and destroys the C++ instance
@@ -1594,7 +1624,7 @@ void PeerConnectionImpl::OnLocalDescCreated(
             changed_transceivers;
         for (auto&& tr : peer_->GetTransceivers()) {
           RefPtr<Transceiver> transceiver = FindTransceiver(tr);
-          transceiver->OnLocalDescUpdated();
+          transceiver->OnSessionDescUpdated(/*remote=*/false);
         }
 
         // Fire interop callback, if any

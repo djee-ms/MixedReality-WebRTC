@@ -56,7 +56,25 @@ Transceiver::Direction Transceiver::FromRtp(
   return (Direction)rtp_direction;
 }
 
-void Transceiver::OnLocalDescUpdated() {
+std::vector<std::string> Transceiver::DecodeStreamIDs(
+    const char* encoded_stream_ids) {
+  if (IsStringNullOrEmpty(encoded_stream_ids)) {
+    return {};
+  }
+  std::vector<std::string> ids;
+  rtc::split(encoded_stream_ids, ';', &ids);
+  return ids;
+}
+
+std::string Transceiver::EncodeStreamIDs(
+    const std::vector<std::string>& stream_ids) {
+  if (stream_ids.empty()) {
+    return {};
+  }
+  return rtc::join(stream_ids, ';');
+}
+
+void Transceiver::OnSessionDescUpdated(bool remote) {
   // Parse state to check for changes
   bool changed = false;
   if (transceiver_) {  // Unified Plan
@@ -85,10 +103,17 @@ void Transceiver::OnLocalDescUpdated() {
 
   // Invoke interop callback if any
   if (changed) {
-    auto lock = std::scoped_lock{cb_mutex_};
-    if (auto cb = state_updated_callback_) {
-      cb(direction_, desired_direction_);
-    }
+    FireStateUpdatedEvent(remote
+                              ? mrsTransceiverStateUpdatedReason::kRemoteDesc
+                              : mrsTransceiverStateUpdatedReason::kLocalDesc);
+  }
+}
+
+void Transceiver::FireStateUpdatedEvent(
+    mrsTransceiverStateUpdatedReason reason) {
+  auto lock = std::scoped_lock{cb_mutex_};
+  if (auto cb = state_updated_callback_) {
+    cb(reason, direction_, desired_direction_);
   }
 }
 

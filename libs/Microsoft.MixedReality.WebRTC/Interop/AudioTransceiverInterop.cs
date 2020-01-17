@@ -69,7 +69,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsAudioTransceiverRegisterStateUpdatedCallback")]
         public static unsafe extern uint AudioTransceiver_RegisterStateUpdatedCallback(AudioTransceiverHandle handle,
-            StateUpdatedDelegate callback);
+            StateUpdatedDelegate callback, IntPtr userData);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsAudioTransceiverSetDirection")]
@@ -105,14 +105,41 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         internal ref struct InitConfig
         {
             /// <summary>
+            /// Name of the transceiver, for logging and debugging.
+            /// </summary>
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string name;
+
+            /// <summary>
+            /// Initial desired direction.
+            /// </summary>
+            public Transceiver.Direction desiredDirection;
+
+            /// <summary>
+            /// Stream IDs of the transceiver, encoded as a semi-colon separated list of IDs.
+            /// </summary>
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string encodedStreamIds;
+
+            /// <summary>
             /// Handle to the audio transceiver wrapper.
             /// </summary>
             public IntPtr transceiverHandle;
 
             public InitConfig(AudioTransceiver transceiver, AudioTransceiverInitSettings settings)
             {
+                name = settings?.Name;
                 transceiverHandle = Utils.MakeWrapperRef(transceiver);
+                desiredDirection = settings != null ? settings.DesiredDirection.GetValueOrDefault(Transceiver.Direction.SendReceive) : Transceiver.Direction.SendReceive;
+                encodedStreamIds = Utils.EncodeTransceiverStreamIDs(settings?.StreamIDs);
             }
+        }
+
+        public enum StateUpdatedReason : int
+        {
+            LocalDesc,
+            RemoteDesc,
+            SetDirection
         }
 
         #endregion
@@ -126,7 +153,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public delegate IntPtr CreateObjectDelegate(IntPtr peer, in CreateConfig config);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-        public delegate void StateUpdatedDelegate(IntPtr transceiver,
+        public delegate void StateUpdatedDelegate(IntPtr transceiver, StateUpdatedReason reason,
             Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection);
 
         [MonoPInvokeCallback(typeof(CreateObjectDelegate))]
@@ -138,7 +165,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         }
 
         [MonoPInvokeCallback(typeof(StateUpdatedDelegate))]
-        private static void AudioTransceiverStateUpdatedCallback(IntPtr transceiver,
+        private static void AudioTransceiverStateUpdatedCallback(IntPtr transceiver, StateUpdatedReason reason,
             Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection)
         {
             var audioTranceiverWrapper = Utils.ToWrapper<AudioTransceiver>(transceiver);
@@ -155,14 +182,16 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             return new AudioTransceiver(parent);
         }
 
-        public static void RegisterCallbacks(AudioTransceiverHandle handle)
+        public static void RegisterCallbacks(AudioTransceiver transceiver, out IntPtr argsRef)
         {
-            AudioTransceiver_RegisterStateUpdatedCallback(handle, StateUpdatedCallback);
+            argsRef = Utils.MakeWrapperRef(transceiver);
+            AudioTransceiver_RegisterStateUpdatedCallback(transceiver._nativeHandle, StateUpdatedCallback, argsRef);
         }
 
-        public static void UnregisterCallbacks(AudioTransceiverHandle handle)
+        public static void UnregisterCallbacks(AudioTransceiverHandle handle, IntPtr argsRef)
         {
-            AudioTransceiver_RegisterStateUpdatedCallback(handle, null);
+            Utils.ReleaseWrapperRef(argsRef);
+            AudioTransceiver_RegisterStateUpdatedCallback(handle, null, IntPtr.Zero);
         }
 
         #endregion

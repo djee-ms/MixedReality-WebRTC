@@ -69,7 +69,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsVideoTransceiverRegisterStateUpdatedCallback")]
         public static unsafe extern uint VideoTransceiver_RegisterStateUpdatedCallback(VideoTransceiverHandle handle,
-            StateUpdatedDelegate callback);
+            StateUpdatedDelegate callback, IntPtr userData);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsVideoTransceiverSetDirection")]
@@ -105,14 +105,41 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         internal ref struct InitConfig
         {
             /// <summary>
+            /// Name of the transceiver, for logging and debugging.
+            /// </summary>
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string name;
+
+            /// <summary>
+            /// Initial desired direction.
+            /// </summary>
+            public Transceiver.Direction desiredDirection;
+
+            /// <summary>
+            /// Stream IDs of the transceiver, encoded as a semi-colon separated list of IDs.
+            /// </summary>
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string encodedStreamIds;
+
+            /// <summary>
             /// Handle to the video transceiver wrapper.
             /// </summary>
             public IntPtr transceiverHandle;
 
             public InitConfig(VideoTransceiver transceiver, VideoTransceiverInitSettings settings)
             {
+                name = settings?.Name;
                 transceiverHandle = Utils.MakeWrapperRef(transceiver);
+                desiredDirection = settings != null ? settings.DesiredDirection.GetValueOrDefault(Transceiver.Direction.SendReceive) : Transceiver.Direction.SendReceive;
+                encodedStreamIds = Utils.EncodeTransceiverStreamIDs(settings?.StreamIDs);
             }
+        }
+
+        public enum StateUpdatedReason : int
+        {
+            LocalDesc,
+            RemoteDesc,
+            SetDirection
         }
 
         #endregion
@@ -123,13 +150,13 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static readonly StateUpdatedDelegate StateUpdatedCallback = VideoTransceiverStateUpdatedCallback;
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-        public delegate IntPtr CreateObjectCallback(IntPtr peer, in CreateConfig config);
+        public delegate IntPtr CreateObjectDelegate(IntPtr peer, in CreateConfig config);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-        public delegate void StateUpdatedDelegate(IntPtr transceiver,
+        public delegate void StateUpdatedDelegate(IntPtr transceiver, StateUpdatedReason reason,
             Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection);
 
-        [MonoPInvokeCallback(typeof(CreateObjectCallback))]
+        [MonoPInvokeCallback(typeof(CreateObjectDelegate))]
         public static IntPtr VideoTransceiverCreateObjectCallback(IntPtr peer, in CreateConfig config)
         {
             var peerWrapper = Utils.ToWrapper<PeerConnection>(peer);
@@ -138,7 +165,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         }
 
         [MonoPInvokeCallback(typeof(StateUpdatedDelegate))]
-        private static void VideoTransceiverStateUpdatedCallback(IntPtr transceiver,
+        private static void VideoTransceiverStateUpdatedCallback(IntPtr transceiver, StateUpdatedReason reason,
             Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection)
         {
             var videoTranceiverWrapper = Utils.ToWrapper<VideoTransceiver>(transceiver);
@@ -155,14 +182,16 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             return new VideoTransceiver(parent);
         }
 
-        public static void RegisterCallbacks(VideoTransceiverHandle handle)
+        public static void RegisterCallbacks(VideoTransceiver transceiver, out IntPtr argsRef)
         {
-            VideoTransceiver_RegisterStateUpdatedCallback(handle, StateUpdatedCallback);
+            argsRef = Utils.MakeWrapperRef(transceiver);
+            VideoTransceiver_RegisterStateUpdatedCallback(transceiver._nativeHandle, StateUpdatedCallback, argsRef);
         }
 
-        public static void UnregisterCallbacks(VideoTransceiverHandle handle)
+        public static void UnregisterCallbacks(VideoTransceiverHandle handle, IntPtr argsRef)
         {
-            VideoTransceiver_RegisterStateUpdatedCallback(handle, null);
+            Utils.ReleaseWrapperRef(argsRef);
+            VideoTransceiver_RegisterStateUpdatedCallback(handle, null, IntPtr.Zero);
         }
 
         #endregion
