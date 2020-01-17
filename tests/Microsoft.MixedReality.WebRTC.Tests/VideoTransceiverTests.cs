@@ -272,6 +272,9 @@ namespace Microsoft.MixedReality.WebRTC.Tests
         [Test]
         public void SetDirection()
         {
+            // This test use manual offers
+            suspendOffer1_ = true;
+
             // Create video transceiver on #1. This triggers a renegotiation needed event.
             var transceiver1 = pc1_.AddVideoTransceiver();
             Assert.NotNull(transceiver1);
@@ -285,12 +288,17 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             // Wait for local SDP re-negotiation event on #1.
             // This will not create an offer, since we're not connected yet.
             Assert.True(renegotiationEvent1_.Wait(TimeSpan.FromSeconds(60.0)));
+            renegotiationEvent1_.Reset();
 
             // Connect
             Assert.True(pc1_.CreateOffer());
             WaitForSdpExchangeCompleted();
             Assert.True(pc1_.IsConnected);
             Assert.True(pc2_.IsConnected);
+
+            // Wait for transceiver to finish updating before changing its direction
+            Assert.True(remoteDescAppliedEvent1_.Wait(TimeSpan.FromSeconds(10.0)));
+            remoteDescAppliedEvent1_.Reset();
 
             // Note: use manual list instead of Enum.GetValues() to control order, and not
             // get Inactive first (which is the current value, so wouldn't make any change).
@@ -310,10 +318,15 @@ namespace Microsoft.MixedReality.WebRTC.Tests
                 Assert.AreEqual(transceiver1.DesiredDirection, direction);
 
                 // Wait for local SDP re-negotiation event on #1.
-                // This will not create an offer, since we're not connected yet.
                 Assert.True(renegotiationEvent1_.Wait(TimeSpan.FromSeconds(10.0)));
+                renegotiationEvent1_.Reset();
+
+                // Renegotiate
+                remoteDescAppliedEvent1_.Reset();
+                Assert.True(pc1_.CreateOffer());
                 WaitForSdpExchangeCompleted();
                 Assert.True(remoteDescAppliedEvent1_.Wait(TimeSpan.FromSeconds(10.0)));
+                remoteDescAppliedEvent1_.Reset();
 
                 // Observe the new negotiated direction
                 Assert.AreEqual(transceiver1.DesiredDirection, direction);

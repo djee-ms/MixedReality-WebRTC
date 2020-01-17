@@ -26,6 +26,11 @@ AudioTransceiver::AudioTransceiver(
 }
 
 AudioTransceiver::~AudioTransceiver() {
+  // Be sure to clean-up WebRTC objects before unregistering ourself, which
+  // could lead to the GlobalFactory being destroyed and the WebRTC threads
+  // stopped.
+  transceiver_ = nullptr;
+
   GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kAudioTransceiver,
                                              this);
 }

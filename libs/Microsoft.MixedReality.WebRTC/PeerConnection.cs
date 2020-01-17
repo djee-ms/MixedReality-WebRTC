@@ -910,17 +910,36 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 track.OnTrackRemoved(this);
             }
+            Debug.Assert(LocalAudioTracks.Count == 0);
             foreach (var track in LocalVideoTracks)
             {
                 track.OnTrackRemoved(this);
             }
+            Debug.Assert(LocalVideoTracks.Count == 0);
             foreach (var track in RemoteAudioTracks)
             {
                 track.OnTrackRemoved(this);
             }
+            Debug.Assert(RemoteAudioTracks.Count == 0);
             foreach (var track in RemoteVideoTracks)
             {
                 track.OnTrackRemoved(this);
+            }
+            Debug.Assert(RemoteVideoTracks.Count == 0);
+
+            // Dispose of owned objects
+            lock (_tracksLock)
+            {
+                foreach (var transceiver in AudioTransceivers)
+                {
+                    transceiver._nativeHandle.Close();
+                }
+                AudioTransceivers.Clear();
+                foreach (var transceiver in VideoTransceivers)
+                {
+                    transceiver._nativeHandle.Close();
+                }
+                VideoTransceivers.Clear();
             }
 
             // Complete shutdown sequence and re-enable InitializeAsync()
@@ -964,7 +983,10 @@ namespace Microsoft.MixedReality.WebRTC
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
-            AudioTransceivers.Add(transceiver);
+            lock (_tracksLock)
+            {
+                AudioTransceivers.Add(transceiver);
+            }
             AudioTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
@@ -991,7 +1013,10 @@ namespace Microsoft.MixedReality.WebRTC
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
-            VideoTransceivers.Add(transceiver);
+            lock (_tracksLock)
+            {
+                VideoTransceivers.Add(transceiver);
+            }
             VideoTransceiverAdded?.Invoke(transceiver);
             return transceiver;
         }
@@ -1498,7 +1523,6 @@ namespace Microsoft.MixedReality.WebRTC
             MainEventSource.Log.AudioTrackAdded(track.Name);
             lock (_tracksLock)
             {
-                RemoteAudioTracks.Add(track);
                 if (!AudioTransceivers.Contains(transceiver))
                 {
                     AudioTransceivers.Add(transceiver);
@@ -1511,11 +1535,12 @@ namespace Microsoft.MixedReality.WebRTC
         internal void OnAudioTrackRemoved(RemoteAudioTrack track)
         {
             MainEventSource.Log.AudioTrackRemoved(track.Name);
-            lock (_tracksLock)
-            {
-                RemoteAudioTracks.Remove(track);
-            }
+            track.OnTrackRemoved(this);
             AudioTrackRemoved?.Invoke(track);
+
+            // PeerConnection is owning the remote track, and all internal states have been
+            // updated and events fired, so dispose of the track now.
+            track.Dispose();
         }
 
         internal void OnVideoTrackAdded(RemoteVideoTrack track, VideoTransceiver transceiver)
@@ -1535,11 +1560,12 @@ namespace Microsoft.MixedReality.WebRTC
         internal void OnVideoTrackRemoved(RemoteVideoTrack track)
         {
             MainEventSource.Log.VideoTrackRemoved(track.Name);
-            lock (_tracksLock)
-            {
-                RemoteVideoTracks.Remove(track);
-            }
+            track.OnTrackRemoved(this);
             VideoTrackRemoved?.Invoke(track);
+
+            // PeerConnection is owning the remote track, and all internal states have been
+            // updated and events fired, so dispose of the track now.
+            track.Dispose();
         }
 
         internal void OnLocalTrackAdded(LocalAudioTrack track)
