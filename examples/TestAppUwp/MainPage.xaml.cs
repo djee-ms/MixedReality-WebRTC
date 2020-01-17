@@ -854,18 +854,18 @@ namespace TestAppUwp
             });
         }
 
-        private void DssSignaler_OnMessage(NodeDssSignaler.Message message)
+        private async void DssSignaler_OnMessage(NodeDssSignaler.Message message)
         {
             switch (message.MessageType)
             {
             case NodeDssSignaler.Message.WireMessageType.Offer:
-                _peerConnection.SetRemoteDescription("offer", message.Data);
-                // If we get an offer, we immediately send an answer back
+                await _peerConnection.SetRemoteDescriptionAsync("offer", message.Data);
+                // If we get an offer, we immediately send an answer back once the offer is applied
                 _peerConnection.CreateAnswer();
                 break;
 
             case NodeDssSignaler.Message.WireMessageType.Answer:
-                _peerConnection.SetRemoteDescription("answer", message.Data);
+                _ = _peerConnection.SetRemoteDescriptionAsync("answer", message.Data);
                 break;
 
             case NodeDssSignaler.Message.WireMessageType.Ice:

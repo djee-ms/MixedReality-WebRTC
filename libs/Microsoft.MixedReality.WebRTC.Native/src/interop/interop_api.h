@@ -798,12 +798,16 @@ mrsPeerConnectionSetBitrate(PeerConnectionHandle peer_handle,
                             int start_bitrate_bps,
                             int max_bitrate_bps) noexcept;
 
+using ActionCallback = void(MRS_CALL*)(void* user_data);
+
 /// Set a remote description received from a remote peer via the signaling
 /// service.
 MRS_API mrsResult MRS_CALL
-mrsPeerConnectionSetRemoteDescription(PeerConnectionHandle peerHandle,
-                                      const char* type,
-                                      const char* sdp) noexcept;
+mrsPeerConnectionSetRemoteDescriptionAsync(PeerConnectionHandle peerHandle,
+                                           const char* type,
+                                           const char* sdp,
+                                           ActionCallback callback,
+                                           void* user_data) noexcept;
 
 /// Close a peer connection, removing all tracks and disconnecting from the
 /// remote peer currently connected. This does not invalidate the handle nor

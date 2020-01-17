@@ -228,8 +228,9 @@ class PeerConnectionImpl : public PeerConnection,
   bool AddIceCandidate(const char* sdp_mid,
                        const int sdp_mline_index,
                        const char* candidate) noexcept override;
-  bool SetRemoteDescription(const char* type,
-                            const char* sdp) noexcept override;
+  bool SetRemoteDescriptionAsync(const char* type,
+                                 const char* sdp,
+                                 Callback<> callback) noexcept override;
 
   void RegisterConnectedCallback(
       ConnectedCallback&& callback) noexcept override {
@@ -1204,8 +1205,10 @@ bool PeerConnectionImpl::IsClosed() const noexcept {
   return (peer_ == nullptr);
 }
 
-bool PeerConnectionImpl::SetRemoteDescription(const char* type,
-                                              const char* sdp) noexcept {
+bool PeerConnectionImpl::SetRemoteDescriptionAsync(
+    const char* type,
+    const char* sdp,
+    Callback<> callback) noexcept {
   if (!peer_) {
     return false;
   }
@@ -1226,7 +1229,7 @@ bool PeerConnectionImpl::SetRemoteDescription(const char* type,
   if (!session_description)
     return false;
   rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface> observer =
-      new rtc::RefCountedObject<SetRemoteSessionDescObserver>([this] {
+      new rtc::RefCountedObject<SetRemoteSessionDescObserver>([this, callback] {
         // Inspect transceiver directions, check for changes to update the
         // interop layer with the actually negotiated direction.
         std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
@@ -1235,6 +1238,8 @@ bool PeerConnectionImpl::SetRemoteDescription(const char* type,
           RefPtr<Transceiver> transceiver = FindTransceiver(tr);
           transceiver->OnSessionDescUpdated(/*remote=*/true);
         }
+        // Fire completed callback to signal remote description was applied.
+        callback();
       });
   peer_->SetRemoteDescription(std::move(session_description),
                               std::move(observer));

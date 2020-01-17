@@ -923,12 +923,16 @@ mrsResult MRS_CALL mrsPeerConnectionSetBitrate(PeerConnectionHandle peer_handle,
 }
 
 mrsResult MRS_CALL
-mrsPeerConnectionSetRemoteDescription(PeerConnectionHandle peerHandle,
-                                      const char* type,
-                                      const char* sdp) noexcept {
+mrsPeerConnectionSetRemoteDescriptionAsync(PeerConnectionHandle peerHandle,
+                                           const char* type,
+                                           const char* sdp,
+                                           ActionCallback callback,
+                                           void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
-    return (peer->SetRemoteDescription(type, sdp) ? Result::kSuccess
-                                                  : Result::kUnknownError);
+    return (peer->SetRemoteDescriptionAsync(type, sdp,
+                                            Callback<>{callback, user_data})
+                ? Result::kSuccess
+                : Result::kUnknownError);
   }
   return Result::kInvalidNativeHandle;
 }

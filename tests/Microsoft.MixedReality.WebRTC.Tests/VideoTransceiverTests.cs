@@ -17,6 +17,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
         PeerConnection pc2_ = null;
         ManualResetEventSlim connectedEvent1_ = null;
         ManualResetEventSlim connectedEvent2_ = null;
+        ManualResetEventSlim remoteDescAppliedEvent1_ = null;
+        ManualResetEventSlim remoteDescAppliedEvent2_ = null;
         ManualResetEventSlim renegotiationEvent1_ = null;
         ManualResetEventSlim renegotiationEvent2_ = null;
         ManualResetEventSlim audioTrackAddedEvent1_ = null;
@@ -45,6 +47,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             // Allocate callback events
             connectedEvent1_ = new ManualResetEventSlim(false);
             connectedEvent2_ = new ManualResetEventSlim(false);
+            remoteDescAppliedEvent1_ = new ManualResetEventSlim(false);
+            remoteDescAppliedEvent2_ = new ManualResetEventSlim(false);
             iceConnectedEvent1_ = new ManualResetEventSlim(false);
             iceConnectedEvent2_ = new ManualResetEventSlim(false);
             renegotiationEvent1_ = new ManualResetEventSlim(false);
@@ -125,6 +129,10 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             iceConnectedEvent1_ = null;
             iceConnectedEvent2_.Dispose();
             iceConnectedEvent2_ = null;
+            remoteDescAppliedEvent1_.Dispose();
+            remoteDescAppliedEvent1_ = null;
+            remoteDescAppliedEvent2_.Dispose();
+            remoteDescAppliedEvent2_ = null;
             connectedEvent1_.Dispose();
             connectedEvent1_ = null;
             connectedEvent2_.Dispose();
@@ -149,18 +157,20 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             connectedEvent2_.Set();
         }
 
-        private void OnLocalSdpReady1(string type, string sdp)
+        private async void OnLocalSdpReady1(string type, string sdp)
         {
-            pc2_.SetRemoteDescription(type, sdp);
+            await pc2_.SetRemoteDescriptionAsync(type, sdp);
+            remoteDescAppliedEvent2_.Set();
             if (type == "offer")
             {
                 pc2_.CreateAnswer();
             }
         }
 
-        private void OnLocalSdpReady2(string type, string sdp)
+        private async void OnLocalSdpReady2(string type, string sdp)
         {
-            pc1_.SetRemoteDescription(type, sdp);
+            await pc1_.SetRemoteDescriptionAsync(type, sdp);
+            remoteDescAppliedEvent1_.Set();
             if (type == "offer")
             {
                 pc1_.CreateAnswer();
@@ -260,7 +270,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
         }
 
         [Test]
-        public async Task SetDirection()
+        public void SetDirection()
         {
             // Create video transceiver on #1. This triggers a renegotiation needed event.
             var transceiver1 = pc1_.AddVideoTransceiver();
@@ -284,11 +294,16 @@ namespace Microsoft.MixedReality.WebRTC.Tests
 
             // Note: use manual list instead of Enum.GetValues() to control order, and not
             // get Inactive first (which is the current value, so wouldn't make any change).
-            var arr = new List<Transceiver.Direction> {
+            var desired = new List<Transceiver.Direction> {
                 Transceiver.Direction.SendOnly, Transceiver.Direction.SendReceive,
                 Transceiver.Direction.ReceiveOnly, Transceiver.Direction.Inactive };
-            foreach (var direction in arr)
+            var negotiated = new List<Transceiver.Direction> {
+                Transceiver.Direction.SendOnly, Transceiver.Direction.SendOnly,
+                Transceiver.Direction.Inactive, Transceiver.Direction.Inactive };
+            for (int i = 0; i < desired.Count; ++i)
             {
+                var direction = desired[i];
+
                 // Change flow direction
                 renegotiationEvent1_.Reset();
                 transceiver1.SetDirection(direction);
@@ -296,12 +311,13 @@ namespace Microsoft.MixedReality.WebRTC.Tests
 
                 // Wait for local SDP re-negotiation event on #1.
                 // This will not create an offer, since we're not connected yet.
-                Assert.True(renegotiationEvent1_.Wait(TimeSpan.FromSeconds(60.0)));
+                Assert.True(renegotiationEvent1_.Wait(TimeSpan.FromSeconds(10.0)));
                 WaitForSdpExchangeCompleted();
+                Assert.True(remoteDescAppliedEvent1_.Wait(TimeSpan.FromSeconds(10.0)));
 
                 // Observe the new negotiated direction
                 Assert.AreEqual(transceiver1.DesiredDirection, direction);
-                //Assert.AreEqual(transceiver1.NegotiatedDirection, direction);
+                Assert.AreEqual(transceiver1.NegotiatedDirection, negotiated[i]);
             }
         }
     }

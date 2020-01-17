@@ -1171,6 +1171,8 @@ namespace Microsoft.MixedReality.WebRTC
         /// Create an SDP answer message to a previously-received offer, to accept a connection.
         /// Once the message is ready to be sent, the <see cref="LocalSdpReadytoSend"/> event is fired
         /// to allow the user to send that message to the remote peer via its selected signaling solution.
+        /// Note that this cannot be called before <see cref="SetRemoteDescriptionAsync(string, string)"/>
+        /// successfully completed and applied the remote offer.
         /// </summary>
         /// <returns><c>true</c> if the answer creation task was successfully submitted.</returns>
         /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
@@ -1208,16 +1210,18 @@ namespace Microsoft.MixedReality.WebRTC
         /// Pass the given SDP description received from the remote peer via signaling to the
         /// underlying WebRTC implementation, which will parse and use it.
         ///
-        /// This must be called by the signaler when receiving a message.
+        /// This must be called by the signaler when receiving a message. Once this operation
+        /// has completed, it is safe to call <see cref="CreateAnswer"/>.
         /// </summary>
         /// <param name="type">The type of SDP message ("offer" or "answer")</param>
         /// <param name="sdp">The content of the SDP message</param>
+        /// <returns>Returns a task which completes once the remote description has been applied and transceivers
+        /// have been updated.</returns>
         /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
-        public void SetRemoteDescription(string type, string sdp)
+        public Task SetRemoteDescriptionAsync(string type, string sdp)
         {
             ThrowIfConnectionNotOpen();
-            uint res = PeerConnectionInterop.PeerConnection_SetRemoteDescription(_nativePeerhandle, type, sdp);
-            Utils.ThrowOnErrorCode(res);
+            return PeerConnectionInterop.SetRemoteDescriptionAsync(_nativePeerhandle, type, sdp);
         }
 
         #endregion

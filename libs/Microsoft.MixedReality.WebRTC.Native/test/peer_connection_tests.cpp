@@ -17,8 +17,9 @@ TEST(PeerConnection, LocalNoIce) {
     // Setup signaling
     SdpCallback sdp1_cb(
         pc1.handle(), [&pc2](const char* type, const char* sdp_data) {
-          ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                          pc2.handle(), type, sdp_data));
+          ASSERT_EQ(Result::kSuccess,
+                    mrsPeerConnectionSetRemoteDescriptionAsync(
+                        pc2.handle(), type, sdp_data, nullptr, nullptr));
           if (kOfferString == type) {
             ASSERT_EQ(Result::kSuccess,
                       mrsPeerConnectionCreateAnswer(pc2.handle()));
@@ -26,8 +27,9 @@ TEST(PeerConnection, LocalNoIce) {
         });
     SdpCallback sdp2_cb(
         pc2.handle(), [&pc1](const char* type, const char* sdp_data) {
-          ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                          pc1.handle(), type, sdp_data));
+          ASSERT_EQ(Result::kSuccess,
+                    mrsPeerConnectionSetRemoteDescriptionAsync(
+                        pc1.handle(), type, sdp_data, nullptr, nullptr));
           if (kOfferString == type) {
             ASSERT_EQ(Result::kSuccess,
                       mrsPeerConnectionCreateAnswer(pc1.handle()));
@@ -55,8 +57,9 @@ TEST(PeerConnection, LocalIce) {
     // Setup signaling
     SdpCallback sdp1_cb(
         pc1.handle(), [&pc2](const char* type, const char* sdp_data) {
-          ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                          pc2.handle(), type, sdp_data));
+          ASSERT_EQ(Result::kSuccess,
+                    mrsPeerConnectionSetRemoteDescriptionAsync(
+                        pc2.handle(), type, sdp_data, nullptr, nullptr));
           if (kOfferString == type) {
             ASSERT_EQ(Result::kSuccess,
                       mrsPeerConnectionCreateAnswer(pc2.handle()));
@@ -64,8 +67,9 @@ TEST(PeerConnection, LocalIce) {
         });
     SdpCallback sdp2_cb(
         pc2.handle(), [&pc1](const char* type, const char* sdp_data) {
-          ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                          pc1.handle(), type, sdp_data));
+          ASSERT_EQ(Result::kSuccess,
+                    mrsPeerConnectionSetRemoteDescriptionAsync(
+                        pc1.handle(), type, sdp_data, nullptr, nullptr));
           if (kOfferString == type) {
             ASSERT_EQ(Result::kSuccess,
                       mrsPeerConnectionCreateAnswer(pc1.handle()));

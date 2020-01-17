@@ -79,7 +79,7 @@ struct Semaphore {
 
 /// RAII helper to initialize and shutdown the library.
 struct LibraryInitRaii {
-// TODO - remove this
+  // TODO - remove this
 };
 
 /// Wrapper around an interop callback taking an extra raw pointer argument, to
@@ -280,16 +280,18 @@ class LocalPeerPairRaii {
   InteropCallback<> connected2_cb_;
   void setup() {
     sdp1_cb_ = [this](const char* type, const char* sdp_data) {
-      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                      pc2_.handle(), type, sdp_data));
+      ASSERT_EQ(Result::kSuccess,
+                mrsPeerConnectionSetRemoteDescriptionAsync(
+                    pc2_.handle(), type, sdp_data, nullptr, nullptr));
       if (kOfferString == type) {
         ASSERT_EQ(Result::kSuccess,
                   mrsPeerConnectionCreateAnswer(pc2_.handle()));
       }
     };
     sdp2_cb_ = [this](const char* type, const char* sdp_data) {
-      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                      pc1_.handle(), type, sdp_data));
+      ASSERT_EQ(Result::kSuccess,
+                mrsPeerConnectionSetRemoteDescriptionAsync(
+                    pc1_.handle(), type, sdp_data, nullptr, nullptr));
       if (kOfferString == type) {
         ASSERT_EQ(Result::kSuccess,
                   mrsPeerConnectionCreateAnswer(pc1_.handle()));
