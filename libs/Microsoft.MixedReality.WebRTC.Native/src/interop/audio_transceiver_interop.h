@@ -11,7 +11,7 @@ extern "C" {
 using mrsAudioTransceiverStateUpdatedCallback =
     void(MRS_CALL*)(void* user_data,
                     mrsTransceiverStateUpdatedReason reason,
-                    mrsTransceiverDirection negotiated_direction,
+                    mrsTransceiverOptDirection negotiated_direction,
                     mrsTransceiverDirection desired_direction);
 
 /// Add a reference to the native object associated with the given handle.

@@ -86,7 +86,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         /// <seealso cref="DesiredDirection"/>
         /// <seealso cref="SetDirection(Direction)"/>
-        public Direction NegotiatedDirection { get; protected set; } = Direction.Inactive;
+        public Direction? NegotiatedDirection { get; protected set; } = null;
 
         /// <summary>
         /// Change the media flowing direction of the transceiver.
@@ -119,6 +119,16 @@ namespace Microsoft.MixedReality.WebRTC
         protected static bool HasRecv(Direction dir)
         {
             return (dir == Direction.ReceiveOnly) || (dir == Direction.SendReceive);
+        }
+
+        protected static bool HasSend(Direction? dir)
+        {
+            return dir.HasValue && ((dir == Direction.SendOnly) || (dir == Direction.SendReceive));
+        }
+
+        protected static bool HasRecv(Direction? dir)
+        {
+            return dir.HasValue && ((dir == Direction.ReceiveOnly) || (dir == Direction.SendReceive));
         }
     }
 }

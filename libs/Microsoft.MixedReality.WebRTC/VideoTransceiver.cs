@@ -193,7 +193,7 @@ namespace Microsoft.MixedReality.WebRTC
             PeerConnection.OnRemoteTrackRemoved(track);
         }
 
-        internal void OnStateUpdated(Direction negotiatedDirection, Direction desiredDirection)
+        internal void OnStateUpdated(Direction? negotiatedDirection, Direction desiredDirection)
         {
             // Desync generally happens only on first update
             _desiredDirection = desiredDirection;

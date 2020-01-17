@@ -598,6 +598,15 @@ enum class mrsTransceiverDirection : int32_t {
   kInactive = 3
 };
 
+/// Same as |mrsTransceiverDirection|, but including optional unset.
+enum class mrsTransceiverOptDirection : int32_t {
+  kNotSet = -1,
+  kSendRecv = 0,
+  kSendOnly = 1,
+  kRecvOnly = 2,
+  kInactive = 3
+};
+
 /// Configuration for creating a new audio transceiver.
 struct AudioTransceiverInitConfig {
   /// Name of the audio transceiver.

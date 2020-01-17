@@ -191,20 +191,22 @@ namespace Microsoft.MixedReality.WebRTC
             PeerConnection.OnRemoteTrackRemoved(track);
         }
 
-        internal void OnStateUpdated(Direction negotiatedDirection, Direction desiredDirection)
+        internal void OnStateUpdated(Direction? negotiatedDirection, Direction desiredDirection)
         {
             Debug.Assert(desiredDirection == _desiredDirection);
             if (negotiatedDirection != NegotiatedDirection)
             {
-                NegotiatedDirection = negotiatedDirection;
                 bool hadSendBefore = HasSend(NegotiatedDirection);
                 bool hasSendNow = HasSend(negotiatedDirection);
+                bool hadRecvBefore = HasRecv(NegotiatedDirection);
+                bool hasRecvNow = HasRecv(negotiatedDirection);
+                
+                NegotiatedDirection = negotiatedDirection;
+
                 if (hadSendBefore != hasSendNow)
                 {
                     LocalTrack?.OnMute(!hasSendNow);
                 }
-                bool hadRecvBefore = HasRecv(NegotiatedDirection);
-                bool hasRecvNow = HasRecv(negotiatedDirection);
                 if (hadRecvBefore != hasRecvNow)
                 {
                     RemoteTrack?.OnMute(!hasRecvNow);

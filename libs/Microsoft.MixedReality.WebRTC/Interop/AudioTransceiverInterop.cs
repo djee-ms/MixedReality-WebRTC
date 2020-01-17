@@ -142,6 +142,15 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             SetDirection
         }
 
+        public enum OptDirection : int
+        {
+            NotSet = -1,
+            SendReceive = 0,
+            SendOnly = 1,
+            ReceiveOnly = 2,
+            Inactive = 3,
+        }
+
         #endregion
 
 
@@ -157,7 +166,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public delegate void StateUpdatedDelegate(IntPtr transceiver, StateUpdatedReason reason,
-            Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection);
+            OptDirection negotiatedDirection, Transceiver.Direction desiredDirection);
 
         [MonoPInvokeCallback(typeof(CreateObjectDelegate))]
         public static IntPtr AudioTransceiverCreateObjectCallback(IntPtr peer, in CreateConfig config)
@@ -176,10 +185,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         [MonoPInvokeCallback(typeof(StateUpdatedDelegate))]
         private static void AudioTransceiverStateUpdatedCallback(IntPtr transceiver, StateUpdatedReason reason,
-            Transceiver.Direction negotiatedDirection, Transceiver.Direction desiredDirection)
+            OptDirection negotiatedDirection, Transceiver.Direction desiredDirection)
         {
             var audioTranceiverWrapper = Utils.ToWrapper<AudioTransceiver>(transceiver);
-            audioTranceiverWrapper.OnStateUpdated(negotiatedDirection, desiredDirection);
+            var optDir = negotiatedDirection == OptDirection.NotSet ? null : (Transceiver.Direction?)negotiatedDirection;
+            audioTranceiverWrapper.OnStateUpdated(optDir, desiredDirection);
         }
 
         #endregion

@@ -56,6 +56,14 @@ Transceiver::Direction Transceiver::FromRtp(
   return (Direction)rtp_direction;
 }
 
+Transceiver::OptDirection Transceiver::FromRtp(
+    std::optional<webrtc::RtpTransceiverDirection> rtp_direction) {
+  if (rtp_direction.has_value()) {
+    return (OptDirection)FromRtp(rtp_direction.value());
+  }
+  return OptDirection::kNotSet;
+}
+
 std::vector<std::string> Transceiver::DecodeStreamIDs(
     const char* encoded_stream_ids) {
   if (IsStringNullOrEmpty(encoded_stream_ids)) {
@@ -81,7 +89,7 @@ void Transceiver::OnSessionDescUpdated(bool remote) {
     // Check negotiated direction
     auto negotiated = transceiver_->current_direction();
     if (negotiated.has_value()) {
-      auto newValue = FromRtp(negotiated.value());
+      auto newValue = FromRtp(negotiated);
       if (newValue != direction_) {
         direction_ = newValue;
         changed = true;

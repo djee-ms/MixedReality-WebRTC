@@ -27,6 +27,7 @@ enum class MediaKind : uint32_t { kAudio, kVideo };
 class Transceiver : public TrackedObject {
  public:
   using Direction = mrsTransceiverDirection;
+  using OptDirection = mrsTransceiverOptDirection;
 
   /// Construct a Plan B transceiver abstraction which tries to mimic a
   /// transceiver for Plan B despite the fact that this semantic doesn't have
@@ -51,7 +52,7 @@ class Transceiver : public TrackedObject {
   MRS_API MediaKind GetKind() const noexcept { return kind_; }
 
   /// Get the current transceiver direction.
-  MRS_API Direction GetDirection() const noexcept { return direction_; }
+  MRS_API OptDirection GetDirection() const noexcept { return direction_; }
 
   //
   // Interop callbacks
@@ -60,7 +61,7 @@ class Transceiver : public TrackedObject {
   /// Callback invoked when the internal state of the transceiver has
   /// been updated.
   using StateUpdatedCallback =
-      Callback<mrsTransceiverStateUpdatedReason, Direction, Direction>;
+      Callback<mrsTransceiverStateUpdatedReason, OptDirection, Direction>;
 
   void RegisterStateUpdatedCallback(StateUpdatedCallback&& callback) noexcept {
     auto lock = std::scoped_lock{cb_mutex_};
@@ -86,6 +87,8 @@ class Transceiver : public TrackedObject {
       Direction direction);
   [[nodiscard]] static Direction FromRtp(
       webrtc::RtpTransceiverDirection rtp_direction);
+  [[nodiscard]] static OptDirection FromRtp(
+      std::optional<webrtc::RtpTransceiverDirection> rtp_direction);
 
   [[nodiscard]] static std::vector<std::string> DecodeStreamIDs(
       const char* encoded_stream_ids);
@@ -105,7 +108,7 @@ class Transceiver : public TrackedObject {
   /// state for the next negotiation, and will differ after changing tracks but
   /// before renegotiating them. This does map however with the internal concept
   /// of "preferred direction" |webrtc::RtpTransceiverInterface::direction()|.
-  Direction direction_ = Direction::kInactive;
+  OptDirection direction_ = OptDirection::kNotSet;
 
   /// Next desired direction, as set by user via |SetDirection()|.
   Direction desired_direction_ = Direction::kInactive;
