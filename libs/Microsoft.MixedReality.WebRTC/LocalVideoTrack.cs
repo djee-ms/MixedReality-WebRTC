@@ -343,7 +343,7 @@ namespace Microsoft.MixedReality.WebRTC
             }
 
             // Create interop wrappers
-            var track = new LocalVideoTrack(trackName);
+            var track = new LocalVideoTrack(trackName, source);
 
             // Parse settings
             var config = new PeerConnectionInterop.LocalVideoTrackFromExternalSourceInteropInitConfig(track, source);
@@ -364,6 +364,7 @@ namespace Microsoft.MixedReality.WebRTC
             Transceiver = null;
             Name = trackName;
             Source = source;
+            source?.OnTrackAddedToSource(this);
         }
 
         // Constructor for interop-based creation; SetHandle() will be called later
@@ -376,6 +377,7 @@ namespace Microsoft.MixedReality.WebRTC
             transceiver.OnLocalTrackAdded(this);
             Name = trackName;
             Source = source;
+            source?.OnTrackAddedToSource(this);
         }
 
         internal void SetHandle(LocalVideoTrackHandle handle)
