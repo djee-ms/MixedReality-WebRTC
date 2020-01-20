@@ -19,11 +19,13 @@ class AudioTransceiver : public Transceiver {
  public:
   /// Constructor for Plan B.
   AudioTransceiver(PeerConnection& owner,
+                   std::string name,
                    mrsAudioTransceiverInteropHandle interop_handle) noexcept;
 
   /// Constructor for Unified Plan.
   AudioTransceiver(
       PeerConnection& owner,
+      std::string name,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
       mrsAudioTransceiverInteropHandle interop_handle) noexcept;
   MRS_API ~AudioTransceiver() override;
@@ -55,6 +57,9 @@ class AudioTransceiver : public Transceiver {
  protected:
   RefPtr<LocalAudioTrack> local_track_;
   RefPtr<RemoteAudioTrack> remote_track_;
+
+  /// Transceiver name, for pairing with the remote peer.
+  std::string name_;
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsAudioTransceiverInteropHandle interop_handle_{};

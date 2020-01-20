@@ -41,7 +41,7 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
   MRS_API ~RemoteAudioTrack() override;
 
   /// Get the name of the remote audio track.
-  MRS_API std::string GetName() const noexcept override { return track_->id(); }
+  MRS_API std::string GetName() const noexcept override;
 
   /// Enable or disable the audio track. An enabled track streams its content
   /// from its source to the remote peer. A disabled audio track only sends

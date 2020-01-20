@@ -49,7 +49,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
   }
 
   std::string track_name_str;
-  if (track_name && (track_name[0] != '\0')) {  //< TODO IsStringNullOrEmpty()
+  if (!IsStringNullOrEmpty(track_name)) {
     track_name_str = track_name;
   } else {
     track_name_str = "external_track";

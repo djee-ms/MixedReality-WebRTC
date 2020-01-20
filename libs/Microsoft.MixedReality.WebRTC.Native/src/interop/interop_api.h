@@ -727,6 +727,12 @@ using mrsRequestExternalArgb32VideoFrameCallback =
 
 /// Configuration for creating a new audio transceiver interop wrapper.
 struct mrsAudioTransceiverConfig {
+  /// Transceiver name, for pairing with remote peer's one. This is normally
+  /// extracted from the receiver's stream ID #0 if the transceiver was created
+  /// for a remote track, or is determined by the user-provided value if created
+  /// with |AddAudioTransceiver()|.
+  const char* name{};
+
   /// Initial desired direction when the transceiver is created. If the
   /// transceiver is created by the implementation, this is generally set to the
   /// current value on the implementation object, to keep the interop wrapper in
@@ -737,6 +743,12 @@ struct mrsAudioTransceiverConfig {
 
 /// Configuration for creating a new video transceiver interop wrapper.
 struct mrsVideoTransceiverConfig {
+  /// Transceiver name, for pairing with remote peer's one. This is normally
+  /// extracted from the receiver's stream ID #0 if the transceiver was created
+  /// for a remote track, or is determined by the user-provided value if created
+  /// with |AddVideoTransceiver()|.
+  const char* name{};
+
   /// Initial desired direction when the transceiver is created. If the
   /// transceiver is created by the implementation, this is generally set to the
   /// current value on the implementation object, to keep the interop wrapper in

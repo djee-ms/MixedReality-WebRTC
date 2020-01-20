@@ -19,11 +19,13 @@ class VideoTransceiver : public Transceiver {
  public:
   /// Constructor for Plan B.
   VideoTransceiver(PeerConnection& owner,
+                   std::string name,
                    mrsVideoTransceiverInteropHandle interop_handle) noexcept;
 
   /// Constructor for Unified Plan.
   VideoTransceiver(
       PeerConnection& owner,
+      std::string name,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
       mrsVideoTransceiverInteropHandle interop_handle) noexcept;
 
@@ -56,6 +58,9 @@ class VideoTransceiver : public Transceiver {
  protected:
   RefPtr<LocalVideoTrack> local_track_;
   RefPtr<RemoteVideoTrack> remote_track_;
+
+  /// Transceiver name, for pairing with the remote peer.
+  std::string name_;
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsVideoTransceiverInteropHandle interop_handle_{};

@@ -100,6 +100,12 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public ref struct CreateConfig
         {
             /// <summary>
+            /// Transceiver name.
+            /// </summary>
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string Name;
+
+            /// <summary>
             /// Initial desired direction of the transceiver on creation.
             /// </summary>
             public Transceiver.Direction DesiredDirection;
@@ -203,7 +209,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         public static AudioTransceiver CreateWrapper(PeerConnection parent, in CreateConfig config)
         {
-            return new AudioTransceiver(parent, config.DesiredDirection);
+            return new AudioTransceiver(parent, config.Name, config.DesiredDirection);
         }
 
         public static void RegisterCallbacks(AudioTransceiver transceiver, out IntPtr argsRef)

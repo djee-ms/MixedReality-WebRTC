@@ -11,16 +11,21 @@ namespace Microsoft::MixedReality::WebRTC {
 
 AudioTransceiver::AudioTransceiver(
     PeerConnection& owner,
+    std::string name,
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(MediaKind::kAudio, owner), interop_handle_(interop_handle) {
+    : Transceiver(MediaKind::kAudio, owner),
+      name_(std::move(name)),
+      interop_handle_(interop_handle) {
   GlobalFactory::InstancePtr()->AddObject(ObjectType::kAudioTransceiver, this);
 }
 
 AudioTransceiver::AudioTransceiver(
     PeerConnection& owner,
+    std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kAudio, owner, transceiver),
+      name_(std::move(name)),
       interop_handle_(interop_handle) {
   GlobalFactory::InstancePtr()->AddObject(ObjectType::kAudioTransceiver, this);
 }

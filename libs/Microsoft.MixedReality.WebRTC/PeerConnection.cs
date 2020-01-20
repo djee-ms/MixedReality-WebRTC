@@ -1008,7 +1008,7 @@ namespace Microsoft.MixedReality.WebRTC
         {
             ThrowIfConnectionNotOpen();
             settings = settings ?? new AudioTransceiverInitSettings();
-            var transceiver = new AudioTransceiver(this, settings.InitialDesiredDirection);
+            var transceiver = new AudioTransceiver(this, settings.Name, settings.InitialDesiredDirection);
             var config = new AudioTransceiverInterop.InitConfig(transceiver, settings);
             Debug.Assert(transceiver.DesiredDirection == config.desiredDirection);
             uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, in config,
@@ -1040,7 +1040,7 @@ namespace Microsoft.MixedReality.WebRTC
         {
             ThrowIfConnectionNotOpen();
             settings = settings ?? new VideoTransceiverInitSettings();
-            var transceiver = new VideoTransceiver(this, settings.InitialDesiredDirection);
+            var transceiver = new VideoTransceiver(this, settings.Name, settings.InitialDesiredDirection);
             var config = new VideoTransceiverInterop.InitConfig(transceiver, settings);
             Debug.Assert(transceiver.DesiredDirection == config.desiredDirection);
             uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, in config,

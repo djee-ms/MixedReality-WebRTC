@@ -40,6 +40,14 @@ RemoteVideoTrack::~RemoteVideoTrack() {
 }
 
 std::string RemoteVideoTrack::GetName() const noexcept {
+  // Use stream ID #0 as track name for pairing with track on remote peer, as
+  // track names are not guaranteed to be paired with Unified Plan (and were
+  // actually neither with Plan B, but that worked in practice).
+  auto ids = receiver_->stream_ids();
+  if (!ids.empty()) {
+    return ids[0];
+  }
+  // Fallback in case something went wrong, to help diagnose.
   return track_->id();
 }
 

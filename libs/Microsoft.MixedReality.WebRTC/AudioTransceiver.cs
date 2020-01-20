@@ -50,8 +50,8 @@ namespace Microsoft.MixedReality.WebRTC
         private IntPtr _argsRef = IntPtr.Zero;
 
         // Constructor for interop-based creation; SetHandle() will be called later
-        internal AudioTransceiver(PeerConnection peerConnection, Direction initialDesiredDirection)
-            : base(peerConnection)
+        internal AudioTransceiver(PeerConnection peerConnection, string name, Direction initialDesiredDirection)
+            : base(peerConnection, name)
         {
             _desiredDirection = initialDesiredDirection;
         }
@@ -201,7 +201,7 @@ namespace Microsoft.MixedReality.WebRTC
                 bool hasSendNow = HasSend(negotiatedDirection);
                 bool hadRecvBefore = HasRecv(NegotiatedDirection);
                 bool hasRecvNow = HasRecv(negotiatedDirection);
-                
+
                 NegotiatedDirection = negotiatedDirection;
 
                 if (hadSendBefore != hasSendNow)

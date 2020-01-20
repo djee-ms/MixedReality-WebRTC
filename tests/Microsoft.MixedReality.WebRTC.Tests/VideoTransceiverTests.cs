@@ -333,5 +333,53 @@ namespace Microsoft.MixedReality.WebRTC.Tests
                 Assert.AreEqual(transceiver1.NegotiatedDirection, negotiated[i]);
             }
         }
+
+        [Test(Description = "Check that the transceiver name is correctly broadcast to the remote peer when the remote transceiver is automatically created.")]
+        public void PairingNameAuto()
+        {
+            // This test use manual offers
+            suspendOffer1_ = true;
+
+            // Create video transceiver on #1. This triggers a renegotiation needed event.
+            string pairingName = "video_feed";
+            var initSettings = new VideoTransceiverInitSettings
+            {
+                Name = pairingName,
+                InitialDesiredDirection = Transceiver.Direction.SendOnly,
+                StreamIDs = new List<string> { "id1", "id2" } // dummy
+            };
+            var transceiver1 = pc1_.AddVideoTransceiver(initSettings);
+            Assert.NotNull(transceiver1);
+            Assert.AreEqual(pairingName, transceiver1.Name);
+            Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendOnly);
+            Assert.AreEqual(transceiver1.NegotiatedDirection, null);
+            Assert.AreEqual(pc1_, transceiver1.PeerConnection);
+            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
+            Assert.IsNull(transceiver1.LocalTrack);
+            Assert.IsNull(transceiver1.RemoteTrack);
+
+            // Wait for local SDP re-negotiation event on #1.
+            // This will not create an offer, since we're not connected yet.
+            Assert.True(renegotiationEvent1_.Wait(TimeSpan.FromSeconds(60.0)));
+            renegotiationEvent1_.Reset();
+
+            // Connect
+            Assert.True(pc1_.CreateOffer());
+            WaitForSdpExchangeCompleted();
+            Assert.True(pc1_.IsConnected);
+            Assert.True(pc2_.IsConnected);
+
+            // Wait for transceiver to finish updating before changing its direction
+            Assert.True(remoteDescAppliedEvent1_.Wait(TimeSpan.FromSeconds(10.0)));
+            remoteDescAppliedEvent1_.Reset();
+
+            // Find the remote transceiver
+            Assert.AreEqual(1, pc2_.VideoTransceivers.Count);
+            var transceiver2 = pc2_.VideoTransceivers[0];
+            Assert.NotNull(transceiver2);
+
+            // Check name was associated
+            Assert.AreEqual(pairingName, transceiver2.Name);
+        }
     }
 }
