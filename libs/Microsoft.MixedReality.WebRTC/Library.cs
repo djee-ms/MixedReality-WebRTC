@@ -6,6 +6,9 @@ using System;
 
 namespace Microsoft.MixedReality.WebRTC
 {
+    /// <summary>
+    /// Container for library-wise global settings of MixedReality-WebRTC.
+    /// </summary>
     public static class Library
     {
         /// <summary>

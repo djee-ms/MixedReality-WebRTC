@@ -280,20 +280,38 @@ namespace Microsoft.MixedReality.WebRTC
         public uint fourcc;
     }
 
+    /// <summary>
+    /// Settings to create a new transceiver wrapper.
+    /// </summary>
     public class TransceiverInitSettings
     {
+        /// <summary>
+        /// Transceiver name, for logging and debugging.
+        /// </summary>
         public string Name;
 
-        public Transceiver.Direction? DesiredDirection;
+        /// <summary>
+        /// Initial value of <see cref="Transceiver.DesiredDirection"/>.
+        /// </summary>
+        public Transceiver.Direction InitialDesiredDirection = Transceiver.Direction.SendReceive;
 
+        /// <summary>
+        /// List of stream IDs to associate the transceiver with.
+        /// </summary>
         public List<string> StreamIDs;
     }
 
+    /// <summary>
+    /// Settings to create a new audio transceiver wrapper.
+    /// </summary>
     public class AudioTransceiverInitSettings : TransceiverInitSettings
     {
 
     }
 
+    /// <summary>
+    /// Settings to create a new video transceiver wrapper.
+    /// </summary>
     public class VideoTransceiverInitSettings : TransceiverInitSettings
     {
 
@@ -981,8 +999,10 @@ namespace Microsoft.MixedReality.WebRTC
         public AudioTransceiver AddAudioTransceiver(AudioTransceiverInitSettings settings = null)
         {
             ThrowIfConnectionNotOpen();
-            var transceiver = new AudioTransceiver(this);
+            settings = settings ?? new AudioTransceiverInitSettings();
+            var transceiver = new AudioTransceiver(this, settings.InitialDesiredDirection);
             var config = new AudioTransceiverInterop.InitConfig(transceiver, settings);
+            Debug.Assert(transceiver.DesiredDirection == config.desiredDirection);
             uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, in config,
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
@@ -1011,8 +1031,10 @@ namespace Microsoft.MixedReality.WebRTC
         public VideoTransceiver AddVideoTransceiver(VideoTransceiverInitSettings settings = null)
         {
             ThrowIfConnectionNotOpen();
-            var transceiver = new VideoTransceiver(this);
+            settings = settings ?? new VideoTransceiverInitSettings();
+            var transceiver = new VideoTransceiver(this, settings.InitialDesiredDirection);
             var config = new VideoTransceiverInterop.InitConfig(transceiver, settings);
+            Debug.Assert(transceiver.DesiredDirection == config.desiredDirection);
             uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, in config,
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);

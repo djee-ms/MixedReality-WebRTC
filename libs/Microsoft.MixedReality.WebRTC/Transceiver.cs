@@ -33,7 +33,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <summary>
         /// Direction of the media flowing inside the transceiver.
         /// </summary>
-        public enum Direction
+        public enum Direction : int
         {
             /// <summary>
             /// Transceiver is both sending to and receiving from the remote peer connection.
@@ -99,8 +99,9 @@ namespace Microsoft.MixedReality.WebRTC
 
         /// <summary>
         /// Backing field for <see cref="DesiredDirection"/>.
+        /// Default is Send+Receive, as it is in implementation.
         /// </summary>
-        protected Direction _desiredDirection = Direction.Inactive;
+        protected Direction _desiredDirection = Direction.SendReceive;
 
         /// <summary>
         /// Create a new transceiver associated with a given peer connection.
@@ -111,21 +112,41 @@ namespace Microsoft.MixedReality.WebRTC
             PeerConnection = peerConnection;
         }
 
+        /// <summary>
+        /// Check whether the given direction includes sending.
+        /// </summary>
+        /// <param name="dir">The direction to check.</param>
+        /// <returns><c>true</c> if direction is <see cref="Direction.SendOnly"/> or <see cref="Direction.SendReceive"/>.</returns>
         protected static bool HasSend(Direction dir)
         {
             return (dir == Direction.SendOnly) || (dir == Direction.SendReceive);
         }
 
+        /// <summary>
+        /// Check whether the given direction includes receiving.
+        /// </summary>
+        /// <param name="dir">The direction to check.</param>
+        /// <returns><c>true</c> if direction is <see cref="Direction.ReceiveOnly"/> or <see cref="Direction.SendReceive"/>.</returns>
         protected static bool HasRecv(Direction dir)
         {
             return (dir == Direction.ReceiveOnly) || (dir == Direction.SendReceive);
         }
 
+        /// <summary>
+        /// Check whether the given direction includes sending.
+        /// </summary>
+        /// <param name="dir">The direction to check.</param>
+        /// <returns><c>true</c> if direction is <see cref="Direction.SendOnly"/> or <see cref="Direction.SendReceive"/>.</returns>
         protected static bool HasSend(Direction? dir)
         {
             return dir.HasValue && ((dir == Direction.SendOnly) || (dir == Direction.SendReceive));
         }
 
+        /// <summary>
+        /// Check whether the given direction includes receiving.
+        /// </summary>
+        /// <param name="dir">The direction to check.</param>
+        /// <returns><c>true</c> if direction is <see cref="Direction.ReceiveOnly"/> or <see cref="Direction.SendReceive"/>.</returns>
         protected static bool HasRecv(Direction? dir)
         {
             return dir.HasValue && ((dir == Direction.ReceiveOnly) || (dir == Direction.SendReceive));

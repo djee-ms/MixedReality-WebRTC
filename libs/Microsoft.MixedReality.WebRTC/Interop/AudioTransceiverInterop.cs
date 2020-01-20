@@ -97,8 +97,12 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         #region Marshaling data structures
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct CreateConfig
+        public ref struct CreateConfig
         {
+            /// <summary>
+            /// Initial desired direction of the transceiver on creation.
+            /// </summary>
+            public Transceiver.Direction DesiredDirection;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -130,7 +134,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             {
                 name = settings?.Name;
                 transceiverHandle = Utils.MakeWrapperRef(transceiver);
-                desiredDirection = settings != null ? settings.DesiredDirection.GetValueOrDefault(Transceiver.Direction.SendReceive) : Transceiver.Direction.SendReceive;
+                desiredDirection = (settings != null ? settings.InitialDesiredDirection : new VideoTransceiverInitSettings().InitialDesiredDirection);
                 encodedStreamIds = Utils.EncodeTransceiverStreamIDs(settings?.StreamIDs);
             }
         }
@@ -199,7 +203,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         public static AudioTransceiver CreateWrapper(PeerConnection parent, in CreateConfig config)
         {
-            return new AudioTransceiver(parent);
+            return new AudioTransceiver(parent, config.DesiredDirection);
         }
 
         public static void RegisterCallbacks(AudioTransceiver transceiver, out IntPtr argsRef)

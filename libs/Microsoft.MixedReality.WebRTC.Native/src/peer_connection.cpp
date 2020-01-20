@@ -1974,7 +1974,9 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::CreateAudioTransceiver(
   // Create an interop wrapper for the new native object if needed
   mrsAudioTransceiverInteropHandle interop_handle{};
   if (auto create_cb = interop_callbacks_.audio_transceiver_create_object) {
-    mrsAudioTransceiverConfig config;
+    mrsAudioTransceiverConfig config{};
+    config.initial_desired_direction =
+        Transceiver::FromRtp(rtp_transceiver->direction());
     interop_handle = (*create_cb)(interop_handle_, config);
   }
 
@@ -2010,7 +2012,9 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::CreateVideoTransceiver(
   // Create an interop wrapper for the new native object if needed
   mrsVideoTransceiverInteropHandle interop_handle{};
   if (auto create_cb = interop_callbacks_.video_transceiver_create_object) {
-    mrsVideoTransceiverConfig config;
+    mrsVideoTransceiverConfig config{};
+    config.initial_desired_direction =
+        Transceiver::FromRtp(rtp_transceiver->direction());
     interop_handle = (*create_cb)(interop_handle_, config);
   }
 

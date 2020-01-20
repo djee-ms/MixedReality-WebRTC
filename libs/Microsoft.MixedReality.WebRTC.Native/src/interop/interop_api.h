@@ -725,9 +725,25 @@ using mrsRequestExternalArgb32VideoFrameCallback =
                          uint32_t request_id,
                          int64_t timestamp_ms);
 
-struct mrsAudioTransceiverConfig {};
+/// Configuration for creating a new audio transceiver interop wrapper.
+struct mrsAudioTransceiverConfig {
+  /// Initial desired direction when the transceiver is created. If the
+  /// transceiver is created by the implementation, this is generally set to the
+  /// current value on the implementation object, to keep the interop wrapper in
+  /// sync.
+  mrsTransceiverDirection initial_desired_direction =
+      mrsTransceiverDirection::kSendRecv;
+};
 
-struct mrsVideoTransceiverConfig {};
+/// Configuration for creating a new video transceiver interop wrapper.
+struct mrsVideoTransceiverConfig {
+  /// Initial desired direction when the transceiver is created. If the
+  /// transceiver is created by the implementation, this is generally set to the
+  /// current value on the implementation object, to keep the interop wrapper in
+  /// sync.
+  mrsTransceiverDirection initial_desired_direction =
+      mrsTransceiverDirection::kSendRecv;
+};
 
 struct mrsRemoteAudioTrackConfig {
   const char* track_name{};

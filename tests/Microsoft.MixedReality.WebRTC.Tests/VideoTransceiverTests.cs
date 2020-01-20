@@ -278,8 +278,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             // Create video transceiver on #1. This triggers a renegotiation needed event.
             var transceiver1 = pc1_.AddVideoTransceiver();
             Assert.NotNull(transceiver1);
-            Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.Inactive);
-            Assert.AreEqual(transceiver1.NegotiatedDirection, Transceiver.Direction.Inactive);
+            Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendReceive); // from implementation
+            Assert.AreEqual(transceiver1.NegotiatedDirection, null);
             Assert.AreEqual(pc1_, transceiver1.PeerConnection);
             Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
             Assert.IsNull(transceiver1.LocalTrack);
