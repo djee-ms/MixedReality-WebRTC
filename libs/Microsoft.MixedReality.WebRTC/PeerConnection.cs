@@ -928,24 +928,32 @@ namespace Microsoft.MixedReality.WebRTC
             _nativePeerhandle.Close();
 
             // Notify tracks they have been removed
-            foreach (var track in LocalAudioTracks)
+            int count = LocalAudioTracks.Count;
+            while (count > 0)
             {
-                track.OnTrackRemoved(this);
+                LocalAudioTracks[count - 1].OnTrackRemoved(this);
+                --count;
             }
             Debug.Assert(LocalAudioTracks.Count == 0);
-            foreach (var track in LocalVideoTracks)
+            count = LocalVideoTracks.Count;
+            while (count > 0)
             {
-                track.OnTrackRemoved(this);
+                LocalVideoTracks[count - 1].OnTrackRemoved(this);
+                --count;
             }
             Debug.Assert(LocalVideoTracks.Count == 0);
-            foreach (var track in RemoteAudioTracks)
+            count = RemoteAudioTracks.Count;
+            while (count > 0)
             {
-                track.OnTrackRemoved(this);
+                RemoteAudioTracks[count - 1].OnTrackRemoved(this);
+                --count;
             }
             Debug.Assert(RemoteAudioTracks.Count == 0);
-            foreach (var track in RemoteVideoTracks)
+            count = RemoteVideoTracks.Count;
+            while (count > 0)
             {
-                track.OnTrackRemoved(this);
+                RemoteVideoTracks[count - 1].OnTrackRemoved(this);
+                --count;
             }
             Debug.Assert(RemoteVideoTracks.Count == 0);
 
