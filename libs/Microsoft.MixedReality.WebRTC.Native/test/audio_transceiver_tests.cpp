@@ -192,3 +192,14 @@ TEST(AudioTransceiver, SetDirection) {
   // Clean-up
   mrsAudioTransceiverRemoveRef(transceiver_handle1);
 }
+
+TEST(AudioTransceiver, InvalidName) {
+  LocalPeerPairRaii pair;
+  AudioTransceiverHandle transceiver_handle1{};
+  AudioTransceiverInitConfig transceiver_config{};
+  transceiver_config.name = "invalid name with space";
+  ASSERT_EQ(Result::kInvalidParameter,
+            mrsPeerConnectionAddAudioTransceiver(
+                pair.pc1(), &transceiver_config, &transceiver_handle1));
+  ASSERT_EQ(nullptr, transceiver_handle1);
+}

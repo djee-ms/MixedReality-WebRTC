@@ -585,3 +585,14 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
   // Clean-up
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
+
+TEST(VideoTransceiver, InvalidName) {
+  LocalPeerPairRaii pair;
+  VideoTransceiverHandle transceiver_handle1{};
+  VideoTransceiverInitConfig transceiver_config{};
+  transceiver_config.name = "invalid name with space";
+  ASSERT_EQ(Result::kInvalidParameter,
+            mrsPeerConnectionAddVideoTransceiver(
+                pair.pc1(), &transceiver_config, &transceiver_handle1));
+  ASSERT_EQ(nullptr, transceiver_handle1);
+}

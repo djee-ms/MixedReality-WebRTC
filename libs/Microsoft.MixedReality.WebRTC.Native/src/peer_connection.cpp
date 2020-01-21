@@ -737,6 +737,11 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
   if (!IsStringNullOrEmpty(config.name)) {
     name = config.name;
   }
+  if (!SdpIsValidToken(name)) {
+    rtc::StringBuilder str("Invalid video transceiver name: ");
+    str << name;
+    return Error(Result::kInvalidParameter, str.Release());
+  }
 
   RefPtr<VideoTransceiver> transceiver;
   switch (peer_->GetConfiguration().sdp_semantics) {
@@ -859,6 +864,11 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
   std::string name;
   if (!IsStringNullOrEmpty(config.name)) {
     name = config.name;
+  }
+  if (!SdpIsValidToken(name)) {
+    rtc::StringBuilder str("Invalid audio transceiver name: ");
+    str << name;
+    return Error(Result::kInvalidParameter, str.Release());
   }
 
   RefPtr<AudioTransceiver> transceiver;

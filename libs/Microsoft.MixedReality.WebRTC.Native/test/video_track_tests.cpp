@@ -83,7 +83,7 @@ TEST(VideoTrack, Simple) {
   {
     renegotiation_needed1_ev.Reset();
     VideoTransceiverInitConfig config{};
-    config.name = "transceiver #1";
+    config.name = "transceiver_1";
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddVideoTransceiver(
                                     pair.pc1(), &config, &transceiver_handle1));
     ASSERT_NE(nullptr, transceiver_handle1);
@@ -225,7 +225,7 @@ TEST(VideoTrack, Muted) {
   VideoTransceiverHandle transceiver_handle1{};
   {
     VideoTransceiverInitConfig config{};
-    config.name = "transceiver #1";
+    config.name = "transceiver_1";
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddVideoTransceiver(
                                     pair.pc1(), &config, &transceiver_handle1));
     ASSERT_NE(nullptr, transceiver_handle1);
@@ -396,14 +396,14 @@ TEST(VideoTrack, Multi) {
   for (auto&& track : tracks) {
     std::stringstream str;
     VideoTransceiverInitConfig tranceiver_config{};
-    str << "transceiver #1 " << idx;
+    str << "transceiver_1_" << idx;
     tranceiver_config.name = str.str().c_str();
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddVideoTransceiver(
                                     pair.pc1(), &tranceiver_config,
                                     &track.local_transceiver_handle));
     ASSERT_NE(nullptr, track.local_transceiver_handle);
     str.clear();
-    str << "track #1 " << idx;
+    str << "track_1_" << idx;
     ASSERT_EQ(Result::kSuccess,
               mrsLocalVideoTrackCreateFromExternalSource(
                   &track_config, str.str().c_str(), &track.local_handle));
@@ -507,7 +507,7 @@ TEST(VideoTrack, ExternalI420) {
   VideoTransceiverHandle transceiver_handle1{};
   {
     VideoTransceiverInitConfig config{};
-    config.name = "transceiver #1";
+    config.name = "transceiver_1";
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddVideoTransceiver(
                                     pair.pc1(), &config, &transceiver_handle1));
     ASSERT_NE(nullptr, transceiver_handle1);

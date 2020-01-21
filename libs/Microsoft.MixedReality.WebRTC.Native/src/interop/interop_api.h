@@ -928,6 +928,11 @@ MRS_API mrsResult MRS_CALL mrsSdpForceCodecs(const char* message,
                                              char* buffer,
                                              uint64_t* buffer_size) noexcept;
 
+/// Check if the given SDP token is valid according to the RFC 4566 standard.
+/// See https://tools.ietf.org/html/rfc4566#page-43 for details.
+/// This is used to validate e.g. track, transceiver, or stream IDs.
+MRS_API mrsBool MRS_CALL mrsSdpIsValidToken(const char* token) noexcept;
+
 /// Must be the same as PeerConnection::FrameHeightRoundMode.
 enum class FrameHeightRoundMode : int32_t { kNone = 0, kCrop = 1, kPad = 2 };
 

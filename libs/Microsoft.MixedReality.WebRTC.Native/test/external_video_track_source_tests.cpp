@@ -161,7 +161,7 @@ TEST(ExternalVideoTrackSource, Simple) {
   VideoTransceiverHandle transceiver_handle1{};
   {
     VideoTransceiverInitConfig config{};
-    config.name = "transceiver #1";
+    config.name = "transceiver_1";
     ASSERT_EQ(mrsResult::kSuccess,
               mrsPeerConnectionAddVideoTransceiver(pair.pc1(), &config,
                                                    &transceiver_handle1));

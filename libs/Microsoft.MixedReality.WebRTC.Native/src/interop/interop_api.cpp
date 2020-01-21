@@ -986,6 +986,11 @@ mrsResult MRS_CALL mrsSdpForceCodecs(const char* message,
   return Result::kSuccess;
 }
 
+mrsBool MRS_CALL mrsSdpIsValidToken(const char* token) noexcept {
+  return ((token != nullptr) && SdpIsValidToken(token) ? mrsBool::kTrue
+                                                       : mrsBool::kFalse);
+}
+
 void MRS_CALL mrsSetFrameHeightRoundMode(FrameHeightRoundMode value) {
   PeerConnection::SetFrameHeightRoundMode(
       (PeerConnection::FrameHeightRoundMode)value);
