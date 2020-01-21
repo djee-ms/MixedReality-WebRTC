@@ -100,9 +100,11 @@ Result VideoTransceiver::SetLocalTrack(
   }
   if (local_track_) {
     // Detach old local track
-    owner_->OnLocalTrackRemovedFromVideoTransceiver(*this, *local_track_);
-    local_track_->OnRemovedFromPeerConnection(*owner_, this,
-                                              transceiver_->sender());
+    // Keep a pointer to the track because local_track_ gets NULL'd. No need to
+    // keep a reference, because owner_ has one.
+    LocalVideoTrack* const track = local_track_.get();
+    track->OnRemovedFromPeerConnection(*owner_, this, transceiver_->sender());
+    owner_->OnLocalTrackRemovedFromVideoTransceiver(*this, *track);
   }
   local_track_ = std::move(local_track);
   if (local_track_) {

@@ -356,6 +356,30 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
     ASSERT_EQ(nullptr, track_handle_remote);
   }
 
+  // Remove track from transceiver #1 with non-null track
+  ASSERT_EQ(Result::kSuccess,
+            mrsVideoTransceiverSetLocalTrack(transceiver_handle1, nullptr));
+
+  // Check video transceiver #1 consistency
+  {
+    // Desired state is Send+Receive, negotiated is still Send only.
+    // SetLocalTrack() doesn't change the transceiver directions.
+    ASSERT_EQ(mrsTransceiverOptDirection::kSendOnly, dir_negotiated1);
+    ASSERT_EQ(mrsTransceiverDirection::kSendRecv, dir_desired1);
+
+    // Local video track is track_handle1
+    LocalVideoTrackHandle track_handle_local{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
+                                    transceiver_handle1, &track_handle_local));
+    ASSERT_EQ(nullptr, track_handle_local);
+
+    // Remote video track is NULL
+    RemoteVideoTrackHandle track_handle_remote{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
+                                    transceiver_handle1, &track_handle_remote));
+    ASSERT_EQ(nullptr, track_handle_remote);
+  }
+
   // Renegotiate
   pair.ConnectAndWait();
 
@@ -513,6 +537,29 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
                                     transceiver_handle1, &track_handle_local));
     ASSERT_EQ(track_handle1, track_handle_local);
     mrsLocalVideoTrackRemoveRef(track_handle_local);
+
+    // Remote video track is NULL
+    RemoteVideoTrackHandle track_handle_remote{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
+                                    transceiver_handle1, &track_handle_remote));
+    ASSERT_EQ(nullptr, track_handle_remote);
+  }
+
+  // Remote track from transceiver #1 with non-null track
+  ASSERT_EQ(Result::kSuccess,
+            mrsVideoTransceiverSetLocalTrack(transceiver_handle1, nullptr));
+
+  // Check video transceiver #1 consistency
+  {
+    // Desired state is Receive, negotiated is still Inactive
+    ASSERT_EQ(mrsTransceiverOptDirection::kInactive, dir_negotiated1);
+    ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);
+
+    // Local video track is NULL
+    LocalVideoTrackHandle track_handle_local{};
+    ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
+                                    transceiver_handle1, &track_handle_local));
+    ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote video track is NULL
     RemoteVideoTrackHandle track_handle_remote{};

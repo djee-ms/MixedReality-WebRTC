@@ -101,9 +101,11 @@ Result AudioTransceiver::SetLocalTrack(
   }
   if (local_track_) {
     // Detach old local track
-    local_track_->OnRemovedFromPeerConnection(*owner_, this,
-                                              transceiver_->sender());
-    owner_->OnLocalTrackRemovedFromAudioTransceiver(*this, *local_track_);
+    // Keep a pointer to the track because local_track_ gets NULL'd. No need to
+    // keep a reference, because owner_ has one.
+    LocalAudioTrack* const track = local_track_.get();
+    track->OnRemovedFromPeerConnection(*owner_, this, transceiver_->sender());
+    owner_->OnLocalTrackRemovedFromAudioTransceiver(*this, *track);
   }
   local_track_ = std::move(local_track);
   if (local_track_) {
