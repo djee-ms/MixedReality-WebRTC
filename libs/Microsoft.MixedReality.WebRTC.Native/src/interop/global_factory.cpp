@@ -71,12 +71,6 @@ void GlobalFactory::SetShutdownOptions(mrsShutdownOptions options) noexcept {
 
 RefPtr<GlobalFactory> GlobalFactory::InstancePtr() {
   auto& factory = MutableInstance();
-  if (!factory) {
-    factory = std::make_unique<GlobalFactory>();
-    if (factory->InitializeImpl() != Result::kSuccess) {
-      return nullptr;
-    }
-  }
   return RefPtr<GlobalFactory>(factory.get());
 }
 
@@ -85,7 +79,14 @@ std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance() {
   /// factory itself, with added thread safety. This keeps a track of all
   /// objects alive, to determine when it is safe to release the WebRTC threads,
   /// thereby allowing a DLL linking this code to be unloaded.
-  static std::unique_ptr<GlobalFactory> g_factory{};
+  static std::unique_ptr<GlobalFactory> g_factory;
+  static std::mutex g_mutex;
+  // Ensure (in a thread-safe way) the factory is initialized
+  std::scoped_lock lock(g_mutex);
+  if (!g_factory) {
+    g_factory = std::make_unique<GlobalFactory>();
+    g_factory->InitializeImplNoLock();
+  }
   return g_factory;
 }
 
@@ -157,7 +158,7 @@ using WebRtcFactoryPtr =
 WebRtcFactoryPtr GlobalFactory::get() {
   std::scoped_lock lock(mutex_);
   if (!impl_) {
-    if (InitializeImpl() != Result::kSuccess) {
+    if (InitializeImplNoLock() != Result::kSuccess) {
       return nullptr;
     }
   }
@@ -168,7 +169,7 @@ mrsResult GlobalFactory::GetOrCreateWebRtcFactory(WebRtcFactoryPtr& factory) {
   factory.reset();
   std::scoped_lock lock(mutex_);
   if (!impl_) {
-    mrsResult res = InitializeImpl();
+    mrsResult res = InitializeImplNoLock();
     if (res != Result::kSuccess) {
       return res;
     }
@@ -179,7 +180,7 @@ mrsResult GlobalFactory::GetOrCreateWebRtcFactory(WebRtcFactoryPtr& factory) {
 
 #endif  // defined(WINUWP)
 
-mrsResult GlobalFactory::InitializeImpl() {
+mrsResult GlobalFactory::InitializeImplNoLock() {
   RTC_CHECK(!factory_);
 
 #if defined(WINUWP)

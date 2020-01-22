@@ -81,7 +81,7 @@ class GlobalFactory {
   GlobalFactory(const GlobalFactory&) = delete;
   GlobalFactory& operator=(const GlobalFactory&) = delete;
   static std::unique_ptr<GlobalFactory>& MutableInstance();
-  mrsResult InitializeImpl();
+  mrsResult InitializeImplNoLock();
   void ForceShutdownImpl();
   bool TryShutdownImpl();
   void ReportLiveObjectsNoLock();
