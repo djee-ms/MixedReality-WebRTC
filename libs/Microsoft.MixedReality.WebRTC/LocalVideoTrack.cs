@@ -349,7 +349,7 @@ namespace Microsoft.MixedReality.WebRTC
             var config = new PeerConnectionInterop.LocalVideoTrackFromExternalSourceInteropInitConfig(track, source);
 
             // Create native implementation objects
-            uint res = LocalVideoTrackInterop.LocalVideoTrack_CreateFromExternalSource(in config, trackName,
+            uint res = LocalVideoTrackInterop.LocalVideoTrack_CreateFromExternalSource(source._nativeHandle, in config, trackName,
                 out LocalVideoTrackHandle trackHandle);
             Utils.ThrowOnErrorCode(res);
             track.SetHandle(trackHandle);

@@ -448,12 +448,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public IntPtr LocalVideoTrackWrapperHandle;
 
             /// <summary>
-            /// Handle to the native external video track source used to provide raw video frames to the
-            /// local video track that will be created.
-            /// </summary>
-            public ExternalVideoTrackSourceHandle SourceHandle;
-
-            /// <summary>
             /// Constructor for creating a local video track from a wrapper and an existing external source.
             /// </summary>
             /// <param name="track">The newly created track wrapper.</param>
@@ -462,7 +456,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public LocalVideoTrackFromExternalSourceInteropInitConfig(LocalVideoTrack track, ExternalVideoTrackSource source)
             {
                 LocalVideoTrackWrapperHandle = Utils.MakeWrapperRef(track);
-                SourceHandle = source._nativeHandle;
             }
         }
 

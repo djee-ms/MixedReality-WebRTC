@@ -708,9 +708,6 @@ struct LocalVideoTrackFromExternalSourceInitConfig {
   /// Handle of the local video track interop wrapper, if any, which will be
   /// associated with the native local video track object.
   mrsLocalVideoTrackInteropHandle track_interop_handle{};
-
-  /// Handle to the native source.
-  ExternalVideoTrackSourceHandle source_handle{};
 };
 
 using mrsRequestExternalI420AVideoFrameCallback =

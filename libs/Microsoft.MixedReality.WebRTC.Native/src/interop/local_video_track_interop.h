@@ -30,6 +30,7 @@ MRS_API mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
 
 /// Create a new local video track by using an existing external video source.
 MRS_API mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
+    ExternalVideoTrackSourceHandle source_handle,
     const LocalVideoTrackFromExternalSourceInitConfig* config,
     const char* track_name,
     LocalVideoTrackHandle* track_handle_out) noexcept;

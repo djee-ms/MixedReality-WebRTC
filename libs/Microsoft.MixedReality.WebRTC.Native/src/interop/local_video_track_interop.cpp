@@ -34,6 +34,7 @@ mrsLocalVideoTrackRemoveRef(LocalVideoTrackHandle handle) noexcept {
 // mrsLocalVideoTrackCreateFromDevice -> interop_api.cpp
 
 mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
+    ExternalVideoTrackSourceHandle source_handle,
     const LocalVideoTrackFromExternalSourceInitConfig* config,
     const char* track_name,
     LocalVideoTrackHandle* track_handle_out) noexcept {
@@ -43,7 +44,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
   *track_handle_out = nullptr;
 
   auto track_source =
-      static_cast<detail::ExternalVideoTrackSourceImpl*>(config->source_handle);
+      static_cast<detail::ExternalVideoTrackSourceImpl*>(source_handle);
   if (!track_source) {
     return Result::kInvalidNativeHandle;
   }

@@ -323,10 +323,10 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
   LocalVideoTrackHandle track_handle1{};
   {
     LocalVideoTrackFromExternalSourceInitConfig config{};
-    config.source_handle = source_handle1;
-    ASSERT_EQ(mrsResult::kSuccess,
-              mrsLocalVideoTrackCreateFromExternalSource(
-                  &config, "simulated_video_track1", &track_handle1));
+    ASSERT_EQ(
+        mrsResult::kSuccess,
+        mrsLocalVideoTrackCreateFromExternalSource(
+            source_handle1, &config, "simulated_video_track1", &track_handle1));
     ASSERT_NE(nullptr, track_handle1);
     ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
   }
@@ -513,10 +513,10 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
   LocalVideoTrackHandle track_handle1{};
   {
     LocalVideoTrackFromExternalSourceInitConfig config{};
-    config.source_handle = source_handle1;
-    ASSERT_EQ(mrsResult::kSuccess,
-              mrsLocalVideoTrackCreateFromExternalSource(
-                  &config, "simulated_video_track1", &track_handle1));
+    ASSERT_EQ(
+        mrsResult::kSuccess,
+        mrsLocalVideoTrackCreateFromExternalSource(
+            source_handle1, &config, "simulated_video_track1", &track_handle1));
     ASSERT_NE(nullptr, track_handle1);
     ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
   }

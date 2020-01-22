@@ -391,7 +391,6 @@ TEST(VideoTrack, Multi) {
 
   // Create local video tracks on the local peer (#1)
   LocalVideoTrackFromExternalSourceInitConfig track_config{};
-  track_config.source_handle = source_handle1;
   int idx = 0;
   for (auto&& track : tracks) {
     std::stringstream str;
@@ -404,9 +403,9 @@ TEST(VideoTrack, Multi) {
     ASSERT_NE(nullptr, track.local_transceiver_handle);
     str.clear();
     str << "track_1_" << idx;
-    ASSERT_EQ(Result::kSuccess,
-              mrsLocalVideoTrackCreateFromExternalSource(
-                  &track_config, str.str().c_str(), &track.local_handle));
+    ASSERT_EQ(Result::kSuccess, mrsLocalVideoTrackCreateFromExternalSource(
+                                    source_handle1, &track_config,
+                                    str.str().c_str(), &track.local_handle));
     ASSERT_NE(nullptr, track.local_handle);
     ASSERT_EQ(Result::kSuccess,
               mrsVideoTransceiverSetLocalTrack(track.local_transceiver_handle,
@@ -524,10 +523,10 @@ TEST(VideoTrack, ExternalI420) {
   LocalVideoTrackHandle track_handle1{};
   {
     LocalVideoTrackFromExternalSourceInitConfig config{};
-    config.source_handle = source_handle1;
-    ASSERT_EQ(mrsResult::kSuccess,
-              mrsLocalVideoTrackCreateFromExternalSource(
-                  &config, "simulated_video_track", &track_handle1));
+    ASSERT_EQ(
+        mrsResult::kSuccess,
+        mrsLocalVideoTrackCreateFromExternalSource(
+            source_handle1, &config, "simulated_video_track", &track_handle1));
     ASSERT_NE(nullptr, track_handle1);
     ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
   }

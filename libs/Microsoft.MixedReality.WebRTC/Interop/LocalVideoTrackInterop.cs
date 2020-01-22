@@ -90,8 +90,9 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsLocalVideoTrackCreateFromExternalSource")]
-        public static unsafe extern uint LocalVideoTrack_CreateFromExternalSource(in PeerConnectionInterop.LocalVideoTrackFromExternalSourceInteropInitConfig config,
-            string trackName, out LocalVideoTrackHandle trackHandle);
+        public static unsafe extern uint LocalVideoTrack_CreateFromExternalSource(ExternalVideoTrackSourceHandle sourceHandle,
+            in PeerConnectionInterop.LocalVideoTrackFromExternalSourceInteropInitConfig config, string trackName,
+            out LocalVideoTrackHandle trackHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsLocalVideoTrackRegisterI420AFrameCallback")]
