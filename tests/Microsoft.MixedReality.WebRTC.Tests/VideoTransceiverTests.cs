@@ -276,7 +276,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             suspendOffer1_ = true;
 
             // Create video transceiver on #1. This triggers a renegotiation needed event.
-            var transceiver1 = pc1_.AddVideoTransceiver();
+            var transceiver_settings = new VideoTransceiverInitSettings
+            {
+                Name = "transceiver1",
+            };
+            var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
             Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendReceive); // from implementation
             Assert.AreEqual(transceiver1.NegotiatedDirection, null);

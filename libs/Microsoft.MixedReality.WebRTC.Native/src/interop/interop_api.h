@@ -609,7 +609,8 @@ enum class mrsTransceiverOptDirection : int32_t {
 
 /// Configuration for creating a new audio transceiver.
 struct AudioTransceiverInitConfig {
-  /// Name of the audio transceiver.
+  /// Mandatory name of the audio transceiver. This must be a valid SDP token;
+  /// see |mrsSdpIsValidToken()|.
   const char* name = nullptr;
 
   /// Initial desired direction of the transceiver media when created.
@@ -627,7 +628,8 @@ struct AudioTransceiverInitConfig {
 
 /// Configuration for creating a new video transceiver.
 struct VideoTransceiverInitConfig {
-  /// Name of the video transceiver.
+  /// Mandatory name of the video transceiver. This must be a valid SDP token;
+  /// see |mrsSdpIsValidToken()|.
   const char* name = nullptr;
 
   /// Initial desired direction of the transceiver media when created.

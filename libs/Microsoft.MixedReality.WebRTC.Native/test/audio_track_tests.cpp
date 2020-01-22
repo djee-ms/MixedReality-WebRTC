@@ -121,6 +121,7 @@ TEST(AudioTrack, Simple) {
   // Create an audio transceiver on #1
   AudioTransceiverHandle audio_transceiver1{};
   AudioTransceiverInitConfig transceiver_config{};
+  transceiver_config.name = "transceiver1";
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddAudioTransceiver(
                 pair.pc1(), &transceiver_config, &audio_transceiver1));
@@ -277,6 +278,7 @@ TEST(AudioTrack, Muted) {
   // Create an audio transceiver on #1
   AudioTransceiverHandle audio_transceiver1{};
   AudioTransceiverInitConfig transceiver_config{};
+  transceiver_config.name = "transceiver1";
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddAudioTransceiver(
                 pair.pc1(), &transceiver_config, &audio_transceiver1));

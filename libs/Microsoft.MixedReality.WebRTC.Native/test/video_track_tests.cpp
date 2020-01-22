@@ -393,19 +393,22 @@ TEST(VideoTrack, Multi) {
   LocalVideoTrackFromExternalSourceInitConfig track_config{};
   int idx = 0;
   for (auto&& track : tracks) {
-    std::stringstream str;
+    std::stringstream strstr;
+    std::string str;
     VideoTransceiverInitConfig tranceiver_config{};
-    str << "transceiver_1_" << idx;
-    tranceiver_config.name = str.str().c_str();
+    strstr << "transceiver_1_" << idx;
+    str = strstr.str();  // keep alive
+    tranceiver_config.name = str.c_str();
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddVideoTransceiver(
                                     pair.pc1(), &tranceiver_config,
                                     &track.local_transceiver_handle));
     ASSERT_NE(nullptr, track.local_transceiver_handle);
-    str.clear();
-    str << "track_1_" << idx;
+    strstr.clear();
+    strstr << "track_1_" << idx;
+    str = strstr.str();  // keep alive
     ASSERT_EQ(Result::kSuccess, mrsLocalVideoTrackCreateFromExternalSource(
                                     source_handle1, &track_config,
-                                    str.str().c_str(), &track.local_handle));
+                                    str.c_str(), &track.local_handle));
     ASSERT_NE(nullptr, track.local_handle);
     ASSERT_EQ(Result::kSuccess,
               mrsVideoTransceiverSetLocalTrack(track.local_transceiver_handle,

@@ -360,7 +360,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
         public async Task BeforeConnect()
         {
             // Create video transceiver on #1
-            var transceiver1 = pc1_.AddVideoTransceiver();
+            var transceiver_settings = new VideoTransceiverInitSettings
+            {
+                Name = "transceiver1",
+            };
+            var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
 
             // Wait for local SDP re-negotiation event on #1.
@@ -455,7 +459,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
 
             // Create video transceiver on #1 -- this generates a renegotiation
             renegotiationEvent1_.Reset();
-            var transceiver1 = pc1_.AddVideoTransceiver();
+            var transceiver_settings = new VideoTransceiverInitSettings
+            {
+                Name = "transceiver1",
+            };
+            var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
             Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
 
@@ -581,7 +589,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             remoteDescAppliedEvent1_.Reset();
             remoteDescAppliedEvent2_.Reset();
             Assert.IsFalse(videoTrackAddedEvent2_.IsSet);
-            var transceiver1 = pc1_.AddVideoTransceiver();
+            var transceiver_settings = new VideoTransceiverInitSettings
+            {
+                Name = "transceiver1",
+            };
+            var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
             Assert.IsNull(transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
@@ -654,7 +666,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             remoteDescAppliedEvent1_.Reset();
             remoteDescAppliedEvent2_.Reset();
             Assert.IsFalse(videoTrackAddedEvent2_.IsSet);
-            var transceiver1 = pc1_.AddVideoTransceiver();
+            var transceiver_settings = new VideoTransceiverInitSettings
+            {
+                Name = "transceiver1",
+            };
+            var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
             Assert.IsNull(transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
@@ -729,7 +745,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             var tracks = new LocalVideoTrack[kNumTracks];
             for (int i = 0; i < kNumTracks; ++i)
             {
-                transceivers[i] = pc1_.AddVideoTransceiver();
+                var transceiver_settings = new VideoTransceiverInitSettings
+                {
+                    Name = $"transceiver1_{i}",
+                };
+                transceivers[i] = pc1_.AddVideoTransceiver(transceiver_settings);
                 Assert.NotNull(transceivers[i]);
 
                 tracks[i] = LocalVideoTrack.CreateFromExternalSource($"track_i420a_{i}", source1);
