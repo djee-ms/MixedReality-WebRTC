@@ -28,10 +28,29 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     public abstract class VideoSource : MonoBehaviour
     {
         /// <summary>
-        /// Frame queue holding the pending frames enqueued by the video source itself,
-        /// which a video renderer needs to read and display.
+        /// Enumeration of video encodings.
         /// </summary>
-        public IVideoFrameQueue FrameQueue { get; protected set; }
+        public enum VideoEncoding
+        {
+            /// <summary>
+            /// I420A video encoding with chroma (UV) halved in both directions (4:2:0),
+            /// and optional Alpha plane.
+            /// </summary>
+            I420A,
+
+            /// <summary>
+            /// 32-bit ARGB32 video encoding with 8-bit per component, encoded as uint32 little-endian
+            /// 0xAARRGGBB value, or equivalently (B,G,R,A) in byte order.
+            /// </summary>
+            Argb32
+        }
+
+        /// <summary>
+        /// Video encoding indicating the kind of frames the source is producing.
+        /// This is used for example by the <see cref="MediaPlayer"/> to determine how to
+        /// render the frame.
+        /// </summary>
+        public VideoEncoding FrameEncoding { get; protected set; } = VideoEncoding.I420A;
 
         /// <summary>
         /// Event invoked from the main Unity thread when the video stream starts.
@@ -45,5 +64,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// may still be present in it that may be rendered.
         /// </summary>
         public VideoStreamStoppedEvent VideoStreamStopped = new VideoStreamStoppedEvent();
+
+        /// <summary>
+        /// Retrieve some statistics about the video feed produced by the source.
+        /// </summary>
+        /// <returns>The current statistics for the source at the time of the call.</returns>
+        public abstract IVideoFrameQueue GetStats();
+
+        public abstract void RegisterCallback(I420AVideoFrameDelegate callback);
+        public abstract void UnregisterCallback(I420AVideoFrameDelegate callback);
+        public abstract void RegisterCallback(Argb32VideoFrameDelegate callback);
+        public abstract void UnregisterCallback(Argb32VideoFrameDelegate callback);
     }
 }

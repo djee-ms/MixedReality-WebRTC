@@ -118,16 +118,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <summary>
         /// Selection mode for the video capture format.
         /// </summary>
-        public LocalVideoSourceFormatMode Mode = LocalVideoSourceFormatMode.Automatic;
+        public LocalVideoSourceFormatMode FormatMode = LocalVideoSourceFormatMode.Automatic;
 
         /// <summary>
-        /// For manual <see cref="Mode"/>, unique identifier of the video profile to use,
+        /// For manual <see cref="FormatMode"/>, unique identifier of the video profile to use,
         /// or an empty string to leave unconstrained.
         /// </summary>
         public string VideoProfileId = string.Empty;
 
         /// <summary>
-        /// For manual <see cref="Mode"/>, kind of video profile to use among a list of predefined
+        /// For manual <see cref="FormatMode"/>, kind of video profile to use among a list of predefined
         /// ones, or an empty string to leave unconstrained.
         /// </summary>
         public VideoProfileKind VideoProfileKind = VideoProfileKind.Unspecified;
@@ -144,7 +144,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private VideoFrameQueue<I420AVideoFrameStorage> _frameQueue;
 
         /// <summary>
-        /// For manual <see cref="Mode"/>, optional constraints on the resolution and framerate of
+        /// For manual <see cref="FormatMode"/>, optional constraints on the resolution and framerate of
         /// the capture format. These constraints are additive, meaning a matching format must satisfy
         /// all of them at once, in addition of being restricted to the formats supported by the selected
         /// video profile or kind of profile.
@@ -156,10 +156,51 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             framerate = 0.0
         };
 
+        public LocalVideoSource()
+        {
+            FrameEncoding = VideoEncoding.I420A;
+        }
+
+        public override IVideoFrameQueue GetStats()
+        {
+            return _frameQueue;
+        }
+
+        public override void RegisterCallback(I420AVideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.I420AVideoFrameReady += callback;
+            }
+        }
+
+        public override void UnregisterCallback(I420AVideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.I420AVideoFrameReady -= callback;
+            }
+        }
+
+        public override void RegisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady += callback;
+            }
+        }
+
+        public override void UnregisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady -= callback;
+            }
+        }
+
         protected void Awake()
         {
             _frameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(3);
-            FrameQueue = _frameQueue;
             PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
             PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
         }

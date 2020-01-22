@@ -78,10 +78,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (typeof(T) == typeof(I420AVideoFrameStorage))
             {
                 Source = ExternalVideoTrackSource.CreateFromI420ACallback(OnFrameRequested);
+                FrameEncoding = VideoEncoding.I420A;
             }
             else if (typeof(T) == typeof(Argb32VideoFrameStorage))
             {
                 Source = ExternalVideoTrackSource.CreateFromArgb32Callback(OnFrameRequested);
+                FrameEncoding = VideoEncoding.Argb32;
             }
             else
             {
@@ -127,10 +129,46 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             _frameQueue.Clear();
         }
 
+        public override IVideoFrameQueue GetStats()
+        {
+            return _frameQueue;
+        }
+
+        public override void RegisterCallback(I420AVideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.I420AVideoFrameReady += callback;
+            }
+        }
+
+        public override void UnregisterCallback(I420AVideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.I420AVideoFrameReady -= callback;
+            }
+        }
+
+        public override void RegisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady += callback;
+            }
+        }
+
+        public override void UnregisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady -= callback;
+            }
+        }
+
         protected void Awake()
         {
             _frameQueue = new VideoFrameQueue<T>(3);
-            FrameQueue = _frameQueue;
             PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
             PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
         }

@@ -115,6 +115,48 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
+        public RemoteVideoSource()
+        {
+            FrameEncoding = VideoEncoding.I420A;
+        }
+
+        public override IVideoFrameQueue GetStats()
+        {
+            return _frameQueue;
+        }
+
+        public override void RegisterCallback(I420AVideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.I420AVideoFrameReady += callback;
+            }
+        }
+
+        public override void UnregisterCallback(I420AVideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.I420AVideoFrameReady -= callback;
+            }
+        }
+
+        public override void RegisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady += callback;
+            }
+        }
+
+        public override void UnregisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady -= callback;
+            }
+        }
+
         /// <summary>
         /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Awake.html">MonoBehaviour.Awake</a>
         /// which registers some handlers with the peer connection to listen to its <see cref="PeerConnection.OnInitialized"/>
@@ -123,7 +165,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         protected void Awake()
         {
             _frameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(5);
-            FrameQueue = _frameQueue;
             PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
             PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
         }
@@ -206,26 +247,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             if (Track == track)
             {
-                Track.I420AVideoFrameReady -= I420ARemoteVideoFrameReady;
                 Track = null;
 
                 // Enqueue invoking the unity event from the main Unity thread, so that listeners
                 // can directly access Unity objects from their handler function.
                 _mainThreadWorkQueue.Enqueue(() => VideoStreamStopped.Invoke(this));
             }
-        }
-
-        /// <summary>
-        /// Interal help callback on remote video frame ready. Enqueues the newly-available video
-        /// frame into the internal <see cref="VideoSource.FrameQueue"/> for later consumption by
-        /// a video renderer.
-        /// </summary>
-        /// <param name="frame">The newly-available video frame from the remote peer</param>
-        private void I420ARemoteVideoFrameReady(I420AVideoFrame frame)
-        {
-            // This does not need to enqueue work, because FrameQueue is thread-safe
-            // and can be manipulated from any thread (does not access Unity objects).
-            _frameQueue.Enqueue(frame);
         }
     }
 }
