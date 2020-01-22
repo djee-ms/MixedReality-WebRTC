@@ -94,9 +94,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 Track = LocalVideoTrack.CreateFromExternalSource(trackName, Source);
                 if (Track != null)
                 {
-                    var transceiver = nativePeer.AddVideoTransceiver();
+                    var transceiverSettings = new VideoTransceiverInitSettings
+                    {
+                        Name = trackName,
+                        InitialDesiredDirection = Transceiver.Direction.SendReceive
+                    };
+                    var transceiver = nativePeer.AddVideoTransceiver(transceiverSettings);
                     transceiver.LocalTrack = Track;
-                    VideoStreamStarted.Invoke();
+
+                    VideoStreamStarted.Invoke(this);
                 }
             }
         }
@@ -108,11 +114,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             if (Track != null)
             {
-                var nativePeer = PeerConnection.Peer;
-                Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalVideoTrack(Track);
+                Track.Transceiver.LocalTrack = null; //< TODO : set transceiver direction?
                 Track.Dispose();
                 Track = null;
-                VideoStreamStopped.Invoke();
+                VideoStreamStopped.Invoke(this);
             }
             if (Source != null)
             {

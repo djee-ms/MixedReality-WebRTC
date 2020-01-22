@@ -189,16 +189,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         protected void OnDisable()
         {
-            var nativePeer = PeerConnection.Peer;
-            if ((Track != null) && (nativePeer != null) && nativePeer.Initialized)
-            {
-                VideoStreamStopped.Invoke();
-                Track.I420AVideoFrameReady -= I420ALocalVideoFrameReady;
-                Track.Transceiver.RemoteTrack = null; //nativePeer.RemoveLocalVideoTrack(Track);
-                Track.Dispose();
-                Track = null;
-                _frameQueue.Clear();
-            }
+            OnPeerShutdown();
         }
 
         private void OnPeerInitialized()
@@ -274,6 +265,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // accounted for.
             nativePeer.PreferredVideoCodec = PreferredVideoCodec;
 
+            _frameQueue.Clear();
+
             // Ensure the track has a valid name
             string trackName = TrackName;
             if (trackName.Length == 0)
@@ -283,10 +276,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
             SdpTokenAttribute.Validate(trackName, allowEmpty: false);
 
-            _frameQueue.Clear();
-
-            var transceiver = nativePeer.AddVideoTransceiver();
-
+            // Create the track
             var trackSettings = new LocalVideoTrackSettings
             {
                 trackName = trackName,
@@ -302,8 +292,21 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             Track = await LocalVideoTrack.CreateFromDeviceAsync(trackSettings);
             if (Track != null)
             {
+                VideoStreamStarted.Invoke(this);
+            }
+
+            // Set the track on the transceiver to start streaming media to the remote peer
+            var transceiverSettings = new VideoTransceiverInitSettings
+            {
+                InitialDesiredDirection = Transceiver.Direction.SendReceive,
+                // Use the same name for the track and the transceiver
+                Name = trackName
+            };
+            var transceiver = nativePeer.AddVideoTransceiver(transceiverSettings);
+            if (Track != null)
+            {
                 transceiver.LocalTrack = Track;
-                VideoStreamStarted.Invoke();
+                VideoStreamStarted.Invoke(this);
             }
         }
 
@@ -311,10 +314,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             if (Track != null)
             {
-                VideoStreamStopped.Invoke();
+                VideoStreamStopped.Invoke(this);
                 Track.I420AVideoFrameReady -= I420ALocalVideoFrameReady;
-                var nativePeer = PeerConnection.Peer;
-                Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalVideoTrack(Track);
+                Track.Transceiver.LocalTrack = null;
                 Track.Dispose();
                 Track = null;
             }

@@ -36,6 +36,18 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public bool IsPlaying { get; private set; }
 
         /// <summary>
+        /// Name of the transceiver this component should pair with.
+        /// When a remote track associated with a transceiver with that name is added to the peer connection,
+        /// this component will automatically pair with that added track.
+        /// </summary>
+        public string TargetTransceiverName;
+
+        /// <summary>
+        /// Remote audio track receiving data from the remote peer.
+        /// </summary>
+        public RemoteAudioTrack Track { get; private set; } = null;
+
+        /// <summary>
         /// Internal queue used to marshal work back to the main Unity thread.
         /// </summary>
         private ConcurrentQueue<Action> _mainThreadWorkQueue = new ConcurrentQueue<Action>();
@@ -78,6 +90,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 IsPlaying = false;
                 //PeerConnection.Peer.RemoteAudioFrameReady -= RemoteAudioFrameReady;
+            }
+            if (Track != null)
+            {
+                AudioStreamStopped.Invoke();
+                Track.Transceiver.LocalTrack = null;
+                Track.Dispose();
+                Track = null;
             }
         }
 

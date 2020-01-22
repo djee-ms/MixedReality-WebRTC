@@ -207,6 +207,32 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         private WebRTC.PeerConnection _nativePeer;
 
+        private class AudioStreamInfo
+        {
+            public LocalAudioSource LocalSource = null;
+            public RemoteAudioSource RemoteSource = null;
+            public AudioTransceiver Transceiver = null;
+        }
+
+        private class VideoStreamInfo
+        {
+            public LocalVideoSource LocalSource = null;
+            public RemoteVideoSource RemoteSource = null;
+            public VideoTransceiver Transceiver = null;
+        }
+
+        /// <summary>
+        /// Map of stream name to audio stream info.
+        /// </summary>
+        private Dictionary<string, AudioStreamInfo> _audioStreams = new Dictionary<string, AudioStreamInfo>();
+
+        /// <summary>
+        /// Map of stream name to video stream info.
+        /// </summary>
+        private Dictionary<string, VideoStreamInfo> _videoStreams = new Dictionary<string, VideoStreamInfo>();
+
+        private bool _suspendOffers = false;
+
         #endregion
 
 
@@ -233,8 +259,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (_nativePeer == null)
             {
                 _nativePeer = new WebRTC.PeerConnection();
-                _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
-                _nativePeer.IceCandidateReadytoSend += Signaler_IceCandidateReadytoSend;
+                if (Signaler != null)
+                {
+                    _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
+                    _nativePeer.IceCandidateReadytoSend += Signaler_IceCandidateReadytoSend;
+                }
             }
 
             // if the peer is already set, we refuse to initialize again.
@@ -287,6 +316,279 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 #endif
         }
 
+        public void RegisterSource(LocalAudioSource source)
+        {
+            if (_audioStreams.TryGetValue(source.TrackName, out AudioStreamInfo streamInfo))
+            {
+                streamInfo.LocalSource = source;
+            }
+            else
+            {
+                _audioStreams.Add(source.TrackName, new AudioStreamInfo { LocalSource = source });
+            }
+            Peer_RenegotiationNeeded();
+        }
+
+        public void RegisterSource(LocalVideoSource source)
+        {
+            if (_videoStreams.TryGetValue(source.TrackName, out VideoStreamInfo streamInfo))
+            {
+                streamInfo.LocalSource = source;
+            }
+            else
+            {
+                _videoStreams.Add(source.TrackName, new VideoStreamInfo { LocalSource = source });
+            }
+            Peer_RenegotiationNeeded();
+        }
+
+        public void RegisterSource(RemoteAudioSource source)
+        {
+            if (_audioStreams.TryGetValue(source.TargetTransceiverName, out AudioStreamInfo streamInfo))
+            {
+                streamInfo.RemoteSource = source;
+            }
+            else
+            {
+                _audioStreams.Add(source.TargetTransceiverName, new AudioStreamInfo { RemoteSource = source });
+            }
+            Peer_RenegotiationNeeded();
+        }
+
+        public void RegisterSource(RemoteVideoSource source)
+        {
+            if (_videoStreams.TryGetValue(source.TargetTransceiverName, out VideoStreamInfo streamInfo))
+            {
+                streamInfo.RemoteSource = source;
+            }
+            else
+            {
+                _videoStreams.Add(source.TargetTransceiverName, new VideoStreamInfo { RemoteSource = source });
+            }
+            Peer_RenegotiationNeeded();
+        }
+
+        /// <summary>
+        /// Create a new connection offer, either for a first connection to the remote peer, or for
+        /// renegotiating some new or removed tracks.
+        /// </summary>
+        public bool CreateOffer()
+        {
+            if (Peer == null)
+            {
+                throw new InvalidOperationException("Cannot create an offer with an uninitialized peer.");
+            }
+
+            // Batch all changes into a single offer
+            _suspendOffers = true;
+
+            // Add all new transceivers for local tracks
+            foreach (var pair in _audioStreams)
+            {
+                var streamId = pair.Key;
+                var streamInfo = pair.Value;
+
+                // Compute the transceiver desired direction based on what the local peer expects, both in terms
+                // of sending and in terms of receiving. Note that this means the remote peer will not be able to
+                // send any data if the local peer did not add a remote source first.
+                bool hasSend = (streamInfo.LocalSource?.Track != null);
+                bool hasRecv = (streamInfo.RemoteSource?.Track != null);
+                var dir = (hasSend ? (hasRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
+                    : (hasRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+
+                // Create a new transceiver if none exists
+                if (streamInfo.Transceiver == null)
+                {
+                    var settings = new AudioTransceiverInitSettings
+                    {
+                        Name = streamId,
+                        InitialDesiredDirection = dir
+                    };
+                    streamInfo.Transceiver = _nativePeer.AddAudioTransceiver(settings);
+                }
+                else
+                {
+                    streamInfo.Transceiver.DesiredDirection = dir;
+                }
+
+                // Associate the tracks with the transceiver, if any
+                if (hasSend)
+                {
+                    streamInfo.Transceiver.LocalTrack = streamInfo.LocalSource.Track;
+                }
+                if (hasRecv)
+                {
+                    streamInfo.Transceiver.RemoteTrack = streamInfo.RemoteSource.Track;
+                }
+            }
+            foreach (var pair in _videoStreams)
+            {
+                var streamId = pair.Key;
+                var streamInfo = pair.Value;
+
+                // Compute the transceiver desired direction based on what the local peer expects, both in terms
+                // of sending and in terms of receiving. Note that this means the remote peer will not be able to
+                // send any data if the local peer did not add a remote source first.
+                bool hasSend = (streamInfo.LocalSource?.Track != null);
+                bool hasRecv = (streamInfo.RemoteSource?.Track != null);
+                var dir = (hasSend ? (hasRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
+                    : (hasRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+
+                // Create a new transceiver if none exists
+                if (streamInfo.Transceiver == null)
+                {
+                    var settings = new VideoTransceiverInitSettings
+                    {
+                        Name = streamId,
+                        InitialDesiredDirection = dir
+                    };
+                    streamInfo.Transceiver = _nativePeer.AddVideoTransceiver(settings);
+                }
+                else
+                {
+                    streamInfo.Transceiver.DesiredDirection = dir;
+                }
+
+                // Associate the tracks with the transceiver, if any
+                if (hasSend)
+                {
+                    streamInfo.Transceiver.LocalTrack = streamInfo.LocalSource.Track;
+                }
+                if (hasRecv)
+                {
+                    streamInfo.Transceiver.RemoteTrack = streamInfo.RemoteSource.Track;
+                }
+            }
+
+            // Create the offer
+            _suspendOffers = false;
+            return _nativePeer.CreateOffer();
+        }
+
+        /// <summary>
+        /// Create an answer to a previously received offer.
+        /// </summary>
+        public bool CreateAnswer()
+        {
+            if (Peer == null)
+            {
+                throw new InvalidOperationException("Cannot create an offer with an uninitialized peer.");
+            }
+
+            // Remote description has been applied to the peer connection, creating any transceiver that the
+            // remote peer wants added. Now match that list with the list of local streams that this peer wants
+            // added, and add the ones missing, while updating the stream info for existing ones.
+            {
+                var transceivers = _nativePeer.AudioTransceivers;
+                foreach (var pair in _audioStreams)
+                {
+                    var streamId = pair.Key;
+                    var streamInfo = pair.Value;
+
+                    // Note: do not use the ?. operator with Unity objects
+                    bool hasSend = (streamInfo.LocalSource != null) && (streamInfo.LocalSource.Track != null);
+                    bool hasRecv = (streamInfo.RemoteSource != null) && (streamInfo.RemoteSource.Track != null);
+
+                    // Try to find a matching transceiver, or create a new one
+                    var tr = transceivers.Find(t => t.Name == streamId);
+                    if (tr != null)
+                    {
+                        streamInfo.Transceiver = tr;
+
+                        // Check compatibility of remote offer with the sources currently registered on this peer
+                        var negDir = tr.NegotiatedDirection;
+                        if (hasSend && ((negDir == Transceiver.Direction.Inactive) || (negDir == Transceiver.Direction.ReceiveOnly)))
+                        {
+                            Debug.LogWarning($"Cannot pair local audio source {streamInfo.LocalSource.name} with the remote transceiver {tr.Name} because the remote peer refused to receive.");
+                        }
+                        if (hasRecv && ((negDir == Transceiver.Direction.Inactive) || (negDir == Transceiver.Direction.SendOnly)))
+                        {
+                            Debug.LogWarning($"Cannot pair remote audio source {streamInfo.RemoteSource.name} with the remote transceiver {tr.Name} because the remote peer refused to send.");
+                        }
+                    }
+                    else
+                    {
+                        // Create a new transceiver for the video stream
+                        var dir = (hasSend ? (hasRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
+                            : (hasRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+                        var settings = new AudioTransceiverInitSettings
+                        {
+                            Name = streamId,
+                            InitialDesiredDirection = dir
+                        };
+                        tr = _nativePeer.AddAudioTransceiver(settings);
+                        streamInfo.Transceiver = tr;
+                    }
+
+                    // Associate the tracks with the transceiver, if any
+                    if (hasSend)
+                    {
+                        tr.LocalTrack = streamInfo.LocalSource.Track;
+                    }
+                    if (hasRecv)
+                    {
+                        tr.RemoteTrack = streamInfo.RemoteSource.Track;
+                    }
+                }
+            }
+            {
+                var transceivers = _nativePeer.VideoTransceivers;
+                foreach (var pair in _videoStreams)
+                {
+                    var streamId = pair.Key;
+                    var streamInfo = pair.Value;
+
+                    // Note: do not use the ?. operator with Unity objects
+                    bool hasSend = (streamInfo.LocalSource != null) && (streamInfo.LocalSource.Track != null);
+                    bool hasRecv = (streamInfo.RemoteSource != null) && (streamInfo.RemoteSource.Track != null);
+
+                    // Try to find a matching transceiver, or create a new one
+                    var tr = transceivers.Find(t => t.Name == streamId);
+                    if (tr != null)
+                    {
+                        streamInfo.Transceiver = tr;
+
+                        // Check compatibility of remote offer with the sources currently registered on this peer
+                        var negDir = tr.NegotiatedDirection;
+                        if (hasSend && ((negDir == Transceiver.Direction.Inactive) || (negDir == Transceiver.Direction.ReceiveOnly)))
+                        {
+                            Debug.LogWarning($"Cannot pair local video source {streamInfo.LocalSource.name} with the remote transceiver {tr.Name} because the remote peer refused to receive.");
+                        }
+                        if (hasRecv && ((negDir == Transceiver.Direction.Inactive) || (negDir == Transceiver.Direction.SendOnly)))
+                        {
+                            Debug.LogWarning($"Cannot pair remote video source {streamInfo.RemoteSource.name} with the remote transceiver {tr.Name} because the remote peer refused to send.");
+                        }
+                    }
+                    else
+                    {
+                        // Create a new transceiver for the video stream
+                        var dir = (hasSend ? (hasRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
+                            : (hasRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+                        var settings = new VideoTransceiverInitSettings
+                        {
+                            Name = streamId,
+                            InitialDesiredDirection = dir
+                        };
+                        tr = _nativePeer.AddVideoTransceiver(settings);
+                        streamInfo.Transceiver = tr;
+                    }
+
+                    // Associate the tracks with the transceiver, if any
+                    if (hasSend)
+                    {
+                        tr.LocalTrack = streamInfo.LocalSource.Track;
+                    }
+                    if (hasRecv)
+                    {
+                        tr.RemoteTrack = streamInfo.RemoteSource.Track;
+                    }
+                }
+            }
+
+            // Create the answer
+            return _nativePeer.CreateAnswer();
+        }
+
         /// <summary>
         /// Uninitialize the underlying WebRTC library, effectively cleaning up the allocated peer connection.
         /// </summary>
@@ -325,8 +627,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private void Awake()
         {
             _nativePeer = new WebRTC.PeerConnection();
-            _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
-            _nativePeer.IceCandidateReadytoSend += Signaler_IceCandidateReadytoSend;
+            if (Signaler != null)
+            {
+                _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
+                _nativePeer.IceCandidateReadytoSend += Signaler_IceCandidateReadytoSend;
+            }
         }
 
         /// <summary>
@@ -343,9 +648,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
 
             // List video capture devices to Unity console
-            GetVideoCaptureDevicesAsync().ContinueWith((prevTask) => {
+            GetVideoCaptureDevicesAsync().ContinueWith((prevTask) =>
+            {
                 var devices = prevTask.Result;
-                _mainThreadWorkQueue.Enqueue(() => {
+                _mainThreadWorkQueue.Enqueue(() =>
+                {
                     foreach (var device in devices)
                     {
                         Debug.Log($"Found video capture device '{device.name}' (id:{device.id}).");
@@ -382,13 +689,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         private void OnDestroy()
         {
-            _nativePeer.IceCandidateReadytoSend -= Signaler_IceCandidateReadytoSend;
-            _nativePeer.LocalSdpReadytoSend -= Signaler_LocalSdpReadyToSend;
+            if (Signaler != null)
+            {
+                _nativePeer.IceCandidateReadytoSend -= Signaler_IceCandidateReadytoSend;
+                _nativePeer.LocalSdpReadytoSend -= Signaler_LocalSdpReadyToSend;
+            }
             Uninitialize();
             OnError.RemoveListener(OnError_Listener);
         }
 
-        #endregion
+#endregion
 
 
         #region Private implementation
@@ -451,12 +761,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     TurnPassword = IceCredential
                 });
             }
-            return _nativePeer.InitializeAsync(config, token).ContinueWith((initTask) => {
+            return _nativePeer.InitializeAsync(config, token).ContinueWith((initTask) =>
+            {
                 token.ThrowIfCancellationRequested();
 
                 if (initTask.Exception != null)
                 {
-                    _mainThreadWorkQueue.Enqueue(() => {
+                    _mainThreadWorkQueue.Enqueue(() =>
+                    {
                         var errorMessage = new StringBuilder();
                         errorMessage.Append("WebRTC plugin initializing failed. See full log for exception details.\n");
                         Exception ex = initTask.Exception;
@@ -521,30 +833,30 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             Signaler.SendMessageAsync(message);
         }
 
-        private void Signaler_OnMessage(Signaler.Message message)
+        private async void Signaler_OnMessage(Signaler.Message message)
         {
             switch (message.MessageType)
             {
-            case Signaler.Message.WireMessageType.Offer:
-                _nativePeer.SetRemoteDescription("offer", message.Data);
-                // If we get an offer, we immediately send an answer back
-                _nativePeer.CreateAnswer();
-                break;
+                case Signaler.Message.WireMessageType.Offer:
+                    await _nativePeer.SetRemoteDescriptionAsync("offer", message.Data);
+                    // If we get an offer, we immediately send an answer back
+                    _nativePeer.CreateAnswer();
+                    break;
 
-            case Signaler.Message.WireMessageType.Answer:
-                _nativePeer.SetRemoteDescription("answer", message.Data);
-                break;
+                case Signaler.Message.WireMessageType.Answer:
+                    await _nativePeer.SetRemoteDescriptionAsync("answer", message.Data);
+                    break;
 
-            case Signaler.Message.WireMessageType.Ice:
-                // TODO - This is NodeDSS-specific
-                // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
-                var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
-                // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
-                _nativePeer.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
-                break;
+                case Signaler.Message.WireMessageType.Ice:
+                    // TODO - This is NodeDSS-specific
+                    // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
+                    var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
+                    // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
+                    _nativePeer.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
+                    break;
 
-            default:
-                throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
+                default:
+                    throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
             }
         }
 
@@ -552,9 +864,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             // If already connected, update the connection on the fly.
             // If not, wait for user action and don't automatically connect.
-            if (_nativePeer.IsConnected)
+            if (_nativePeer.IsConnected && !_suspendOffers)
             {
-                _nativePeer.CreateOffer();
+                CreateOffer();
             }
         }
 

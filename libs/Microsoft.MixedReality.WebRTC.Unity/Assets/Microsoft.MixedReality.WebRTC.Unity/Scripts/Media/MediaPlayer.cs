@@ -112,17 +112,17 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
         }
 
-        private void VideoStreamStarted()
+        private void VideoStreamStarted(VideoSource source)
         {
             FrameQueue = VideoSource.FrameQueue;
         }
 
-        private void VideoStreamStopped()
+        private void VideoStreamStopped(VideoSource source)
         {
             FrameQueue = null;
 
             // Clear the video display to not confuse the user who could otherwise
-            // think that the video is still playing but is lagging.
+            // think that the video is still playing but is lagging/frozen.
             CreateEmptyVideoTextures();
         }
 

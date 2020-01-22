@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
@@ -34,10 +35,20 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public PeerConnection PeerConnection;
 
         /// <summary>
+        /// Name of the track. This will be sent in the SDP messages.
+        /// </summary>
+        [Tooltip("SDP track name.")]
+        [SdpToken(allowEmpty: true)]
+        public string TrackName;
+
+        /// <summary>
         /// Automatically register as an audio track when the peer connection is ready.
         /// </summary>
         public bool AutoAddTrack = true;
 
+        /// <summary>
+        /// Audio track added to the peer connection that this component encapsulates.
+        /// </summary>
         public LocalAudioTrack Track { get; private set; } = null;
 
         /// <summary>
@@ -110,18 +121,35 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 // accounted for.
                 nativePeer.PreferredAudioCodec = PreferredAudioCodec;
 
-                //FrameQueue.Clear();
-
-                var transceiver = nativePeer.AddAudioTransceiver();
-
-                var settings = new LocalAudioTrackSettings
+                // Ensure the track has a valid name
+                string trackName = TrackName;
+                if (trackName.Length == 0)
                 {
-                    trackName = "LocalAudioSource", //< TODO
-                };
-                Track = await LocalAudioTrack.CreateFromDeviceAsync(settings);
-                transceiver.LocalTrack = Track;
+                    trackName = Guid.NewGuid().ToString();
+                    TrackName = trackName;
+                }
+                SdpTokenAttribute.Validate(trackName, allowEmpty: false);
 
-                AudioStreamStarted.Invoke();
+                var transceiverSettings = new AudioTransceiverInitSettings
+                {
+                    InitialDesiredDirection = Transceiver.Direction.SendReceive,
+                    // Use the same name for the track and the transceiver
+                    Name = trackName
+                };
+                var transceiver = nativePeer.AddAudioTransceiver(transceiverSettings);
+
+                var trackSettings = new LocalAudioTrackSettings
+                {
+                    trackName = trackName
+                };
+                Track = await LocalAudioTrack.CreateFromDeviceAsync(trackSettings);
+
+                // Set the track on the transceiver to start streaming media to the remote peer
+                if (Track != null)
+                {
+                    transceiver.LocalTrack = Track;
+                    AudioStreamStarted.Invoke();
+                }
             }
         }
 
@@ -131,8 +159,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 AudioStreamStopped.Invoke();
                 //Track.AudioFrameReady -= AudioFrameReady;
-                var nativePeer = PeerConnection.Peer;
-                Track.Transceiver.LocalTrack = null; // nativePeer.RemoveLocalAudioTrack(Track);
+                Track.Transceiver.LocalTrack = null;
                 Track.Dispose();
                 Track = null;
             }

@@ -11,14 +11,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// Unity event corresponding to a new video stream being started.
     /// </summary>
     [Serializable]
-    public class VideoStreamStartedEvent : UnityEvent
+    public class VideoStreamStartedEvent : UnityEvent<VideoSource>
     { };
 
     /// <summary>
     /// Unity event corresponding to an on-going video stream being stopped.
     /// </summary>
     [Serializable]
-    public class VideoStreamStoppedEvent : UnityEvent
+    public class VideoStreamStoppedEvent : UnityEvent<VideoSource>
     { };
 
     /// <summary>
