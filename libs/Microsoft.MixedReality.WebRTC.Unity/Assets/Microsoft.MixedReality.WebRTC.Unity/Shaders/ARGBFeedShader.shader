@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-Shader "Video/ARGBFeedShader"
+Shader "Video/ARGBFeedShader (standard lit)"
 {
     Properties
     {
-        [HideInEditor] _MainTex("Main Tex", 2D) = "white" {}
+        [HideInEditor] _MainTex("Main Tex", 2D) = "black" {}
     }
     SubShader
     {

@@ -6,9 +6,9 @@ Shader "Video/YUVFeedShader (standard lit)"
     Properties
     {
         [Toggle(MIRROR)] _Mirror("Horizontal Mirror", Float) = 0
-        [HideInEditor][NoScaleOffset] _YPlane("Y plane", 2D) = "white" {}
-        [HideInEditor][NoScaleOffset] _UPlane("U plane", 2D) = "white" {}
-        [HideInEditor][NoScaleOffset] _VPlane("V plane", 2D) = "white" {}
+        [HideInEditor][NoScaleOffset] _YPlane("Y plane", 2D) = "black" {}
+        [HideInEditor][NoScaleOffset] _UPlane("U plane", 2D) = "gray" {}
+        [HideInEditor][NoScaleOffset] _VPlane("V plane", 2D) = "gray" {}
     }
 
     SubShader
