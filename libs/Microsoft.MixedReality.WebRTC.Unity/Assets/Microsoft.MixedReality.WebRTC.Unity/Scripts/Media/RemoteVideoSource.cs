@@ -110,7 +110,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 VideoStreamStopped.Invoke(this);
                 Track.Transceiver.LocalTrack = null;
-                Track.Dispose();
                 Track = null;
             }
         }

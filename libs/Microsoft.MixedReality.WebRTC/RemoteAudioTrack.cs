@@ -12,7 +12,7 @@ namespace Microsoft.MixedReality.WebRTC
     /// <summary>
     /// Audio track receiving audio frames from the remote peer.
     /// </summary>
-    public class RemoteAudioTrack : IDisposable
+    public class RemoteAudioTrack
     {
         /// <summary>
         /// Peer connection this audio track is added to, if any.
@@ -114,8 +114,10 @@ namespace Microsoft.MixedReality.WebRTC
             }
         }
 
-        /// <inheritdoc/>
-        public void Dispose()
+        /// <summary>
+        /// Dispose of the native track. Invoked by its owner (<see cref="PeerConnection"/>).
+        /// </summary>
+        internal void Dispose()
         {
             if (_nativeHandle.IsClosed)
             {

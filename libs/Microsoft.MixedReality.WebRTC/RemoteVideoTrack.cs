@@ -12,7 +12,7 @@ namespace Microsoft.MixedReality.WebRTC
     /// <summary>
     /// Video track receiving video frames from the remote peer.
     /// </summary>
-    public class RemoteVideoTrack : IDisposable
+    public class RemoteVideoTrack
     {
         /// <summary>
         /// Peer connection this video track is added to, if any.
@@ -123,8 +123,10 @@ namespace Microsoft.MixedReality.WebRTC
             }
         }
 
-        /// <inheritdoc/>
-        public void Dispose()
+        /// <summary>
+        /// Dispose of the native track. Invoked by its owner (<see cref="PeerConnection"/>).
+        /// </summary>
+        internal void Dispose()
         {
             if (_nativeHandle.IsClosed)
             {

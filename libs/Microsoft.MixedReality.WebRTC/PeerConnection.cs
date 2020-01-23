@@ -927,7 +927,7 @@ namespace Microsoft.MixedReality.WebRTC
             // but will be handled at some point anyway, even if the PeerConnection managed instance is gone.
             _nativePeerhandle.Close();
 
-            // Notify tracks they have been removed
+            // Notify local tracks they have been removed
             int count = LocalAudioTracks.Count;
             while (count > 0)
             {
@@ -945,14 +945,18 @@ namespace Microsoft.MixedReality.WebRTC
             count = RemoteAudioTracks.Count;
             while (count > 0)
             {
-                RemoteAudioTracks[count - 1].OnTrackRemoved(this);
+                var track = RemoteAudioTracks[count - 1];
+                track.OnTrackRemoved(this);
+                track.Dispose(); // remote tracks are owned
                 --count;
             }
             Debug.Assert(RemoteAudioTracks.Count == 0);
             count = RemoteVideoTracks.Count;
             while (count > 0)
             {
-                RemoteVideoTracks[count - 1].OnTrackRemoved(this);
+                var track = RemoteVideoTracks[count - 1];
+                track.OnTrackRemoved(this);
+                track.Dispose(); // remote tracks are owned
                 --count;
             }
             Debug.Assert(RemoteVideoTracks.Count == 0);

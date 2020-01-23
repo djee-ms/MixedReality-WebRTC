@@ -95,7 +95,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 AudioStreamStopped.Invoke();
                 Track.Transceiver.LocalTrack = null;
-                Track.Dispose();
                 Track = null;
             }
         }
