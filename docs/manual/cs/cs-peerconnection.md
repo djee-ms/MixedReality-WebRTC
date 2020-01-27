@@ -12,6 +12,7 @@ A [`PeerConnection`](xref:Microsoft.MixedReality.WebRTC.PeerConnection) instance
 [`InitializeAsync()`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.InitializeAsync*) takes a [`PeerConnectionConfiguration`](xref:Microsoft.MixedReality.WebRTC.PeerConnectionConfiguration) and a [`CancellationToken`](xref:System.Threading.CancellationToken). The former allows configuring the peer connection about to be established, while the later allows cancelling that task while it is being processed.
 
 [`PeerConnectionConfiguration`](xref:Microsoft.MixedReality.WebRTC.PeerConnectionConfiguration) contains several fields, but the most important are:
+
 - [`IceServers`](xref:Microsoft.MixedReality.WebRTC.PeerConnectionConfiguration.IceServers) contains an optional collection of STUN and/or TURN servers used by the Interactive Connectivity Establishment (ICE) to establish a connection with the remote peer through routing devices (NATs). Without these, only direct connections to the remote peer can be established, which can be enough if the application knows in advance the network topology surrounding the two peers, but is generally recommended otherwise to increase the chances of establishing a connection over the Internet.
 - [`SdpSemantic`](xref:Microsoft.MixedReality.WebRTC.PeerConnectionConfiguration.SdpSemantic) describes the semantic used by the Session Description Protocol (SDP) while trying to establish a connection. This is a compatibility feature, which allows connecting with older peers supporting only the deprecated _Plan B_ semantic. New code should always use the default _Unified Plan_, which is the only one accepted by the WebRTC 1.0 standard.
 
@@ -43,6 +44,7 @@ In general it is recommended to subscribe to these events before starting to est
 | [`RenegotiationNeeded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.IceCandidateReadytoSend) | Recommended | Invoked when the peer connection detected that the current session is obsolete, and needs to be renegotiated. This is generally the result of some media tracks or data channels being added or removed, and **must** be handled to make those changes available to the remote peer. However, it is perfectly acceptable to ignore **some** of those events, if several changes are expected in a short period of time, to avoid triggering multiple unnecessary renegotiations. However a renegotiation eventually needs to happen for the newly added tracks and channel to become open. |
 
 *_Status_ indicates the recommended subscription status for a working peer connection:
+
 - **Mandatory** means those events must be handled, otherwise the connection cannot be established.
 - **Recommended** means those events are typically handled, although not mandatory.
 - **Optional** means those events are informational only, and it is entirely optional to subscribe to them.
@@ -51,13 +53,16 @@ In general it is recommended to subscribe to these events before starting to est
 
 | Event | Status* | Description |
 |---|---|---|
-| [`TrackAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.TrackAdded) | Optional | Invoked when a media track (audio or video) was added on the remote peer, and received on the local peer after a renegotiation. This only concerns remotely-created tracks. Tracks whose creation was initied locally with _e.g._ [`AddLocalVideoTrackAsync()`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AddLocalVideoTrackAsync(Microsoft.MixedReality.WebRTC.PeerConnection.LocalVideoTrackSettings)) do not generate a [`TrackAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.TrackAdded) event. |
-| [`TrackRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.TrackRemoved) | Optional | Invoked when a media track (audio or video) was removed on the remote peer, and a remove message was received on the local peer after a renegotiation. This only concerns remotely-deleted tracks. Tracks removed locally with _e.g._ [`RemoveLocalVideoTrack(LocalVideoTrack)`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.RemoveLocalVideoTrack(Microsoft.MixedReality.WebRTC.LocalVideoTrack)) do not generate a [`TrackRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.TrackRemoved) event. |
+| [`AudioTrackAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AudioTrackAdded) | Recommended | Invoked when an audio track was added on the remote peer, and received on the local peer after a renegotiation. This only concerns remotely-added tracks. Tracks whose creation was initied locally by changing the [`AudioTransceiver.DesiredDirection`](xref:Microsoft.MixedReality.WebRTC.AudioTransceiver.DesiredDirection) do not generate an [`AudioTrackAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AudioTrackAdded) event. |
+| [`VideoTrackAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.VideoTrackAdded) | Optional | Same as [`AudioTrackAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AudioTrackAdded), but for remote video tracks. |
+| [`AudioTrackRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AudioTrackRemoved) | Recommended | Invoked when an audio track was removed on the remote peer, and a remove message was received on the local peer after a renegotiation. This only concerns remotely-removed tracks. Tracks removed locally by changing the [`AudioTransceiver.DesiredDirection`](xref:Microsoft.MixedReality.WebRTC.AudioTransceiver.DesiredDirection) do not generate an [`AudioTrackRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AudioTrackRemoved) event. |
+| [`VideoTrackRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.VideoTrackRemoved) | Optional | Same as [`AudioTrackRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AudioTrackRemoved), but for remote video tracks. |
 | [`DataChannelAdded`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.DataChannelAdded) | Optional | Invoked when a data channel was added to the local peer connection. This is always fired, irrelevant of how the data channel was initially created (in-band or out-of-band). |
 | <span style="white-space: pre; word-break: break-word">[`DataChannelRemoved`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.DataChannelRemoved)</span> | Optional | Invoked when a data channel was removed from the local peer connection. This is always fired, irrelevant of how the data channel was initially created (in-band or out-of-band). |
 
 *_Status_ - See above.
 
+<!--
 ### Frame events
 
 | Event | Status* | Description |
@@ -70,4 +75,4 @@ In general it is recommended to subscribe to these events before starting to est
 *_Status_ - See above.
 
 > [!NOTE]
-> It is generally recommended to use the I420 callbacks instead of the ARGB ones. Even in situations where the processing (_e.g._ local rendering) requires ARGB frames, I420 frames are smaller thanks to the chroma downsampling, so faster to upload to GPU. And GPU-based I420-to-ARGB conversion via a custom pixel shader (fragment shader) is more efficient than the CPU conversion provided by the ARGB callbacks, even with the use of SIMD. See [`YUVFeedShaderUnlit.shader`](https://github.com/microsoft/MixedReality-WebRTC/blob/master/libs/Microsoft.MixedReality.WebRTC.Unity/Assets/Microsoft.MixedReality.WebRTC.Unity/Shaders/YUVFeedShaderUnlit.shader) in the Unity integration for an example of such conversion shader.
+> It is generally recommended to use the I420 callbacks instead of the ARGB ones. Even in situations where the processing (_e.g._ local rendering) requires ARGB frames, I420 frames are smaller thanks to the chroma downsampling, so faster to upload to GPU. And GPU-based I420-to-ARGB conversion via a custom pixel shader (fragment shader) is more efficient than the CPU conversion provided by the ARGB callbacks, even with the use of SIMD. See [`YUVFeedShaderUnlit.shader`](https://github.com/microsoft/MixedReality-WebRTC/blob/master/libs/Microsoft.MixedReality.WebRTC.Unity/Assets/Microsoft.MixedReality.WebRTC.Unity/Shaders/YUVFeedShaderUnlit.shader) in the Unity integration for an example of such conversion shader. -->

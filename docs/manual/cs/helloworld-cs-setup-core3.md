@@ -4,6 +4,7 @@ In this tutorial we use [.NET Core 3.0](https://dotnet.microsoft.com/download/do
 
 > [!Note]
 > This tutorial assumes that the host device where the app will be running during the tutorial has access to:
+>
 > - a webcam, or any other video capture device recognized by WebRTC
 > - a microphone, or any other audio capture device recognized by WebRTC
 
@@ -18,11 +19,12 @@ Download the latest .NET Core 3.0 **SDK** (and not Runtime) from its [download p
 
 Open a terminal and use the `dotnet` command to create a new project from the `console` template. We will name this tutorial project `TestNetCoreConsole`.
 
-```
+```cmd
 dotnet new console --name TestNetCoreConsole
 ```
 
 This generates a folder named `TestNetCoreConsole` which contains the following notable files:
+
 - **`TestNetCoreConsole.csproj`** : The C# project
 - **`Program.cs`** : The C# source code for the application
 
@@ -105,7 +107,7 @@ Launch the application again. This time the terminal window shows a list of devi
 Found webcam <some webcam name> (id: <some long ID>)
 ```
 
-Note that there might be multiple lines if multiple capture devices are available, which is unusual but can happen _e.g._ if you plug a USB webcam into a laptop which already has an integrated webcam. In general the first capture device listed will be the default one used by WebRTC, although it is possible to explicitly select a device (see [`PeerConnection.AddLocalVideoTrackAsync()`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.AddLocalVideoTrackAsync(Microsoft.MixedReality.WebRTC.PeerConnection.LocalVideoTrackSettings)) for more details).
+Note that there might be multiple lines if multiple capture devices are available, which is unusual but can happen _e.g._ if you plug a USB webcam into a laptop which already has an integrated webcam. In general the first capture device listed will be the default one used by WebRTC, although it is possible to explicitly select a device (see [`LocalVideoTrack.CreateFromDeviceAsync()`](xref:Microsoft.MixedReality.WebRTC.LocalVideoTrack.CreateFromDeviceAsync(Microsoft.MixedReality.WebRTC.LocalVideoTrackSettings)) for more details).
 
 ----
 
