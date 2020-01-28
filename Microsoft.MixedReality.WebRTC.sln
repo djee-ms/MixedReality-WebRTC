@@ -5,28 +5,28 @@ VisualStudioVersion = 16.0.28917.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.MixedReality.WebRTC", "libs\Microsoft.MixedReality.WebRTC\Microsoft.MixedReality.WebRTC.csproj", "{BD9DCE7E-7159-4DAA-AAEB-71A8261C02FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.MixedReality.WebRTC.TestAppUWP", "examples\TestAppUwp\Microsoft.MixedReality.WebRTC.TestAppUWP.csproj", "{12C27383-118D-46F8-B025-BE44F42311A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAppUWP", "examples\TestAppUwp\TestAppUWP.csproj", "{12C27383-118D-46F8-B025-BE44F42311A0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D} = {0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Native.UWP", "libs\Microsoft.MixedReality.WebRTC.Native\src\uwp\Microsoft.MixedReality.WebRTC.Native.UWP.vcxproj", "{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Native.UWP", "libs\Microsoft.MixedReality.WebRTC.Native\src\uwp\Microsoft.MixedReality.WebRTC.Native.UWP.vcxproj", "{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Native.Win32", "libs\Microsoft.MixedReality.WebRTC.Native\src\win32\Microsoft.MixedReality.WebRTC.Native.Win32.vcxproj", "{928899BC-F131-4343-A1AB-72F3A5787E41}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Native.Desktop", "libs\Microsoft.MixedReality.WebRTC.Native\src\win32\Microsoft.MixedReality.WebRTC.Native.Win32.vcxproj", "{928899BC-F131-4343-A1AB-72F3A5787E41}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.MixedReality.WebRTC.Tests", "tests\Microsoft.MixedReality.WebRTC.Tests\Microsoft.MixedReality.WebRTC.Tests.csproj", "{70AB2CE0-D35D-4911-AC83-545A611EA930}"
 	ProjectSection(ProjectDependencies) = postProject
 		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Native.Tests", "libs\Microsoft.MixedReality.WebRTC.Native\test\Microsoft.MixedReality.WebRTC.Native.Tests.vcxproj", "{6D020425-2E3E-4BA7-BC46-00C8D29081C0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Native.Desktop.Tests", "libs\Microsoft.MixedReality.WebRTC.Native\test\Microsoft.MixedReality.WebRTC.Native.Tests.vcxproj", "{6D020425-2E3E-4BA7-BC46-00C8D29081C0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B32AC033-2CD1-4450-978B-00B16C517DDB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{35C3F3A6-2133-4523-81CA-BDFCE559A98C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{35C3F3A6-2133-4523-81CA-BDFCE559A98C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNetCoreConsole", "examples\TestNetCoreConsole\TestNetCoreConsole.csproj", "{C17D2554-9409-4CC7-8337-E3FBE3CAE415}"
 EndProject
@@ -34,9 +34,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{324D2D56-8AD2-407D-91A7-37DCC9F164B2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Core.Desktop", "libs\Microsoft.MixedReality.WebRTC.Core\tools\build\win32\Microsoft.MixedReality.WebRTC.Core.Desktop.vcxproj", "{A0BE77BA-8B3E-4084-BCC3-C32F7E2BBF74}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core.Desktop", "libs\Microsoft.MixedReality.WebRTC.Core\tools\build\win32\Microsoft.MixedReality.WebRTC.Core.Desktop.vcxproj", "{A0BE77BA-8B3E-4084-BCC3-C32F7E2BBF74}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Core.UWP", "libs\Microsoft.MixedReality.WebRTC.Core\tools\build\uwp\Microsoft.MixedReality.WebRTC.Core.UWP.vcxproj", "{6152E9EC-FCE5-429E-B427-5E61707F5DA7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core.UWP", "libs\Microsoft.MixedReality.WebRTC.Core\tools\build\uwp\Microsoft.MixedReality.WebRTC.Core.UWP.vcxproj", "{6152E9EC-FCE5-429E-B427-5E61707F5DA7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
