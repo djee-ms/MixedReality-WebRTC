@@ -1,10 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license
-// information.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 #pragma once
 
-#include "export.h"
+#include "mrs_export.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 

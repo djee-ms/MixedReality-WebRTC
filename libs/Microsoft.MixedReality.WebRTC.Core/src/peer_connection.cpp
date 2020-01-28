@@ -5,16 +5,15 @@
 // line, to prevent clang-format from reordering it with other headers.
 #include "pch.h"
 
-#include "audio_frame_observer.h"
-#include "data_channel.h"
-#include "local_video_track.h"
+#include "media/audio_frame_observer.h"
+#include "media/data_channel.h"
+#include "media/local_video_track.h"
+#include "media/video_frame_observer.h"
 #include "peer_connection.h"
 #include "sdp_utils.h"
-#include "video_frame_observer.h"
 
-// Internal
-#include "interop/global_factory.h"
-#include "interop/interop_api.h"
+#include "global_factory.h"
+#include "interop_api.h"
 
 #include <functional>
 
@@ -208,8 +207,10 @@ class PeerConnectionImpl : public PeerConnection,
   bool AddIceCandidate(const char* sdp_mid,
                        const int sdp_mline_index,
                        const char* candidate) noexcept override;
-  bool SetRemoteDescription(const char* type,
-                            const char* sdp) noexcept override;
+  bool SetRemoteDescription(
+      const char* type,
+      const char* sdp,
+      RemoteDescriptionAppliedCallback&& callback) noexcept override;
 
   void RegisterConnectedCallback(
       ConnectedCallback&& callback) noexcept override {
@@ -543,7 +544,18 @@ class SessionDescObserver : public webrtc::SetSessionDescriptionObserver {
 struct SetRemoteSessionDescObserver
     : public webrtc::SetRemoteDescriptionObserverInterface {
  public:
-  void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {}
+  SetRemoteSessionDescObserver(
+      PeerConnection::RemoteDescriptionAppliedCallback&& callback)
+      : callback_(std::move(callback)) {}
+
+  void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {
+    if (error.ok()) {
+      callback_();
+    }
+  }
+
+ private:
+  PeerConnection::RemoteDescriptionAppliedCallback&& callback_;
 };
 
 const std::string kAudioVideoStreamId("local_av_stream");
@@ -983,8 +995,10 @@ bool PeerConnectionImpl::IsClosed() const noexcept {
   return (peer_ == nullptr);
 }
 
-bool PeerConnectionImpl::SetRemoteDescription(const char* type,
-                                              const char* sdp) noexcept {
+bool PeerConnectionImpl::SetRemoteDescription(
+    const char* type,
+    const char* sdp,
+    RemoteDescriptionAppliedCallback&& callback) noexcept {
   if (!peer_) {
     return false;
   }
@@ -1005,7 +1019,8 @@ bool PeerConnectionImpl::SetRemoteDescription(const char* type,
   if (!session_description)
     return false;
   rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface> observer =
-      new rtc::RefCountedObject<SetRemoteSessionDescObserver>();
+      new rtc::RefCountedObject<SetRemoteSessionDescObserver>(
+          std::move(callback));
   peer_->SetRemoteDescription(std::move(session_description),
                               std::move(observer));
   return true;

@@ -113,3 +113,23 @@ class ExternalVideoTrackSource : public TrackedObject {
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC
+
+namespace Microsoft::MixedReality::WebRTC::detail {
+
+//
+// Helpers
+//
+
+/// Create an I420A external video track source wrapping the given interop
+/// callback.
+RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceCreateFromI420A(
+    mrsRequestExternalI420AVideoFrameCallback callback,
+    void* user_data);
+
+/// Create an ARGB32 external video track source wrapping the given interop
+/// callback.
+RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceCreateFromArgb32(
+    mrsRequestExternalArgb32VideoFrameCallback callback,
+    void* user_data);
+
+}  // namespace Microsoft::MixedReality::WebRTC::detail

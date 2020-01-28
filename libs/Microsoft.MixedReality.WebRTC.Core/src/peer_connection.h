@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "audio_frame_observer.h"
 #include "callback.h"
-#include "data_channel.h"
+#include "media/audio_frame_observer.h"
+#include "media/data_channel.h"
+#include "media/video_frame_observer.h"
 #include "mrs_errors.h"
 #include "refptr.h"
 #include "tracked_object.h"
-#include "video_frame_observer.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -122,12 +122,16 @@ class PeerConnection : public TrackedObject {
 
   /// Notify the WebRTC engine that an ICE candidate has been received.
   virtual bool AddIceCandidate(const char* sdp_mid,
-                                       const int sdp_mline_index,
-                                       const char* candidate) noexcept = 0;
+                               const int sdp_mline_index,
+                               const char* candidate) noexcept = 0;
+
+  using RemoteDescriptionAppliedCallback = Callback<>;
 
   /// Notify the WebRTC engine that an SDP offer message has been received.
-  virtual bool SetRemoteDescription(const char* type,
-                                            const char* sdp) noexcept = 0;
+  virtual bool SetRemoteDescription(
+      const char* type,
+      const char* sdp,
+      RemoteDescriptionAppliedCallback&& callback) noexcept = 0;
 
   //
   // Connection
@@ -279,8 +283,7 @@ class PeerConnection : public TrackedObject {
   ///
   /// Note: currently a single local audio track is supported per peer
   /// connection.
-  virtual void
-  SetLocalAudioTrackEnabled(bool enabled = true) noexcept = 0;
+  virtual void SetLocalAudioTrackEnabled(bool enabled = true) noexcept = 0;
 
   /// Check if the local audio frame is enabled.
   ///
@@ -323,8 +326,7 @@ class PeerConnection : public TrackedObject {
 
   /// Close and remove a given data channel.
   /// This invokes the DataChannelRemoved callback.
-  virtual void
-  RemoveDataChannel(const DataChannel& data_channel) noexcept = 0;
+  virtual void RemoveDataChannel(const DataChannel& data_channel) noexcept = 0;
 
   /// Close and remove all data channels at once.
   /// This invokes the DataChannelRemoved callback for each data channel.
@@ -333,8 +335,7 @@ class PeerConnection : public TrackedObject {
   /// Notification from a non-negotiated DataChannel that it is open, so that
   /// the PeerConnection can fire a DataChannelAdded event. This is called
   /// automatically by non-negotiated data channels; do not call manually.
-  virtual void
-  OnDataChannelAdded(const DataChannel& data_channel) noexcept = 0;
+  virtual void OnDataChannelAdded(const DataChannel& data_channel) noexcept = 0;
 
   /// Internal use.
   void GetStats(webrtc::RTCStatsCollectorCallback* callback);

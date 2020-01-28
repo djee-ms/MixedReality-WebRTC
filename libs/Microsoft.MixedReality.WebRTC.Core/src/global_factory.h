@@ -3,10 +3,17 @@
 
 #pragma once
 
-#include "export.h"
+#include "mrs_export.h"
 #include "peer_connection.h"
 
 namespace Microsoft::MixedReality::WebRTC {
+
+#if defined(WINUWP)
+// Non-API helper. Returned object can be deleted at any time in theory.
+// In practice because it's provided by a global object it's safe.
+//< TODO - Remove that, clean-up API, this is bad (c).
+rtc::Thread* UnsafeGetWorkerThread();
+#endif
 
 enum class ObjectType : int {
   kPeerConnection,

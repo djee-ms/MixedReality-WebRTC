@@ -4,9 +4,9 @@
 #pragma once
 
 #include "callback.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 #include "tracked_object.h"
-#include "video_frame_observer.h"
+#include "media/video_frame_observer.h"
 
 namespace rtc {
 template <typename T>

@@ -4,16 +4,12 @@
 
 #pragma once
 
-#include <mutex>
-
-#include "api/datachannelinterface.h"
+#include <cstdint>
 
 #include "callback.h"
 #include "data_channel.h"
-#include "str.h"
 
-// Internal
-#include "interop/interop_api.h"
+#include "interop_api.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -30,7 +26,7 @@ class PeerConnection;
 /// re-sending lost packets as many times as needed.
 /// - ordered: data is received by the remote peer in the same order as it is
 /// sent by the local peer.
-class DataChannel : public webrtc::DataChannelObserver {
+class DataChannel {
  public:
   /// Data channel state as marshaled through the public API.
   enum class State : int {
@@ -48,71 +44,78 @@ class DataChannel : public webrtc::DataChannelObserver {
     kClosed = 3
   };
 
-  /// Callback fired on newly available data channel data.
-  using MessageCallback = Callback<const void*, const uint64_t>;
-
-  /// Callback fired when data buffering changed.
-  /// The first parameter indicates the old buffering amount in bytes, the
-  /// second one the new value, and the last one indicates the limit in bytes
-  /// (buffer capacity). This is important because if the send buffer is full
-  /// then any attempt to send data will abruptly close the data channel. See
-  /// comment in webrtc::DataChannelInterface::Send() for details. Current
-  /// WebRTC implementation has a limit of 16MB for the buffer capacity.
-  using BufferingCallback =
-      Callback<const uint64_t, const uint64_t, const uint64_t>;
-
-  /// Callback fired when the data channel state changed.
-  using StateCallback = Callback</*DataChannelState*/ int, int>;
-
-  DataChannel(PeerConnection* owner,
-              rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
-              mrsDataChannelInteropHandle interop_handle = nullptr) noexcept;
-
   /// Remove the data channel from its parent PeerConnection and close it.
-  ~DataChannel() override;
+  virtual ~DataChannel();
 
   /// Get the unique channel identifier.
-  [[nodiscard]] int id() const { return data_channel_->id(); }
+  [[nodiscard]] int id() const noexcept { return id_; }
 
   /// Get the friendly channel name.
-  [[nodiscard]] MRS_API str label() const;
-
-  void SetMessageCallback(MessageCallback callback) noexcept;
-  void SetBufferingCallback(BufferingCallback callback) noexcept;
-  void SetStateCallback(StateCallback callback) noexcept;
-
-  /// Get the maximum buffering size, in bytes, before |Send()| stops accepting
-  /// data.
-  [[nodiscard]] MRS_API size_t GetMaxBufferingSize() const noexcept;
+  [[nodiscard]] std::string label() const { return label_; }
 
   /// Send a blob of data through the data channel.
-  MRS_API bool Send(const void* data, size_t size) noexcept;
+  void Send(const void* data, size_t size);
+
+  //
+  // Events
+  //
+
+  /// Callback invoked when a message is received.
+  virtual void OnMessageReceived(const void* /*data*/, size_t /*size*/) {}
+
+  /// Callback invoked when the internal message buffering changed.
+  virtual void OnBufferingChanged(size_t /*previous*/,
+                                  size_t /*current*/,
+                                  size_t /*max_capacity*/) {}
+
+  /// Callback invoked when the data channel state changed.
+  virtual void OnStateChanged(State /*state*/) {}
+
+  //
+  // Errors
+  //
+
+  /// Helper method invoked for each API call, to check that the call was
+  /// successful. This default implementation throws an exception depending on
+  /// the type of error in |result|.
+  virtual void CheckResult(mrsResult result) const { ThrowOnError(result); }
 
   //
   // Advanced use
   //
 
-  [[nodiscard]] webrtc::DataChannelInterface* impl() const {
-    return data_channel_.get();
-  }
-
-  mrsDataChannelInteropHandle GetInteropHandle() const noexcept {
-    return interop_handle_;
+  /// Get the handle to the implementation object, to make an API call.
+  /// This throws an |InvalidOperationException| if the data channel was closed,
+  /// or more generally when the handle is not valid.
+  DataChannelHandle GetHandle() const {
+    if (!handle_) {
+      throw new InvalidOperationException();
+    }
+    return handle_;
   }
 
   /// This is invoked automatically by PeerConnection::RemoveDataChannel().
   /// Do not call it manually.
   void OnRemovedFromPeerConnection() noexcept { owner_ = nullptr; }
 
- protected:
-  // DataChannelObserver interface
+ private:
+  DataChannel(PeerConnection* owner,
+              int id,
+              std::string_view label,
+              bool ordered,
+              bool reliable) noexcept;
 
-  // The data channel state have changed.
-  void OnStateChange() noexcept override;
-  //  A data buffer was successfully received.
-  void OnMessage(const webrtc::DataBuffer& buffer) noexcept override;
-  // The data channel's buffered_amount has changed.
-  void OnBufferedAmountChange(uint64_t previous_amount) noexcept override;
+  static void StaticMessageCallback(void* user_data,
+                                    const void* data,
+                                    const uint64_t size);
+  static void StaticBufferingCallback(void* user_data,
+                                      const uint64_t previous,
+                                      const uint64_t current,
+                                      const uint64_t max_capacity);
+  static void StaticStateCallback(void* user_data, int state, int id);
+
+  // See PeerConnection::AddDataChannel()
+  friend class PeerConnection;
 
  private:
   /// PeerConnection object owning this data channel. This is only valid from
@@ -121,16 +124,17 @@ class DataChannel : public webrtc::DataChannelObserver {
   /// parent's collection and |owner_| is set to nullptr.
   PeerConnection* owner_{};
 
-  /// Underlying core implementation.
-  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  /// Handle to the implementation object.
+  DataChannelHandle handle_{};
 
-  MessageCallback message_callback_ RTC_GUARDED_BY(mutex_);
-  BufferingCallback buffering_callback_ RTC_GUARDED_BY(mutex_);
-  StateCallback state_callback_ RTC_GUARDED_BY(mutex_);
-  std::mutex mutex_;
+  /// Unique ID of the data channel within the current session.
+  const int id_;
 
-  /// Optional interop handle, if associated with an interop wrapper.
-  mrsDataChannelInteropHandle interop_handle_{};
+  ///
+  const std::string label_;
+
+  const bool ordered_;
+  const bool reliable_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

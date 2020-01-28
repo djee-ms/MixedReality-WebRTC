@@ -3,17 +3,8 @@
 
 #pragma once
 
-#if defined(WINUWP)
-// Non-API helper. Returned object can be deleted at any time in theory.
-// In practice because it's provided by a global object it's safe.
-//< TODO - Remove that, clean-up API, this is bad (c).
-rtc::Thread* UnsafeGetWorkerThread();
-#endif
-
-#include "audio_frame.h"
-#include "export.h"
 #include "mrs_errors.h"
-#include "video_frame.h"
+#include "mrs_export.h"
 
 extern "C" {
 
@@ -129,6 +120,9 @@ using PeerConnectionConnectedCallback = void(MRS_CALL*)(void* user_data);
 using PeerConnectionLocalSdpReadytoSendCallback =
     void(MRS_CALL*)(void* user_data, const char* type, const char* sdp_data);
 
+using PeerConnectionRemoteDescriptionAppliedCallback =
+    void(MRS_CALL*)(void* user_data);
+
 /// Callback fired when an ICE candidate has been prepared and is ready to be
 /// sent by the user via the signaling service.
 using PeerConnectionIceCandidateReadytoSendCallback =
@@ -197,7 +191,52 @@ using PeerConnectionDataChannelRemovedCallback =
                     mrsDataChannelInteropHandle data_channel_wrapper,
                     DataChannelHandle data_channel);
 
-using mrsI420AVideoFrame = Microsoft::MixedReality::WebRTC::I420AVideoFrame;
+/// View over an existing buffer representing a video frame encoded in I420
+/// format with an extra Alpha plane for opacity.
+struct mrsI420AVideoFrame {
+  /// Width of the video frame, in pixels.
+  std::uint32_t width_;
+
+  /// Height of the video frame, in pixels.
+  std::uint32_t height_;
+
+  /// Pointer to the raw contiguous memory block holding the Y plane data.
+  /// The size of the buffer is at least (|ystride_| * |height_|) bytes.
+  const void* ydata_;
+
+  /// Pointer to the raw contiguous memory block holding the U plane data.
+  /// The size of the buffer is at least (|ustride_| * (|height_| + 1) / 2)
+  /// bytes, due to chroma downsampling compared to the Y plane.
+  const void* udata_;
+
+  /// Pointer to the raw contiguous memory block holding the V plane data.
+  /// The size of the buffer is at least (|vstride_| * (|height_| + 1) / 2)
+  /// bytes, due to chroma downsampling compared to the Y plane.
+  const void* vdata_;
+
+  /// Pointer to the raw contiguous memory block holding the alpha plane data,
+  /// if any. This can optionally be NULL if the frame doesn't have an Alpha
+  /// component.
+  /// The size of the buffer is at least (|astride_| * |height_|) bytes.
+  const void* adata_;
+
+  /// Stride in bytes between two consecutive rows in the Y plane buffer.
+  /// This is always greater than or equal to |width_|.
+  std::int32_t ystride_;
+
+  /// Stride in bytes between two consecutive rows in the U plane buffer.
+  /// This is always greater than or equal to ((|width_| + 1) / 2).
+  std::int32_t ustride_;
+
+  /// Stride in bytes between two consecutive rows in the V plane buffer.
+  /// This is always greater than or equal to ((|width_| + 1) / 2).
+  std::int32_t vstride_;
+
+  /// Stride in bytes between two consecutive rows in the A plane buffer.
+  /// This is ignored if there is no A plane (|adata_| is NULL).
+  /// Otherwise, this is always greater than or equal to |width_|.
+  std::int32_t astride_;
+};
 
 /// Callback fired when a local or remote (depending on use) video frame is
 /// available to be consumed by the caller, usually for display.
@@ -205,7 +244,23 @@ using mrsI420AVideoFrame = Microsoft::MixedReality::WebRTC::I420AVideoFrame;
 using PeerConnectionI420AVideoFrameCallback =
     void(MRS_CALL*)(void* user_data, const mrsI420AVideoFrame& frame);
 
-using mrsArgb32VideoFrame = Microsoft::MixedReality::WebRTC::Argb32VideoFrame;
+/// View over an existing buffer representing a video frame encoded in ARGB
+/// 32-bit-per-pixel format, in little endian order (B first, A last).
+struct mrsArgb32VideoFrame {
+  /// Width of the video frame, in pixels.
+  std::uint32_t width_;
+
+  /// Height of the video frame, in pixels.
+  std::uint32_t height_;
+
+  /// Pointer to the raw contiguous memory block holding the video frame data.
+  /// The size of the buffer is at least (|stride_| * |height_|) bytes.
+  const void* argb32_data_;
+
+  /// Stride in bytes between two consecutive rows in the ARGB buffer.
+  /// This is always greater than or equal to |width_|.
+  std::int32_t stride_;
+};
 
 /// Callback fired when a local or remote (depending on use) video frame is
 /// available to be consumed by the caller, usually for display.
@@ -213,7 +268,27 @@ using mrsArgb32VideoFrame = Microsoft::MixedReality::WebRTC::Argb32VideoFrame;
 using PeerConnectionArgb32VideoFrameCallback =
     void(MRS_CALL*)(void* user_data, const mrsArgb32VideoFrame& frame);
 
-using mrsAudioFrame = Microsoft::MixedReality::WebRTC::AudioFrame;
+/// View over an existing buffer representing an audio frame, in the sense
+/// of a single group of contiguous audio data.
+struct mrsAudioFrame {
+  /// Pointer to the raw contiguous memory block holding the audio data in
+  /// channel interleaved format. The length of the buffer is at least
+  /// (|bits_per_sample_| / 8 * |channel_count_| * |sample_count_|) bytes.
+  const void* data_;
+
+  /// Number of bits per sample, often 8 or 16, for a single channel.
+  std::uint32_t bits_per_sample_;
+
+  /// Sampling rate, in Hertz (number of samples per second).
+  std::uint32_t sampling_rate_hz_;
+
+  /// Number of interleaved channels in a single audio sample.
+  std::uint32_t channel_count_;
+
+  /// Number of consecutive samples. The frame duration is given by the ratio
+  /// |sample_count_| / |sampling_rate_hz_|.
+  std::uint32_t sample_count_;
+};
 
 /// Callback fired when a local or remote (depending on use) audio frame is
 /// available to be consumed by the caller, usually for local output.
@@ -495,8 +570,8 @@ using mrsRequestExternalArgb32VideoFrameCallback =
 /// including generated or synthetic frames, for example for testing.
 /// The track source initially starts as capuring. Capture can be stopped with
 /// |mrsExternalVideoTrackSourceShutdown|.
-/// This returns a handle to a newly allocated object, which must be released once
-/// not used anymore with |mrsLocalVideoTrackRemoveRef()|.
+/// This returns a handle to a newly allocated object, which must be released
+/// once not used anymore with |mrsLocalVideoTrackRemoveRef()|.
 MRS_API mrsResult MRS_CALL
 mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
     PeerConnectionHandle peerHandle,
@@ -523,6 +598,7 @@ MRS_API mrsResult MRS_CALL
 mrsPeerConnectionAddLocalAudioTrack(PeerConnectionHandle peerHandle) noexcept;
 
 enum class mrsDataChannelConfigFlags : uint32_t {
+  kNone = 0,
   kOrdered = 0x1,
   kReliable = 0x2,
 };
@@ -533,9 +609,19 @@ inline mrsDataChannelConfigFlags operator|(
   return (mrsDataChannelConfigFlags)((uint32_t)a | (uint32_t)b);
 }
 
+inline void operator|=(mrsDataChannelConfigFlags& a,
+                       mrsDataChannelConfigFlags b) noexcept {
+  a = (mrsDataChannelConfigFlags)((uint32_t)a | (uint32_t)b);
+}
+
 inline uint32_t operator&(mrsDataChannelConfigFlags a,
                           mrsDataChannelConfigFlags b) noexcept {
   return ((uint32_t)a | (uint32_t)b);
+}
+
+inline void operator&=(mrsDataChannelConfigFlags& a,
+                       mrsDataChannelConfigFlags b) noexcept {
+  a = (mrsDataChannelConfigFlags)((uint32_t)a | (uint32_t)b);
 }
 
 struct mrsDataChannelConfig {
@@ -630,10 +716,12 @@ mrsPeerConnectionSetBitrate(PeerConnectionHandle peer_handle,
 
 /// Set a remote description received from a remote peer via the signaling
 /// service.
-MRS_API mrsResult MRS_CALL
-mrsPeerConnectionSetRemoteDescription(PeerConnectionHandle peerHandle,
-                                      const char* type,
-                                      const char* sdp) noexcept;
+MRS_API mrsResult MRS_CALL mrsPeerConnectionSetRemoteDescription(
+    PeerConnectionHandle peerHandle,
+    const char* type,
+    const char* sdp,
+    PeerConnectionRemoteDescriptionAppliedCallback callback,
+    void* user_data) noexcept;
 
 /// Close a peer connection, removing all tracks and disconnecting from the
 /// remote peer currently connected. This does not invalidate the handle nor

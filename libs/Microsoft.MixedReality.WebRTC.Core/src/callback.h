@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "export.h"
+#include "mrs_export.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 

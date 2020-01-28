@@ -5,8 +5,8 @@
 // line, to prevent clang-format from reordering it with other headers.
 #include "pch.h"
 
-#include "interop/global_factory.h"
-#include "interop/peer_connection_interop.h"
+#include "global_factory.h"
+#include "mrs_peer_connection.h"
 #include "peer_connection.h"
 
 using namespace Microsoft::MixedReality::WebRTC;

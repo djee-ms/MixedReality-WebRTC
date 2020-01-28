@@ -5,13 +5,8 @@
 
 #include <mutex>
 
-#include "api/video/video_frame.h"
-#include "api/video/video_sink_interface.h"
-
 #include "callback.h"
 #include "video_frame.h"
-
-#include "rtc_base/memory/aligned_malloc.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 

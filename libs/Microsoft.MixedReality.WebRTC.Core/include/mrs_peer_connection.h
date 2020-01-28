@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "export.h"
-#include "interop/interop_api.h"
+#include "mrs_export.h"
+#include "interop_api.h"
 
 extern "C" {
 

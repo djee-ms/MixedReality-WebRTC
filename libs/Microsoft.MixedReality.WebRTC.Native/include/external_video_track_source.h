@@ -4,8 +4,7 @@
 #pragma once
 
 #include "mrs_errors.h"
-#include "refptr.h"
-#include "tracked_object.h"
+#include "mrs_external_video_track_source.h"
 #include "video_frame.h"
 
 namespace Microsoft::MixedReality::WebRTC {
@@ -31,7 +30,7 @@ struct I420AVideoFrameRequest {
 
 /// Custom video source producing video frames encoded in I420 format, with
 /// optional Alpha (opacity) plane.
-class I420AExternalVideoSource : public RefCountedBase {
+class I420AExternalVideoSource {
  public:
   /// Produce a video frame for a request initiated by an external track source.
   ///
@@ -61,7 +60,7 @@ struct Argb32VideoFrameRequest {
 
 /// Custom video source producing vidoe frames encoded in ARGB 32-bit-per-pixel
 /// format.
-class Argb32ExternalVideoSource : public RefCountedBase {
+class Argb32ExternalVideoSource {
  public:
   /// Produce a video frame for a request initiated by an external track source.
   ///
@@ -75,41 +74,60 @@ class Argb32ExternalVideoSource : public RefCountedBase {
 
 /// Video track source acting as an adapter for an external source of raw
 /// frames.
-class ExternalVideoTrackSource : public TrackedObject {
+class ExternalVideoTrackSource {
  public:
   /// Helper to create an external video track source from a custom I420A video
   /// frame request callback.
-  static MRS_API RefPtr<ExternalVideoTrackSource> createFromI420A(
-      RefPtr<I420AExternalVideoSource> video_source);
+  static MRS_API std::shared_ptr<ExternalVideoTrackSource> createFromI420A(
+      std::shared_ptr<I420AExternalVideoSource> video_source);
 
   /// Helper to create an external video track source from a custom ARGB32 video
   /// frame request callback.
-  static MRS_API RefPtr<ExternalVideoTrackSource> createFromArgb32(
-      RefPtr<Argb32ExternalVideoSource> video_source);
+  static MRS_API std::shared_ptr<ExternalVideoTrackSource> createFromArgb32(
+      std::shared_ptr<Argb32ExternalVideoSource> video_source);
 
   /// Start the video capture. This will begin to produce video frames and start
   /// calling the video frame callback.
-  MRS_API virtual void StartCapture() = 0;
+  MRS_API void StartCapture();
 
   /// Complete a given video frame request with the provided I420A frame.
   /// The caller must know the source expects an I420A frame; there is no check
   /// to confirm the source is I420A-based or ARGB32-based.
-  MRS_API virtual Result CompleteRequest(uint32_t request_id,
-                                         int64_t timestamp_ms,
-                                         const I420AVideoFrame& frame) = 0;
+  MRS_API Result CompleteRequest(uint32_t request_id,
+                                 int64_t timestamp_ms,
+                                 const I420AVideoFrame& frame);
 
   /// Complete a given video frame request with the provided ARGB32 frame.
   /// The caller must know the source expects an ARGB32 frame; there is no check
   /// to confirm the source is I420A-based or ARGB32-based.
-  MRS_API virtual Result CompleteRequest(uint32_t request_id,
-                                         int64_t timestamp_ms,
-                                         const Argb32VideoFrame& frame) = 0;
+  MRS_API Result CompleteRequest(uint32_t request_id,
+                                 int64_t timestamp_ms,
+                                 const Argb32VideoFrame& frame);
 
   /// Stop the video capture. This will stop producing video frames.
-  MRS_API virtual void StopCapture() = 0;
+  MRS_API void StopCapture();
 
   /// Shutdown the source and release the buffer adapter and its callback.
-  MRS_API virtual void Shutdown() noexcept = 0;
+  MRS_API void Shutdown();
+
+  //
+  // Advanced use
+  //
+
+  [[nodiscard]] ExternalVideoTrackSourceHandle GetHandle() const {
+    if (!handle_) {
+      throw new InvalidOperationException();
+    }
+    return handle_;
+  }
+
+  //[[nodiscard]] mrsExternalVideoTrackSourceInteropHandle GetInteropHandle()
+  //    const noexcept {
+  //  return (mrsExternalVideoTrackSourceInteropHandle)this;
+  //}
+
+ protected:
+  ExternalVideoTrackSourceHandle handle_{};
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

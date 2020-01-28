@@ -4,20 +4,7 @@
 #pragma once
 
 #include "callback.h"
-#include "interop/interop_api.h"
-#include "str.h"
-#include "tracked_object.h"
-#include "video_frame_observer.h"
-
-namespace rtc {
-template <typename T>
-class scoped_refptr;
-}
-
-namespace webrtc {
-class RtpSenderInterface;
-class VideoTrackInterface;
-}  // namespace webrtc
+#include "interop_api.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -35,52 +22,48 @@ class PeerConnection;
 /// typically a video capture device (e.g. webcam), but can	also be a source
 /// producing programmatically generated frames. The local video track itself
 /// has no knowledge about how the source produces the frames.
-class LocalVideoTrack : public VideoFrameObserver, public TrackedObject {
+class LocalVideoTrack {
  public:
-  LocalVideoTrack(PeerConnection& owner,
-                  rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
-                  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
-                  mrsLocalVideoTrackInteropHandle interop_handle) noexcept;
-  MRS_API ~LocalVideoTrack() override;
-
-  /// Get the name of the local video track.
-  MRS_API std::string GetName() const noexcept override;
+  LocalVideoTrack(PeerConnection& owner, LocalVideoTrackHandle handle);
+  virtual ~LocalVideoTrack();
 
   /// Enable or disable the video track. An enabled track streams its content
   /// from its source to the remote peer. A disabled video track only sends
   /// black frames.
-  MRS_API void SetEnabled(bool enabled) const noexcept;
+  void SetEnabled(bool enabled) const;
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
-  MRS_API [[nodiscard]] bool IsEnabled() const noexcept;
+  [[nodiscard]] bool IsEnabled() const noexcept;
+
+  //
+  // Errors
+  //
+
+  /// Helper method invoked for each API call, to check that the call was
+  /// successful. This default implementation throws an exception depending on
+  /// the type of error in |result|.
+  virtual void CheckResult(mrsResult result) const { ThrowOnError(result); }
 
   //
   // Advanced use
   //
 
-  [[nodiscard]] webrtc::VideoTrackInterface* impl() const;
-  [[nodiscard]] webrtc::RtpSenderInterface* sender() const;
-
-  [[nodiscard]] mrsLocalVideoTrackInteropHandle GetInteropHandle() const
-      noexcept {
-    return interop_handle_;
+  /// Get the handle to the implementation object, to make an API call.
+  /// This throws an |InvalidOperationException| when the handle is not valid.
+  [[nodiscard]] LocalVideoTrackHandle GetHandle() const {
+    if (!handle_) {
+      throw new InvalidOperationException();
+    }
+    return handle_;
   }
-
-  void RemoveFromPeerConnection(webrtc::PeerConnectionInterface& peer);
 
  private:
   /// Weak reference to the PeerConnection object owning this track.
   PeerConnection* owner_{};
 
-  /// Underlying core implementation.
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
-
-  /// RTP sender this track is associated with.
-  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender_;
-
-  /// Optional interop handle, if associated with an interop wrapper.
-  mrsLocalVideoTrackInteropHandle interop_handle_{};
+  /// Handle to the implementation object.
+  LocalVideoTrackHandle handle_{};
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

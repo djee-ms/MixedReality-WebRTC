@@ -9,10 +9,10 @@
 #include "api/datachannelinterface.h"
 
 #include "callback.h"
-#include "data_channel.h"
+#include "media/data_channel.h"
 
 // Internal
-#include "interop/interop_api.h"
+#include "interop_api.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 

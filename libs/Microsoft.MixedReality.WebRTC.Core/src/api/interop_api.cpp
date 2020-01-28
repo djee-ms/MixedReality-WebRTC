@@ -7,14 +7,15 @@
 
 #include "api/stats/rtcstats_objects.h"
 
-#include "data_channel.h"
-#include "external_video_track_source.h"
-#include "interop/external_video_track_source_interop.h"
-#include "interop/global_factory.h"
-#include "interop/interop_api.h"
-#include "interop/peer_connection_interop.h"
-#include "local_video_track.h"
+#include "global_factory.h"
+#include "interop_api.h"
+#include "media/data_channel.h"
+#include "media/external_video_track_source.h"
 #include "media/external_video_track_source_impl.h"
+#include "media/local_video_track.h"
+#include "mrs_external_video_track_source.h"
+#include "mrs_local_video_track.h"
+#include "mrs_peer_connection.h"
 #include "peer_connection.h"
 #include "sdp_utils.h"
 
@@ -971,11 +972,11 @@ mrsDataChannelSendMessage(DataChannelHandle dataChannelHandle,
 
 mrsResult MRS_CALL
 mrsPeerConnectionAddIceCandidate(PeerConnectionHandle peerHandle,
-                                 const char* sdp,
+                                 const char* sdp_mid,
                                  const int sdp_mline_index,
-                                 const char* sdp_mid) noexcept {
+                                 const char* candidate) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
-    return (peer->AddIceCandidate(sdp, sdp_mline_index, sdp_mid)
+    return (peer->AddIceCandidate(sdp_mid, sdp_mline_index, candidate)
                 ? Result::kSuccess
                 : Result::kUnknownError);
   }
@@ -1018,13 +1019,19 @@ mrsResult MRS_CALL mrsPeerConnectionSetBitrate(PeerConnectionHandle peer_handle,
   return Result::kInvalidNativeHandle;
 }
 
-mrsResult MRS_CALL
-mrsPeerConnectionSetRemoteDescription(PeerConnectionHandle peerHandle,
-                                      const char* type,
-                                      const char* sdp) noexcept {
+mrsResult MRS_CALL mrsPeerConnectionSetRemoteDescription(
+    PeerConnectionHandle peerHandle,
+    const char* type,
+    const char* sdp,
+    PeerConnectionRemoteDescriptionAppliedCallback callback,
+    void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
-    return (peer->SetRemoteDescription(type, sdp) ? Result::kSuccess
-                                                  : Result::kUnknownError);
+    return (peer->SetRemoteDescription(
+                type, sdp,
+                PeerConnection::RemoteDescriptionAppliedCallback{callback,
+                                                                 user_data})
+                ? Result::kSuccess
+                : Result::kUnknownError);
   }
   return Result::kInvalidNativeHandle;
 }
@@ -1173,7 +1180,7 @@ T GetValueIfDefined(const webrtc::RTCStatsMember<T>& member) {
   return member.is_defined() ? *member : 0;
 }
 
-}
+}  // namespace
 
 mrsResult MRS_CALL
 mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
@@ -1287,7 +1294,8 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
             dest_stats.track_stats_timestamp_us = track_stats.timestamp_us();
             dest_stats.track_identifier = track_stats.track_identifier->c_str();
             dest_stats.frames_sent = GetValueIfDefined(track_stats.frames_sent);
-            dest_stats.huge_frames_sent = GetValueIfDefined(track_stats.huge_frames_sent);
+            dest_stats.huge_frames_sent =
+                GetValueIfDefined(track_stats.huge_frames_sent);
           }
         }
       }
@@ -1316,8 +1324,10 @@ mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
             auto& dest_stats = FindOrInsert(pending_stats, track_stats.id());
             dest_stats.track_stats_timestamp_us = track_stats.timestamp_us();
             dest_stats.track_identifier = track_stats.track_identifier->c_str();
-            dest_stats.frames_received = GetValueIfDefined(track_stats.frames_received);
-            dest_stats.frames_dropped = GetValueIfDefined(track_stats.frames_dropped);
+            dest_stats.frames_received =
+                GetValueIfDefined(track_stats.frames_received);
+            dest_stats.frames_dropped =
+                GetValueIfDefined(track_stats.frames_dropped);
           }
         }
       }

@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "interop/global_factory.h"
+#include "global_factory.h"
 #include "media/external_video_track_source_impl.h"
 
 namespace {

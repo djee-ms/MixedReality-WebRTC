@@ -114,47 +114,48 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="../../../src/interop/interop_api.h" />
-    <ClInclude Include="../../../include/audio_frame_observer.h" />
-    <ClInclude Include="../../../include/callback.h" />
-    <ClInclude Include="../../../include/data_channel.h" />
-    <ClInclude Include="../../../src/pch.h" />
-    <ClInclude Include="../../../include/peer_connection.h" />
-    <ClInclude Include="../../../src/targetver.h" />
-    <ClInclude Include="../../../include/video_frame_observer.h" />
-    <ClInclude Include="../../../include/sdp_utils.h" />
-    <ClInclude Include="../../../include/export.h" />
-    <ClInclude Include="../../../src/interop/global_factory.h" />
-    <ClInclude Include="../../../src/interop/peer_connection_interop.h" />
-    <ClInclude Include="../../../include/local_video_track.h" />
-    <ClInclude Include="../../../src/interop/local_video_track_interop.h" />
-    <ClInclude Include="../..\..\include\audio_frame.h" />
-    <ClInclude Include="../..\..\include\external_video_track_source.h" />
-    <ClInclude Include="../..\..\include\mrs_errors.h" />
-    <ClInclude Include="../..\..\include\refptr.h" />
-    <ClInclude Include="../..\..\include\ref_counted_base.h" />
-    <ClInclude Include="../..\..\include\tracked_object.h" />
-    <ClInclude Include="../..\..\include\video_frame.h" />
-    <ClInclude Include="../../../src/interop/external_video_track_source_interop.h" />
-    <ClInclude Include="../..\../src/media\external_video_track_source_impl.h" />
+    <ClInclude Include="..\..\..\include\interop_api.h" />
+    <ClInclude Include="..\..\..\include\Microsoft.MixedReality.WebRTC.h" />
+    <ClInclude Include="..\..\..\include\mrs_external_video_track_source.h" />
+    <ClInclude Include="..\..\..\include\mrs_local_video_track.h" />
+    <ClInclude Include="..\..\..\include\mrs_peer_connection.h" />
+    <ClInclude Include="..\..\..\src\callback.h" />
+    <ClInclude Include="..\..\..\src\export.h" />
+    <ClInclude Include="..\..\..\src\global_factory.h" />
+    <ClInclude Include="..\..\..\src\media\audio_frame.h" />
+    <ClInclude Include="..\..\..\src\media\audio_frame_observer.h" />
+    <ClInclude Include="..\..\..\src\media\data_channel.h" />
+    <ClInclude Include="..\..\..\src\media\external_video_track_source.h" />
+    <ClInclude Include="..\..\..\src\media\external_video_track_source_impl.h" />
+    <ClInclude Include="..\..\..\src\media\local_video_track.h" />
+    <ClInclude Include="..\..\..\src\media\video_frame.h" />
+    <ClInclude Include="..\..\..\src\media\video_frame_observer.h" />
+    <ClInclude Include="..\..\..\src\mrs_errors.h" />
+    <ClInclude Include="..\..\..\src\pch.h" />
+    <ClInclude Include="..\..\..\src\peer_connection.h" />
+    <ClInclude Include="..\..\..\src\refptr.h" />
+    <ClInclude Include="..\..\..\src\ref_counted_base.h" />
+    <ClInclude Include="..\..\..\src\sdp_utils.h" />
+    <ClInclude Include="..\..\..\src\targetver.h" />
+    <ClInclude Include="..\..\..\src\tracked_object.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="../../../src/interop/interop_api.cpp" />
-    <ClCompile Include="../../../src/audio_frame_observer.cpp" />
-    <ClCompile Include="../../../src/data_channel.cpp" />
-    <ClCompile Include="../../../src/pch.cpp">
+    <ClCompile Include="..\..\..\src\api\mrs_external_video_track_source.cpp" />
+    <ClCompile Include="..\..\..\src\api\interop_api.cpp" />
+    <ClCompile Include="..\..\..\src\api\mrs_local_video_track.cpp" />
+    <ClCompile Include="..\..\..\src\api\mrs_peer_connection.cpp" />
+    <ClCompile Include="..\..\..\src\global_factory.cpp" />
+    <ClCompile Include="..\..\..\src\media\audio_frame_observer.cpp" />
+    <ClCompile Include="..\..\..\src\media\data_channel.cpp" />
+    <ClCompile Include="..\..\..\src\media\external_video_track_source.cpp" />
+    <ClCompile Include="..\..\..\src\media\local_video_track.cpp" />
+    <ClCompile Include="..\..\..\src\media\video_frame_observer.cpp" />
+    <ClCompile Include="..\..\..\src\mrs_errors.cpp" />
+    <ClCompile Include="..\..\..\src\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="../../../src/peer_connection.cpp" />
-    <ClCompile Include="../../../src/video_frame_observer.cpp" />
-    <ClCompile Include="../../../src/sdp_utils.cpp" />
-    <ClCompile Include="../../../src/interop/global_factory.cpp" />
-    <ClCompile Include="../../../src/interop/peer_connection_interop.cpp" />
-    <ClCompile Include="../../../src/interop/local_video_track_interop.cpp" />
-    <ClCompile Include="../../../src/media/local_video_track.cpp" />
-    <ClCompile Include="..\../../src/mrs_errors.cpp" />
-    <ClCompile Include="../../../src/interop/external_video_track_source_interop.cpp" />
-    <ClCompile Include="..\../../src/media\external_video_track_source.cpp" />
+    <ClCompile Include="..\..\..\src\peer_connection.cpp" />
+    <ClCompile Include="..\..\..\src\sdp_utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="AfterBuild">

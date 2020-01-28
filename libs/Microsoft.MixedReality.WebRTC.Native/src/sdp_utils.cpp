@@ -6,10 +6,6 @@
 
 #include "sdp_utils.h"
 
-#include "api/jsepsessiondescription.h"
-#include "pc/sessiondescription.h"
-#include "pc/webrtcsdp.h"
-
 namespace {
 
 /// Assign a preferred audio or video codec to the media content description,
@@ -130,67 +126,6 @@ std::string SdpForceCodecs(
 
   // Re-serialize the SDP modified message
   return webrtc::SdpSerialize(jdesc);
-}
-
-webrtc::PeerConnectionInterface::IceServers DecodeIceServers(
-    const std::string& str) {
-  if (str.empty())
-    return {};
-
-  webrtc::PeerConnectionInterface::IceServers serverList;
-
-  webrtc::PeerConnectionInterface::IceServer server;
-  size_t offset = 0;
-  constexpr char lineSep = '\n';
-  size_t idx = str.find_first_of(lineSep);
-  bool blockHasData = false;
-  while (true) {
-    if (idx > offset) {
-      blockHasData = true;
-      // Parse line
-      std::string line = str.substr(offset, idx - offset);
-      if (!TryExtractSuffix(line, "username:", server.username) &&
-          !TryExtractSuffix(line, "password:", server.password)) {
-        server.urls.emplace_back(std::move(line));
-      }
-    } else {
-      // block end
-      if (blockHasData) {
-        serverList.emplace_back(std::move(server));
-        // webrtc::PeerConnectionInterface::IceServer missing move operators
-        server.urls.clear();
-        server.username.clear();
-        server.password.clear();
-        blockHasData = false;
-      }
-    }
-    if (idx < std::string::npos) {
-      offset = idx + 1;
-      idx = str.find_first_of(lineSep, offset);
-      continue;
-    }
-    // last block end
-    if (blockHasData) {
-      serverList.emplace_back(std::move(server));
-      // webrtc::PeerConnectionInterface::IceServer missing move operators
-      server.urls.clear();
-      server.username.clear();
-      server.password.clear();
-    }
-    break;
-  }
-
-  return serverList;
-}
-
-std::string EncodeIceServers(const std::string& url) {
-  return url;
-}
-
-std::string EncodeIceServers(const std::string& url,
-                             const std::string& username,
-                             const std::string& password) {
-  return url + "\nusername:" + username + "\npassword:" + password;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC
