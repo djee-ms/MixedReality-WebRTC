@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="../../../src/pch.cpp" />
+    <ClCompile Include="../../../src/peer_connection.cpp" />
+    <ClCompile Include="../../../src/sdp_utils.cpp" />
+    <ClCompile Include="..\../../src/mrs_errors.cpp" />
+    <ClCompile Include="..\../../src/interop\external_video_track_source_interop.cpp" />
+    <ClCompile Include="../../../src/interop/local_video_track_interop.cpp">
+      <Filter>interop</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/interop/peer_connection_interop.cpp">
+      <Filter>interop</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/media/external_video_track_source.cpp">
+      <Filter>media</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/audio_frame_observer.cpp">
+      <Filter>media</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/video_frame_observer.cpp">
+      <Filter>media</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/media/local_video_track.cpp">
+      <Filter>media</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/interop/global_factory.cpp">
+      <Filter>interop</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/interop/interop_api.cpp">
+      <Filter>interop</Filter>
+    </ClCompile>
+    <ClCompile Include="../../../src/data_channel.cpp">
+      <Filter>media</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="../../../include/audio_frame_observer.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../include/callback.h" />
+    <ClInclude Include="../../../include/peer_connection.h" />
+    <ClInclude Include="../../../include/video_frame_observer.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../include/sdp_utils.h" />
+    <ClInclude Include="../../../include/export.h" />
+    <ClInclude Include="../../../include/data_channel.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../include/local_video_track.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\mrs_errors.h" />
+    <ClInclude Include="..\..\..\include\refptr.h" />
+    <ClInclude Include="..\..\..\include\ref_counted_base.h" />
+    <ClInclude Include="..\..\..\include\tracked_object.h" />
+    <ClInclude Include="..\..\..\include\audio_frame.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\video_frame.h">
+      <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../src/pch.h" />
+    <ClInclude Include="../../../src/targetver.h" />
+    <ClInclude Include="..\../../src/media\external_video_track_source_impl.h" />
+    <ClInclude Include="..\../../src/interop\external_video_track_source_interop.h">
+      <Filter>interop</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../src/interop/local_video_track_interop.h">
+      <Filter>interop</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../src/interop/peer_connection_interop.h">
+      <Filter>interop</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../src/interop/global_factory.h">
+      <Filter>interop</Filter>
+    </ClInclude>
+    <ClInclude Include="../../../src/interop/interop_api.h">
+      <Filter>interop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\external_video_track_source.h">
+      <Filter>media</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="interop">
+      <UniqueIdentifier>{ab950f96-ca33-4d16-9cba-16b9b3b7cadc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="media">
+      <UniqueIdentifier>{c6391787-dde2-458b-bf17-27bfaf238956}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
