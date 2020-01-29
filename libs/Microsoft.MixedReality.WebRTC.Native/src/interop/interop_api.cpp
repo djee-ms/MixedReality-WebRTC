@@ -31,21 +31,21 @@ inline bool IsStringNullOrEmpty(const char* str) noexcept {
   return ((str == nullptr) || (str[0] == '\0'));
 }
 
-mrsResult RTCToAPIError(const webrtc::RTCError& error) {
-  if (error.ok()) {
-    return Result::kSuccess;
-  }
-  switch (error.type()) {
-    case webrtc::RTCErrorType::INVALID_PARAMETER:
-    case webrtc::RTCErrorType::INVALID_RANGE:
-      return Result::kInvalidParameter;
-    case webrtc::RTCErrorType::INVALID_STATE:
-      return Result::kInvalidOperation;
-    case webrtc::RTCErrorType::INTERNAL_ERROR:
-    default:
-      return Result::kUnknownError;
-  }
-}
+//mrsResult RTCToAPIError(const webrtc::RTCError& error) {
+//  if (error.ok()) {
+//    return Result::kSuccess;
+//  }
+//  switch (error.type()) {
+//    case webrtc::RTCErrorType::INVALID_PARAMETER:
+//    case webrtc::RTCErrorType::INVALID_RANGE:
+//      return Result::kInvalidParameter;
+//    case webrtc::RTCErrorType::INVALID_STATE:
+//      return Result::kInvalidOperation;
+//    case webrtc::RTCErrorType::INTERNAL_ERROR:
+//    default:
+//      return Result::kUnknownError;
+//  }
+//}
 
 #if defined(WINUWP)
 using WebRtcFactoryPtr =
@@ -246,22 +246,22 @@ mrsResult OpenVideoCaptureDevice(
 #endif
 }
 
-//< TODO - Unit test / check if RTC has already a utility like this
-std::vector<std::string> SplitString(const std::string& str, char sep) {
-  std::vector<std::string> ret;
-  size_t offset = 0;
-  for (size_t idx = str.find_first_of(sep); idx < std::string::npos;
-       idx = str.find_first_of(sep, offset)) {
-    if (idx > offset) {
-      ret.push_back(str.substr(offset, idx - offset));
-    }
-    offset = idx + 1;
-  }
-  if (offset < str.size()) {
-    ret.push_back(str.substr(offset));
-  }
-  return ret;
-}
+///< TODO - Unit test / check if RTC has already a utility like this
+//std::vector<std::string> SplitString(const std::string& str, char sep) {
+//  std::vector<std::string> ret;
+//  size_t offset = 0;
+//  for (size_t idx = str.find_first_of(sep); idx < std::string::npos;
+//       idx = str.find_first_of(sep, offset)) {
+//    if (idx > offset) {
+//      ret.push_back(str.substr(offset, idx - offset));
+//    }
+//    offset = idx + 1;
+//  }
+//  if (offset < str.size()) {
+//    ret.push_back(str.substr(offset));
+//  }
+//  return ret;
+//}
 
 /// Convert a WebRTC VideoType format into its FOURCC counterpart.
 uint32_t FourCCFromVideoType(webrtc::VideoType videoType) {
@@ -820,7 +820,7 @@ mrsResult MRS_CALL mrsPeerConnectionAddLocalVideoTrackFromExternalSource(
   }
   RTC_LOG(LS_ERROR) << "Failed to add local video track: "
                     << result.error().message();
-  return Result::kUnknownError;  //< TODO Convert from result.error()?
+  return Result::kUnknownError;  ///< TODO Convert from result.error()?
 }
 
 mrsResult MRS_CALL mrsPeerConnectionRemoveLocalVideoTracksFromSource(

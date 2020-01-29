@@ -132,11 +132,11 @@ Result ResultFromRTCErrorType(webrtc::RTCErrorType type) {
   }
 }
 
-Microsoft::MixedReality::WebRTC::Error ErrorFromRTCError(
-    const webrtc::RTCError& error) {
-  return Microsoft::MixedReality::WebRTC::Error(
-      ResultFromRTCErrorType(error.type()), error.message());
-}
+//Microsoft::MixedReality::WebRTC::Error ErrorFromRTCError(
+//    const webrtc::RTCError& error) {
+//  return Microsoft::MixedReality::WebRTC::Error(
+//      ResultFromRTCErrorType(error.type()), error.message());
+//}
 
 Microsoft::MixedReality::WebRTC::Error ErrorFromRTCError(
     webrtc::RTCError&& error) {
@@ -171,7 +171,7 @@ class PeerConnectionImpl : public PeerConnection,
     remote_audio_observer_.reset(new AudioFrameObserver());
   }
 
-  void SetName(std::string_view name) { name_ = name; }
+  void SetName(std::string_view name) override { name_ = name; }
 
   std::string GetName() const override { return name_; }
 
@@ -467,7 +467,7 @@ class PeerConnectionImpl : public PeerConnection,
   /// Mutex for data structures related to data channels.
   std::mutex data_channel_mutex_;
 
-  //< TODO - Clarify lifetime of those, for now same as this PeerConnection
+  ///< TODO - Clarify lifetime of those, for now same as this PeerConnection
   std::unique_ptr<AudioFrameObserver> local_audio_observer_;
   std::unique_ptr<AudioFrameObserver> remote_audio_observer_;
   std::unique_ptr<VideoFrameObserver> remote_video_observer_;
@@ -597,7 +597,7 @@ ErrorOr<RefPtr<LocalVideoTrack>> PeerConnectionImpl::AddLocalVideoTrack(
   auto result = peer_->AddTrack(video_track, {kAudioVideoStreamId});
   if (result.ok()) {
     RefPtr<LocalVideoTrack> track = new LocalVideoTrack(
-        *this, std::move(video_track), std::move(result.MoveValue()), nullptr);
+        *this, std::move(video_track), result.MoveValue(), nullptr);
     {
       rtc::CritScope lock(&tracks_mutex_);
       local_video_tracks_.push_back(track);
@@ -640,7 +640,7 @@ void PeerConnectionImpl::RemoveLocalVideoTracksFromSource(
     rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
         sender->track();
     // Apparently track can be null if destroyed already
-    //< FIXME - Is this an error?
+    ///< FIXME - Is this an error?
     if (!track ||
         (track->kind() != webrtc::MediaStreamTrackInterface::kVideoKind)) {
       continue;
@@ -897,7 +897,7 @@ bool PeerConnectionImpl::CreateOffer() noexcept {
     return false;
   }
   webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-  /*if (mandatory_receive_)*/ {  //< TODO - This is legacy, should use
+  /*if (mandatory_receive_)*/ {  ///< TODO - This is legacy, should use
                                  // transceivers
     options.offer_to_receive_audio = true;
     options.offer_to_receive_video = true;
@@ -920,7 +920,7 @@ bool PeerConnectionImpl::CreateAnswer() noexcept {
     return false;
   }
   webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-  /*if (mandatory_receive_)*/ {  //< TODO - This is legacy, should use
+  /*if (mandatory_receive_)*/ {  ///< TODO - This is legacy, should use
                                  // transceivers
     options.offer_to_receive_audio = true;
     options.offer_to_receive_video = true;
@@ -1032,6 +1032,8 @@ void PeerConnectionImpl::OnSignalingChange(
     case webrtc::PeerConnectionInterface::kHaveRemoteOffer:
       break;
     case webrtc::PeerConnectionInterface::kHaveRemotePrAnswer:
+      break;
+    case webrtc::PeerConnectionInterface::kClosed:
       break;
   }
 }

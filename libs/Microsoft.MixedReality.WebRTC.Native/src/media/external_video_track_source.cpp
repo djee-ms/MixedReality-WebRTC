@@ -271,7 +271,7 @@ void ExternalVideoTrackSourceImpl::OnMessage(rtc::Message* message) {
       adapter_->RequestFrame(*this, request_id, now);
 
       // Schedule a new request for 30ms from now
-      //< TODO - this is unreliable and prone to drifting; figure out something
+      ///< TODO - this is unreliable and prone to drifting; figure out something
       // better
       capture_thread_->PostAt(RTC_FROM_HERE, now + 30, this, MSG_REQUEST_FRAME);
       break;

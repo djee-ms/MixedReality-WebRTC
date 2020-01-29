@@ -92,6 +92,8 @@ void DataChannel::OnStateChange() noexcept {
         owner_->OnDataChannelAdded(*this);
       }
       break;
+  default:
+      break;
   }
 
   // Invoke the StateChanged event
