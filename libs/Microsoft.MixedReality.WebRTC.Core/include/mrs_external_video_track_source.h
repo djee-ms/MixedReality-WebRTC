@@ -5,7 +5,6 @@
 
 #include "mrs_export.h"
 #include "interop_api.h"
-#include "refptr.h"
 
 extern "C" {
 

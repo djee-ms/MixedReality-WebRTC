@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#include "../include/mrs_errors.h"
-#include "../src/interop/interop_api.h"
-#include "../src/interop/peer_connection_interop.h"
-
 using namespace Microsoft::MixedReality::WebRTC;
 
 /// Simple wait event, similar to rtc::Event.
@@ -228,16 +224,22 @@ class LocalPeerPairRaii {
   InteropCallback<> connected2_cb_;
   void setup() {
     sdp1_cb_ = [this](const char* type, const char* sdp_data) {
-      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                      pc2_.handle(), type, sdp_data));
+      Event ev;
+      ASSERT_EQ(Result::kSuccess,
+                mrsPeerConnectionSetRemoteDescription(
+                    pc2_.handle(), type, sdp_data, &WaitForEvent, &ev));
+      ASSERT_TRUE(ev.WaitFor(20s));
       if (kOfferString == type) {
         ASSERT_EQ(Result::kSuccess,
                   mrsPeerConnectionCreateAnswer(pc2_.handle()));
       }
     };
     sdp2_cb_ = [this](const char* type, const char* sdp_data) {
-      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                      pc1_.handle(), type, sdp_data));
+      Event ev;
+      ASSERT_EQ(Result::kSuccess,
+                mrsPeerConnectionSetRemoteDescription(
+                    pc1_.handle(), type, sdp_data, &WaitForEvent, &ev));
+      ASSERT_TRUE(ev.WaitFor(20s));
       if (kOfferString == type) {
         ASSERT_EQ(Result::kSuccess,
                   mrsPeerConnectionCreateAnswer(pc1_.handle()));
@@ -266,5 +268,10 @@ class LocalPeerPairRaii {
       mrsPeerConnectionRegisterConnectedCallback(pc2(), nullptr, nullptr);
       connected2_cb_.is_registered_ = false;
     }
+  }
+
+  static void WaitForEvent(void* user_data) {
+    Event* const ev = static_cast<Event*>(user_data);
+    ev->Set();
   }
 };

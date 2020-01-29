@@ -3,16 +3,12 @@
 
 #include "pch.h"
 
-#include "interop/external_video_track_source_interop.h"
-#include "interop/interop_api.h"
-#include "interop/local_video_track_interop.h"
-
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
 
 namespace {
 
 // PeerConnectionI420VideoFrameCallback
-using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
+using I420VideoFrameCallback = InteropCallback<const mrsI420AVideoFrame&>;
 
 /// Generate a test frame to simualte an external video track source.
 mrsResult MRS_CALL MakeTestFrame(void* /*user_data*/,
@@ -41,7 +37,7 @@ mrsResult MRS_CALL MakeTestFrame(void* /*user_data*/,
       handle, request_id, timestamp_ms, &frame);
 }
 
-void CheckIsTestFrame(const I420AVideoFrame& frame) {
+void CheckIsTestFrame(const mrsI420AVideoFrame& frame) {
   ASSERT_EQ(16u, frame.width_);
   ASSERT_EQ(16u, frame.height_);
   ASSERT_NE(nullptr, frame.ydata_);
@@ -92,7 +88,7 @@ TEST(VideoTrack, Simple) {
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
 
   uint32_t frame_count = 0;
-  I420VideoFrameCallback i420cb = [&frame_count](const I420AVideoFrame& frame) {
+  I420VideoFrameCallback i420cb = [&frame_count](const mrsI420AVideoFrame& frame) {
     ASSERT_NE(nullptr, frame.ydata_);
     ASSERT_NE(nullptr, frame.udata_);
     ASSERT_NE(nullptr, frame.vdata_);
@@ -132,7 +128,7 @@ TEST(VideoTrack, Muted) {
   ASSERT_EQ(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
 
   uint32_t frame_count = 0;
-  I420VideoFrameCallback i420cb = [&frame_count](const I420AVideoFrame& frame) {
+  I420VideoFrameCallback i420cb = [&frame_count](const mrsI420AVideoFrame& frame) {
     ASSERT_NE(nullptr, frame.ydata_);
     ASSERT_NE(nullptr, frame.udata_);
     ASSERT_NE(nullptr, frame.vdata_);
@@ -221,7 +217,7 @@ TEST(VideoTrack, ExternalI420) {
   ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle));
 
   uint32_t frame_count = 0;
-  I420VideoFrameCallback i420cb = [&frame_count](const I420AVideoFrame& frame) {
+  I420VideoFrameCallback i420cb = [&frame_count](const mrsI420AVideoFrame& frame) {
     CheckIsTestFrame(frame);
     ++frame_count;
   };

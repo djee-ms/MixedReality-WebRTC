@@ -3,8 +3,6 @@
 
 #include "pch.h"
 
-#include "interop/interop_api.h"
-
 // Test fast path of mrsMemCpyStride() when data is packed.
 TEST(MemoryUtils, MemCpyStride_Fast) {
   std::vector<uint8_t> s, d;

@@ -3,15 +3,12 @@
 
 #include "pch.h"
 
-#include "interop/interop_api.h"
-#include "audio_frame.h"
-
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
 
 namespace {
 
 // PeerConnectionAudioFrameCallback
-using AudioFrameCallback = InteropCallback<const AudioFrame&>;
+using AudioFrameCallback = InteropCallback<const mrsAudioFrame&>;
 
 bool IsSilent_uint8(const uint8_t* data,
                     uint32_t size,
@@ -78,7 +75,7 @@ TEST(AudioTrack, Simple) {
             mrsPeerConnectionIsLocalAudioTrackEnabled(pair.pc1()));
 
   uint32_t call_count = 0;
-  AudioFrameCallback audio_cb = [&call_count](const AudioFrame& frame) {
+  AudioFrameCallback audio_cb = [&call_count](const mrsAudioFrame& frame) {
     ASSERT_NE(nullptr, frame.data_);
     ASSERT_LT(0u, frame.bits_per_sample_);
     ASSERT_LT(0u, frame.sampling_rate_hz_);
@@ -140,7 +137,7 @@ TEST(AudioTrack, Muted) {
 
   uint32_t call_count = 0;
   AudioFrameCallback audio_cb =
-      [&call_count, &pair](const AudioFrame& frame) {
+      [&call_count, &pair](const mrsAudioFrame& frame) {
         ASSERT_NE(nullptr, frame.data_);
         ASSERT_LT(0u, frame.bits_per_sample_);
         ASSERT_LT(0u, frame.sampling_rate_hz_);
