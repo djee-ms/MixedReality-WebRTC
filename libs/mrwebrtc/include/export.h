@@ -9,7 +9,7 @@
 #if defined(MR_SHARING_WIN)
 #define MRS_API __declspec(dllexport)
 #define MRS_CALL __stdcall
-#elif defined(MR_SHARING_ANDROID)
+#elif defined(MR_SHARING_ANDROID) || defined(MR_SHARING_IOS)
 #define MRS_API __attribute__((visibility("default")))
 #define MRS_CALL
 #else

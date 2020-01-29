@@ -31,6 +31,12 @@
 #define WEBRTC_POSIX 1
 #define WEBRTC_ANDROID 1
 
+#elif defined(MR_SHARING_IOS)
+
+#define WEBRTC_POSIX 1
+#define WEBRTC_MAC 1
+#define WEBRTC_IOS 1
+
 #else
 
 #error Unknown platform
