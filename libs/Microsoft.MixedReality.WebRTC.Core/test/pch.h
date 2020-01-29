@@ -33,8 +33,8 @@ using namespace std::chrono_literals;
 // Google Test
 #include "gtest/gtest.h"
 
-// Microsoft.MixedReality.WebRTC
-#include "Microsoft.MixedReality.WebRTC.h"
+// Microsoft.MixedReality.WebRTC (Interop API)
+#include "mrs_webrtc.h"
 
-// Test helpers
+// Local test helpers
 #include "peer_connection_test_helpers.h"

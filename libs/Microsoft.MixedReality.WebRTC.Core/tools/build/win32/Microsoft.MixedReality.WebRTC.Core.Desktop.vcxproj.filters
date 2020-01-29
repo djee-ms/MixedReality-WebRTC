@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="../../../src/pch.cpp" />
     <ClCompile Include="..\..\..\src\global_factory.cpp" />
-    <ClCompile Include="..\..\..\src\mrs_errors.cpp" />
     <ClCompile Include="..\..\..\src\peer_connection.cpp" />
     <ClCompile Include="..\..\..\src\sdp_utils.cpp" />
     <ClCompile Include="..\..\..\src\media\audio_frame_observer.cpp">
@@ -33,13 +32,15 @@
     <ClCompile Include="..\..\..\src\api\mrs_peer_connection.cpp">
       <Filter>api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\mrs_errors.cpp">
+      <Filter>api</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../../../src/pch.h" />
     <ClInclude Include="..\..\..\src\callback.h" />
     <ClInclude Include="..\..\..\src\export.h" />
     <ClInclude Include="..\..\..\src\global_factory.h" />
-    <ClInclude Include="..\..\..\src\mrs_errors.h" />
     <ClInclude Include="..\..\..\src\peer_connection.h" />
     <ClInclude Include="..\..\..\src\ref_counted_base.h" />
     <ClInclude Include="..\..\..\src\refptr.h" />
@@ -70,9 +71,6 @@
     <ClInclude Include="..\..\..\include\interop_api.h">
       <Filter>api</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\Microsoft.MixedReality.WebRTC.h">
-      <Filter>api</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\mrs_external_video_track_source.h">
       <Filter>api</Filter>
     </ClInclude>
@@ -84,6 +82,12 @@
     </ClInclude>
     <ClInclude Include="..\../../src/media\external_video_track_source_impl.h">
       <Filter>media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\mrs_webrtc.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\mrs_errors.h">
+      <Filter>api</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

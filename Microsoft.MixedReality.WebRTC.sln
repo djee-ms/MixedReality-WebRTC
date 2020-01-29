@@ -50,6 +50,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core.Desktop", "libs\Micros
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core.UWP", "libs\Microsoft.MixedReality.WebRTC.Core\tools\build\uwp\Microsoft.MixedReality.WebRTC.Core.UWP.vcxproj", "{6152E9EC-FCE5-429E-B427-5E61707F5DA7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core.Desktop.Tests", "libs\Microsoft.MixedReality.WebRTC.Core\test\Microsoft.MixedReality.WebRTC.Core.Desktop.Tests.vcxproj", "{746D640C-46DF-417F-BBD3-447E34CBEA02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -222,6 +224,20 @@ Global
 		{6152E9EC-FCE5-429E-B427-5E61707F5DA7}.Release|x64.Build.0 = Release|x64
 		{6152E9EC-FCE5-429E-B427-5E61707F5DA7}.Release|x86.ActiveCfg = Release|Win32
 		{6152E9EC-FCE5-429E-B427-5E61707F5DA7}.Release|x86.Build.0 = Release|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|ARM.ActiveCfg = Debug|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|x64.ActiveCfg = Debug|x64
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|x64.Build.0 = Debug|x64
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|x86.ActiveCfg = Debug|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Debug|x86.Build.0 = Debug|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|Any CPU.ActiveCfg = Release|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|ARM.ActiveCfg = Release|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|ARM64.ActiveCfg = Release|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|x64.ActiveCfg = Release|x64
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|x64.Build.0 = Release|x64
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|x86.ActiveCfg = Release|Win32
+		{746D640C-46DF-417F-BBD3-447E34CBEA02}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -236,6 +252,7 @@ Global
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415} = {B32AC033-2CD1-4450-978B-00B16C517DDB}
 		{A0BE77BA-8B3E-4084-BCC3-C32F7E2BBF74} = {324D2D56-8AD2-407D-91A7-37DCC9F164B2}
 		{6152E9EC-FCE5-429E-B427-5E61707F5DA7} = {324D2D56-8AD2-407D-91A7-37DCC9F164B2}
+		{746D640C-46DF-417F-BBD3-447E34CBEA02} = {35C3F3A6-2133-4523-81CA-BDFCE559A98C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FDDDC335-362A-4F14-815D-5D40C75CCE88}

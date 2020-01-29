@@ -129,6 +129,8 @@
     <ClInclude Include="../targetver.h" />
     <ClInclude Include="../../include/local_video_track.h" />
     <ClInclude Include="..\..\include\annotations.h" />
+    <ClInclude Include="..\..\include\exceptions.h" />
+    <ClInclude Include="..\..\include\Microsoft.MixedReality.WebRTC.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../data_channel.cpp" />

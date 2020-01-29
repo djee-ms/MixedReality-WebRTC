@@ -4,11 +4,8 @@
 #include "pch.h"
 
 #include "data_channel.h"
-#include "interop/external_video_track_source_interop.h"
-#include "interop/interop_api.h"
-#include "interop/local_video_track_interop.h"
-
-#include "libyuv.h"
+#include "external_video_track_source.h"
+#include "local_video_track.h"
 
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
 

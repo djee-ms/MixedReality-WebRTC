@@ -467,8 +467,8 @@ ErrorOr<std::shared_ptr<LocalVideoTrack>> PeerConnection::AddLocalVideoTrack(
 }
 
 void PeerConnection::RemoveLocalVideoTrack(LocalVideoTrack& video_track) {
-  CheckResult(mrsPeerConnectionRemoveLocalVideoTrack(
-      GetHandle(), video_track.GetHandle()));
+  CheckResult(mrsPeerConnectionRemoveLocalVideoTrack(GetHandle(),
+                                                     video_track.GetHandle()));
 }
 
 void PeerConnection::RemoveLocalVideoTracksFromSource(

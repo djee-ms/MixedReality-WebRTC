@@ -22,6 +22,8 @@
       <Filter>media</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\annotations.h" />
+    <ClInclude Include="..\..\include\Microsoft.MixedReality.WebRTC.h" />
+    <ClInclude Include="..\..\include\exceptions.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../docs/design.md" />

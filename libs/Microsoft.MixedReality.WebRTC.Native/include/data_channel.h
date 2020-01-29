@@ -4,16 +4,13 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "callback.h"
-#include "data_channel.h"
-
-#include "interop_api.h"
+#include "exceptions.h"
+#include "mrs_webrtc.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
+enum class Result : uint32_t;
 
 /// A data channel is a bidirectional pipe established between the local and
 /// remote peer to carry random blobs of data.

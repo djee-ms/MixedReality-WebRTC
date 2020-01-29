@@ -3,9 +3,14 @@
 
 #pragma once
 
-#include "callback.h"
+#include <future>
+#include <optional>
+
+#include "audio_frame.h"
 #include "data_channel.h"
-#include "mrs_errors.h"
+#include "exceptions.h"
+#include "mrs_webrtc.h"
+#include "video_frame.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -103,7 +108,7 @@ class PeerConnection {
   /// Typically an implementation will call CreateOffer() when receiving this
   /// notification to initiate a new SDP exchange. Failing to do so will prevent
   /// the remote peer from being informed about track changes.
-  using RenegotiationNeededCallback = std::function<void>;
+  using RenegotiationNeededCallback = std::function<void(void)>;
 
   /// Register a custom RenegotiationNeededCallback.
   void RegisterRenegotiationNeededCallback(
@@ -122,7 +127,7 @@ class PeerConnection {
   /// Callback fired when the peer connection is established.
   /// This guarantees that the handshake process has terminated successfully,
   /// but does not guarantee that ICE exchanges are done.
-  using ConnectedCallback = Callback<>;
+  using ConnectedCallback = std::function<void(void)>;
 
   /// Register a custom ConnectedCallback.
   void RegisterConnectedCallback(ConnectedCallback&& callback) noexcept;
@@ -130,11 +135,14 @@ class PeerConnection {
   void SetBitrate(const BitrateSettings& settings);
 
   /// Create an SDP offer to attempt to establish a connection with the remote
-  /// peer.
+  /// peer. When the SDP offer description is ready, it should be sent by the
+  /// user to the remote peer via the chosen signaling solution.
   std::future<SdpDescription> CreateOfferAsync();
 
   /// Create an SDP answer to accept a previously-received offer to establish a
-  /// connection with the remote peer.
+  /// connection with the remote peer. When the SDP answer description is ready,
+  /// it should be sent by the user to the remote peer via the chosen signaling
+  /// solution.
   std::future<SdpDescription> CreateAnswerAsync();
 
   /// Close the peer connection. After the connection is closed, it cannot be
@@ -166,13 +174,20 @@ class PeerConnection {
   // Video
   //
 
-  /// Register a custom callback invoked when a remote video frame has been
-  /// received and decompressed, and is ready to be displayed locally.
-  // void RegisterRemoteVideoFrameCallback(I420AFrameReadyCallback callback);
+  using I420AFrameReadyCallback = std::function<void(const I420AVideoFrame&)>;
+  using Argb32FrameReadyCallback = std::function<void(const Argb32VideoFrame&)>;
 
   /// Register a custom callback invoked when a remote video frame has been
   /// received and decompressed, and is ready to be displayed locally.
-  // void RegisterRemoteVideoFrameCallback(Argb32FrameReadyCallback callback);
+  void RegisterRemoteVideoFrameCallback(I420AFrameReadyCallback&& callback) {
+    local_i420cb_ = std::move(callback);
+  }
+
+  /// Register a custom callback invoked when a remote video frame has been
+  /// received and decompressed, and is ready to be displayed locally.
+  void RegisterRemoteVideoFrameCallback(Argb32FrameReadyCallback&& callback) {
+    local_argb32cb_ = std::move(callback);
+  }
 
   /// Add a video track to the peer connection. If no RTP sender/transceiver
   /// exist, create a new one for that track.
@@ -220,18 +235,21 @@ class PeerConnection {
   // Audio
   //
 
+  using AudioFrameReadyCallback = std::function<void(const AudioFrame&)>;
+
   /// Register a custom callback invoked when a local audio frame is ready to be
   /// output.
-  ///
-  /// FIXME - Current implementation of AddSink() for the local audio capture
-  /// device is no-op. So this callback is never fired.
-  // void RegisterLocalAudioFrameCallback(AudioFrameReadyCallback callback)
-  // noexcept;
+  void RegisterLocalAudioFrameCallback(
+      AudioFrameReadyCallback&& callback) noexcept {
+    local_audio_cb_ = std::move(callback);
+  }
 
   /// Register a custom callback invoked when a remote audio frame has been
   /// received and uncompressed, and is ready to be output locally.
-  // void RegisterRemoteAudioFrameCallback(AudioFrameReadyCallback callback)
-  // noexcept;
+  void RegisterRemoteAudioFrameCallback(
+      AudioFrameReadyCallback callback) noexcept {
+    remote_audio_cb_ = std::move(callback);
+  }
 
   /// Add to the peer connection an audio track backed by a local audio capture
   /// device. If no RTP sender/transceiver exist, create a new one for that
@@ -330,6 +348,12 @@ class PeerConnection {
     }
     return handle_;
   }
+
+ private:
+  I420AFrameReadyCallback local_i420cb_;
+  Argb32FrameReadyCallback local_argb32cb_;
+  AudioFrameReadyCallback local_audio_cb_;
+  AudioFrameReadyCallback remote_audio_cb_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

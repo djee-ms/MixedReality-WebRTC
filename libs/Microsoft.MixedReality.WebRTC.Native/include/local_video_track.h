@@ -4,7 +4,6 @@
 #pragma once
 
 #include "callback.h"
-#include "interop_api.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 

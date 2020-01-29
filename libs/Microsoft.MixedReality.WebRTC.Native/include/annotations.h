@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#pragma once
+
 // The following is borrowed from the WebRTC codebase, with renamed prefix MRS_.
 
 //

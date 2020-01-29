@@ -4,20 +4,8 @@
 #include "pch.h"
 
 #include "data_channel.h"
-#include "interop/interop_api.h"
 
 namespace {
-
-const mrsPeerConnectionInteropHandle kFakeInteropPeerConnectionHandle =
-    (void*)0x1;
-const mrsDataChannelInteropHandle kFakeInteropDataChannelHandle = (void*)0x2;
-
-mrsDataChannelInteropHandle MRS_CALL
-FakeIterop_DataChannelCreate(mrsPeerConnectionInteropHandle /*parent*/,
-                             mrsDataChannelConfig /*config*/,
-                             mrsDataChannelCallbacks* /*callbacks*/) {
-  return kFakeInteropDataChannelHandle;
-}
 
 // OnDataChannelAdded
 using DataAddedCallback =
@@ -27,33 +15,17 @@ using DataAddedCallback =
 
 TEST(DataChannel, AddChannelBeforeInit) {
   PCRaii pc;
-  ASSERT_NE(nullptr, pc.handle());
-  mrsDataChannelConfig config{};
-  config.label = "data";
-  config.flags = mrsDataChannelConfigFlags::kOrdered |
-                 mrsDataChannelConfigFlags::kReliable;
-  mrsDataChannelCallbacks callbacks{};
-  DataChannelHandle handle;
-  mrsDataChannelInteropHandle interopHandle = kFakeInteropDataChannelHandle;
-  ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionAddDataChannel(pc.handle(), interopHandle, config,
-                                            callbacks, &handle));
+  ASSERT_NE(nullptr, pc.pc());
+  ASSERT_NO_THROW(pc.pc()->AddDataChannel(-1, "data", true, true));
 }
 
 TEST(DataChannel, InBand) {
   // Create PC
   PeerConnectionConfiguration config{};  // local connection only
   PCRaii pc1(config);
-  ASSERT_NE(nullptr, pc1.handle());
+  ASSERT_NE(nullptr, pc1.pc());
   PCRaii pc2(config);
-  ASSERT_NE(nullptr, pc2.handle());
-
-  // In order to allow creating interop wrappers from native code, register the
-  // necessary interop callbacks.
-  mrsPeerConnectionInteropCallbacks interop{};
-  interop.data_channel_create_object = &FakeIterop_DataChannelCreate;
-  ASSERT_EQ(Result::kSuccess,
-            mrsPeerConnectionRegisterInteropCallbacks(pc2.handle(), &interop));
+  ASSERT_NE(nullptr, pc2.pc());
 
   // Setup signaling
   SdpCallback sdp1_cb(pc1.handle(), [&pc2](const char* type,

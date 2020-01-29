@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#include "../include/mrs_errors.h"
-#include "../src/interop/interop_api.h"
-#include "../src/interop/peer_connection_interop.h"
-
 using namespace Microsoft::MixedReality::WebRTC;
 
 /// Simple wait event, similar to rtc::Event.
@@ -102,82 +98,19 @@ class PCRaii {
   /// connection from being established.
   PCRaii() {
     PeerConnectionConfiguration config{};
-    mrsPeerConnectionInteropHandle interop_handle = (void*)0x1;
-    create(config, interop_handle);
+    create(config);
   }
   /// Create a peer connection with a specific configuration.
-  PCRaii(const PeerConnectionConfiguration& config,
-         mrsPeerConnectionInteropHandle interop_handle = (void*)0x1) {
-    create(config, interop_handle);
-  }
-  ~PCRaii() { mrsPeerConnectionRemoveRef(handle_); }
-  PeerConnectionHandle handle() const { return handle_; }
+  PCRaii(const PeerConnectionConfiguration& config) { create(config); }
+  ~PCRaii() = default;
+  const std::shared_ptr<PeerConnection>& pc() const { return pc_; }
 
  protected:
-  PeerConnectionHandle handle_{};
-  void create(const PeerConnectionConfiguration& config,
-              mrsPeerConnectionInteropHandle interop_handle) {
-    ASSERT_EQ(mrsResult::kSuccess,
-              mrsPeerConnectionCreate(config, interop_handle, &handle_));
-    ASSERT_NE(nullptr, handle_);
+  std::shared_ptr<PeerConnection> pc_;
+  void create(const PeerConnectionConfiguration& config) {
+    pc_ = PeerConnection::Create(config);
+    ASSERT_NE(nullptr, pc_);
   }
-};
-
-// OnLocalSdpReadyToSend
-class SdpCallback : public InteropCallback<const char*, const char*> {
- public:
-  using Base = InteropCallback<const char*, const char*>;
-  using callback_type = void(const char*, const char*);
-  SdpCallback(PeerConnectionHandle pc) : pc_(pc) {}
-  SdpCallback(PeerConnectionHandle pc, std::function<callback_type> func)
-      : Base(std::move(func)), pc_(pc) {
-    mrsPeerConnectionRegisterLocalSdpReadytoSendCallback(pc_, &StaticExec,
-                                                         this);
-    is_registered_ = true;
-  }
-  ~SdpCallback() override {
-    mrsPeerConnectionRegisterLocalSdpReadytoSendCallback(pc_, nullptr, nullptr);
-    is_registered_ = false;
-  }
-  SdpCallback& operator=(std::function<callback_type> func) {
-    Base::operator=(std::move(func));
-    mrsPeerConnectionRegisterLocalSdpReadytoSendCallback(pc_, &StaticExec,
-                                                         this);
-    is_registered_ = true;
-    return (*this);
-  }
-
- protected:
-  PeerConnectionHandle pc_{};
-};
-
-// OnIceCandidateReadyToSend
-class IceCallback : public InteropCallback<const char*, int, const char*> {
- public:
-  using Base = InteropCallback<const char*, int, const char*>;
-  using callback_type = void(const char*, int, const char*);
-  IceCallback(PeerConnectionHandle pc) : pc_(pc) {}
-  IceCallback(PeerConnectionHandle pc, std::function<callback_type> func)
-      : Base(std::move(func)), pc_(pc) {
-    mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(pc_, &StaticExec,
-                                                             this);
-    is_registered_ = true;
-  }
-  ~IceCallback() override {
-    mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(pc_, nullptr,
-                                                             nullptr);
-    is_registered_ = false;
-  }
-  IceCallback& operator=(std::function<callback_type> func) {
-    Base::operator=(std::move(func));
-    mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(pc_, &StaticExec,
-                                                             this);
-    is_registered_ = true;
-    return (*this);
-  }
-
- protected:
-  PeerConnectionHandle pc_{};
 };
 
 constexpr const std::string_view kOfferString{"offer"};
@@ -186,33 +119,23 @@ constexpr const std::string_view kOfferString{"offer"};
 /// other via simple hard-coded signaling.
 class LocalPeerPairRaii {
  public:
-  LocalPeerPairRaii()
-      : sdp1_cb_(pc1()), sdp2_cb_(pc2()), ice1_cb_(pc1()), ice2_cb_(pc2()) {
-    setup();
-  }
+  LocalPeerPairRaii() { setup(); }
   LocalPeerPairRaii(const PeerConnectionConfiguration& config)
-      : pc1_(config),
-        pc2_(config),
-        sdp1_cb_(pc1()),
-        sdp2_cb_(pc2()),
-        ice1_cb_(pc1()),
-        ice2_cb_(pc2()) {
+      : pc1_(config), pc2_(config) {
     setup();
   }
   ~LocalPeerPairRaii() { shutdown(); }
 
-  PeerConnectionHandle pc1() const { return pc1_.handle(); }
-  PeerConnectionHandle pc2() const { return pc2_.handle(); }
+  const std::shared_ptr<PeerConnection>& pc1() const { return pc1_.pc(); }
+  const std::shared_ptr<PeerConnection>& pc2() const { return pc2_.pc(); }
 
   void ConnectAndWait() {
     Event ev1, ev2;
-    connected1_cb_ = [&ev1]() { ev1.Set(); };
-    connected2_cb_ = [&ev2]() { ev2.Set(); };
-    mrsPeerConnectionRegisterConnectedCallback(pc1(), CB(connected1_cb_));
-    connected1_cb_.is_registered_ = true;
-    mrsPeerConnectionRegisterConnectedCallback(pc2(), CB(connected2_cb_));
-    connected2_cb_.is_registered_ = true;
-    ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateOffer(pc1()));
+    pc1()->RegisterConnectedCallback([&ev1]() { ev1.Set(); });
+    pc2()->RegisterConnectedCallback([&ev2]() { ev2.Set(); });
+    std::future<SdpDescription> future_desc = pc1()->CreateOfferAsync();
+    ASSERT_EQ(std::future_status::ready, future_desc.wait_for(60s));
+    ASSERT_EQ(SdpType::kOffer, future_desc.get().type);
     ASSERT_EQ(true, ev1.WaitFor(60s));
     ASSERT_EQ(true, ev2.WaitFor(60s));
   }
@@ -220,51 +143,36 @@ class LocalPeerPairRaii {
  protected:
   PCRaii pc1_;
   PCRaii pc2_;
-  SdpCallback sdp1_cb_;
-  SdpCallback sdp2_cb_;
-  IceCallback ice1_cb_;
-  IceCallback ice2_cb_;
-  InteropCallback<> connected1_cb_;
-  InteropCallback<> connected2_cb_;
+  std::function<void(const SdpDescription&)> sdp1_cb_;
+  std::function<void(const SdpDescription&)> sdp2_cb_;
+  std::function<void(const IceCandidate&)> ice1_cb_;
+  std::function<void(const IceCandidate&)> ice2_cb_;
   void setup() {
-    sdp1_cb_ = [this](const char* type, const char* sdp_data) {
-      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                      pc2_.handle(), type, sdp_data));
-      if (kOfferString == type) {
-        ASSERT_EQ(Result::kSuccess,
-                  mrsPeerConnectionCreateAnswer(pc2_.handle()));
+    sdp1_cb_ = [this](const SdpDescription& desc) {
+      // Send to remote:
+      pc2()->SetRemoteDescriptionAsync(desc).wait_for(10s);
+      // Remote might initiate reply:
+      if (desc.type == SdpType::kOffer) {
+        pc2()->CreateAnswerAsync();
       }
     };
-    sdp2_cb_ = [this](const char* type, const char* sdp_data) {
-      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescription(
-                                      pc1_.handle(), type, sdp_data));
-      if (kOfferString == type) {
-        ASSERT_EQ(Result::kSuccess,
-                  mrsPeerConnectionCreateAnswer(pc1_.handle()));
+    sdp2_cb_ = [this](const SdpDescription& desc) {
+      // Send to remote:
+      pc1()->SetRemoteDescriptionAsync(desc).wait_for(10s);
+      // Remote might initiate reply:
+      if (desc.type == SdpType::kOffer) {
+        pc1()->CreateAnswerAsync();
       }
     };
-    ice1_cb_ = [this](const char* candidate, int sdpMlineindex,
-                      const char* sdpMid) {
-      ASSERT_EQ(Result::kSuccess,
-                mrsPeerConnectionAddIceCandidate(pc2_.handle(), sdpMid,
-                                                 sdpMlineindex, candidate));
+    ice1_cb_ = [this](const IceCandidate& candidate) {
+      // Send to remote:
+      pc2()->AddIceCandidate(candidate);
     };
-    ice2_cb_ = [this](const char* candidate, int sdpMlineindex,
-                      const char* sdpMid) {
-      ASSERT_EQ(Result::kSuccess,
-                mrsPeerConnectionAddIceCandidate(pc1_.handle(), sdpMid,
-                                                 sdpMlineindex, candidate));
+    ice2_cb_ = [this](const IceCandidate& candidate) {
+      // Send to remote:
+      pc1()->AddIceCandidate(candidate);
     };
   }
 
-  void shutdown() {
-    if (connected1_cb_.is_registered_) {
-      mrsPeerConnectionRegisterConnectedCallback(pc1(), nullptr, nullptr);
-      connected1_cb_.is_registered_ = false;
-    }
-    if (connected2_cb_.is_registered_) {
-      mrsPeerConnectionRegisterConnectedCallback(pc2(), nullptr, nullptr);
-      connected2_cb_.is_registered_ = false;
-    }
-  }
+  void shutdown() {}
 };
