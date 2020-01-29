@@ -50,7 +50,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// This is used for example by the <see cref="MediaPlayer"/> to determine how to
         /// render the frame.
         /// </summary>
-        public VideoEncoding FrameEncoding { get; protected set; } = VideoEncoding.I420A;
+        public VideoEncoding FrameEncoding { get; } = VideoEncoding.I420A;
 
         /// <summary>
         /// Event invoked from the main Unity thread when the video stream starts.
@@ -65,11 +65,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         public VideoStreamStoppedEvent VideoStreamStopped = new VideoStreamStoppedEvent();
 
-        /// <summary>
-        /// Retrieve some statistics about the video feed produced by the source.
-        /// </summary>
-        /// <returns>The current statistics for the source at the time of the call.</returns>
-        public abstract IVideoFrameQueue GetStats();
+        public VideoSource(VideoEncoding frameEncoding)
+        {
+            FrameEncoding = frameEncoding;
+        }
 
         public abstract void RegisterCallback(I420AVideoFrameDelegate callback);
         public abstract void UnregisterCallback(I420AVideoFrameDelegate callback);

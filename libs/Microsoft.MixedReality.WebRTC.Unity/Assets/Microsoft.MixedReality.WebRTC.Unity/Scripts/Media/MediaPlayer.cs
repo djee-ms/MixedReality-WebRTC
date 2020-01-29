@@ -112,15 +112,18 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         private void VideoStreamStarted(VideoSource source)
         {
+            bool isRemote = (source is VideoReceiver);
+            int frameQueueSize = (isRemote ? 5 : 3);
+
             switch (VideoSource.FrameEncoding)
             {
                 case VideoSource.VideoEncoding.I420A:
-                    _i420aFrameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(3);
+                    _i420aFrameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(frameQueueSize);
                     VideoSource.RegisterCallback(I420AVideoFrameReady);
                     break;
 
                 case VideoSource.VideoEncoding.Argb32:
-                    _argb32FrameQueue = new VideoFrameQueue<Argb32VideoFrameStorage>(3);
+                    _argb32FrameQueue = new VideoFrameQueue<Argb32VideoFrameStorage>(frameQueueSize);
                     VideoSource.RegisterCallback(Argb32VideoFrameReady);
                     break;
             }
@@ -218,7 +221,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     // Share our stats values, if possible.
                     using (var profileScope = displayStatsMarker.Auto())
                     {
-                        var stats = VideoSource.GetStats();
+                        IVideoFrameQueue stats = (_i420aFrameQueue != null ? (IVideoFrameQueue)_i420aFrameQueue : _argb32FrameQueue);
                         if (FrameLoadStatHolder != null)
                         {
                             FrameLoadStatHolder.text = stats.QueuedFramesPerSecond.ToString("F2");

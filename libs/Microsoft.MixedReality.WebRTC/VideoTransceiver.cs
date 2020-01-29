@@ -133,27 +133,6 @@ namespace Microsoft.MixedReality.WebRTC
                 Debug.Assert(_localTrack.Transceiver == this);
                 Debug.Assert(_localTrack.Transceiver.LocalTrack == _localTrack);
             }
-
-            //// Update direction
-            //switch (_desiredDirection)
-            //{
-            //    case Direction.Inactive:
-            //    case Direction.ReceiveOnly:
-            //        if (_localTrack != null)
-            //        {
-            //            // Add send bit
-            //            _desiredDirection |= Direction.SendOnly;
-            //        }
-            //        break;
-            //    case Direction.SendOnly:
-            //    case Direction.SendReceive:
-            //        if (_localTrack == null)
-            //        {
-            //            // Remove send bit
-            //            _desiredDirection &= Direction.ReceiveOnly;
-            //        }
-            //        break;
-            //}
         }
 
         /// <summary>
@@ -163,7 +142,30 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="track">The new remote video track receiving data from the remote peer.</param>
         public void SetRemoteTrack(RemoteVideoTrack track)
         {
-            throw new NotImplementedException(); //< TODO
+            if (track == _remoteTrack)
+            {
+                return;
+            }
+
+            // Capture peer connection; it gets reset during track manipulation below
+            var peerConnection = PeerConnection;
+
+            // Remove old track
+            if (_remoteTrack != null)
+            {
+                _remoteTrack.OnTrackRemoved(peerConnection);
+            }
+            Debug.Assert(_remoteTrack == null);
+
+            // Add new track
+            if (track != null)
+            {
+                track.OnTrackAdded(peerConnection, this);
+                Debug.Assert(track == _remoteTrack);
+                Debug.Assert(_localTrack.PeerConnection == PeerConnection);
+                Debug.Assert(_localTrack.Transceiver == this);
+                Debug.Assert(_localTrack.Transceiver.RemoteTrack == _remoteTrack);
+            }
         }
 
         internal void OnLocalTrackAdded(LocalVideoTrack track)

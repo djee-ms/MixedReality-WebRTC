@@ -13,8 +13,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// existing WebRTC peer connection by a remote peer and received locally.
     /// The audio track can optionally be displayed locally with a <see cref="MediaPlayer"/>.
     /// </summary>
-    [AddComponentMenu("MixedReality-WebRTC/Remote Audio Source")]
-    public class RemoteAudioSource : AudioSource
+    [AddComponentMenu("MixedReality-WebRTC/Audio Receiver")]
+    public class AudioReceiver : AudioSource
     {
         /// <summary>
         /// Peer connection this remote audio source is extracted from.
@@ -106,6 +106,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         protected void Awake()
         {
+            PeerConnection.RegisterSource(this);
             //FrameQueue = new AudioFrameQueue<AudioFrameStorage>(5);
             PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
             PeerConnection.OnShutdown.AddListener(OnPeerShutdown);

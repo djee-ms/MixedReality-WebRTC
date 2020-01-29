@@ -12,8 +12,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// existing WebRTC peer connection by a remote peer and received locally.
     /// The video track can optionally be displayed locally with a <see cref="MediaPlayer"/>.
     /// </summary>
-    [AddComponentMenu("MixedReality-WebRTC/Remote Video Source")]
-    public class RemoteVideoSource : VideoSource
+    [AddComponentMenu("MixedReality-WebRTC/Video Receiver")]
+    public class VideoReceiver : VideoSource
     {
         /// <summary>
         /// Peer connection this remote video source is extracted from.
@@ -49,12 +49,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// Remote video track receiving data from the remote peer.
         /// </summary>
         public RemoteVideoTrack Track { get; private set; } = null;
-
-        /// <summary>
-        /// Frame queue holding the pending frames enqueued by the video source itself,
-        /// which a video renderer needs to read and display.
-        /// </summary>
-        private VideoFrameQueue<I420AVideoFrameStorage> _frameQueue;
 
         /// <summary>
         /// Internal queue used to marshal work back to the main Unity thread.
@@ -114,14 +108,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public RemoteVideoSource()
+        public VideoReceiver() : base(frameEncoding: VideoEncoding.I420A)
         {
-            FrameEncoding = VideoEncoding.I420A;
-        }
-
-        public override IVideoFrameQueue GetStats()
-        {
-            return _frameQueue;
         }
 
         public override void RegisterCallback(I420AVideoFrameDelegate callback)
@@ -163,7 +151,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         protected void Awake()
         {
-            _frameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(5);
+            PeerConnection.RegisterSource(this);
             PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
             PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
         }
@@ -176,6 +164,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             PeerConnection.OnInitialized.RemoveListener(OnPeerInitialized);
             PeerConnection.OnShutdown.RemoveListener(OnPeerShutdown);
+            Stop();
         }
 
         /// <summary>

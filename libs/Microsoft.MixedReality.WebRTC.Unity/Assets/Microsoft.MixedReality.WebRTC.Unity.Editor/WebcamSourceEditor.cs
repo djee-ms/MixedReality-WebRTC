@@ -8,14 +8,14 @@ using UnityEngine;
 namespace Microsoft.MixedReality.WebRTC.Unity.Editor
 {
     /// <summary>
-    /// Inspector editor for <see cref="LocalVideoSource"/>.
+    /// Inspector editor for <see cref="WebcamSource"/>.
     /// Allows displaying some error message when Mixed Reality Capture is enabled but
     /// XR is not, the later corresponding to a non-exclusive app (2D slate) where MRC
     /// is not available.
     /// </summary>
-    [CustomEditor(typeof(LocalVideoSource))]
+    [CustomEditor(typeof(WebcamSource))]
     [CanEditMultipleObjects]
-    public class LocalVideoSourceEditor : UnityEditor.Editor
+    public class WebcamSourceEditor : UnityEditor.Editor
     {
         SerializedProperty _peerConnection;
         SerializedProperty _trackName;

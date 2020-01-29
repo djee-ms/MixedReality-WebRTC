@@ -1,7 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Collections;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -46,10 +47,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Check the event was raised
             Assert.IsTrue(initializedEvent.Wait(millisecondsTimeout: 50000));
             Assert.IsNotNull(pc.Peer);
-
-            // Destroy
-            Object.Destroy(pc);
-            Object.Destroy(go);
         }
 
         [UnityTest]

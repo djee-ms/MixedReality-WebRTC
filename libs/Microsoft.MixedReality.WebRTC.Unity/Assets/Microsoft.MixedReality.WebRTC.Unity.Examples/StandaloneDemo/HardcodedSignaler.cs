@@ -4,6 +4,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Microsoft.MixedReality.WebRTC.Unity;
+using System.Threading;
 
 /// <summary>
 /// Simple signaler using two peer connections in the same process,
@@ -31,12 +32,24 @@ public class HardcodedSignaler : MonoBehaviour
     [Tooltip("The button that generates an offer to a given target")]
     public Button CreateOfferButton;
 
+    private ManualResetEventSlim _remoteApplied1 = new ManualResetEventSlim();
+    private ManualResetEventSlim _remoteApplied2 = new ManualResetEventSlim();
+
+    public void Connect()
+    {
+        _remoteApplied1.Reset();
+        _remoteApplied2.Reset();
+        Peer1.CreateOffer();
+        _remoteApplied1.Wait();
+        _remoteApplied2.Wait();
+    }
+
     private void Start()
     {
         Peer1.OnInitialized.AddListener(OnInitialized1);
         Peer2.OnInitialized.AddListener(OnInitialized2);
 
-        CreateOfferButton.onClick.AddListener(() =>
+        CreateOfferButton?.onClick.AddListener(() =>
         {
             Peer1.CreateOffer();
         });
@@ -57,6 +70,7 @@ public class HardcodedSignaler : MonoBehaviour
     private async void Peer1_LocalSdpReadytoSend(string type, string sdp)
     {
         await Peer2.Peer.SetRemoteDescriptionAsync(type, sdp);
+        _remoteApplied2.Set();
         if (type == "offer")
         {
             Peer2.CreateAnswer();
@@ -66,6 +80,7 @@ public class HardcodedSignaler : MonoBehaviour
     private async void Peer2_LocalSdpReadytoSend(string type, string sdp)
     {
         await Peer1.Peer.SetRemoteDescriptionAsync(type, sdp);
+        _remoteApplied1.Set();
         if (type == "offer")
         {
             Peer1.CreateAnswer();
