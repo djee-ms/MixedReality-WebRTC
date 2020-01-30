@@ -160,7 +160,7 @@ namespace Microsoft.MixedReality.WebRTC
             // Add new track
             if (track != null)
             {
-                track.OnTrackAdded(peerConnection, this);
+                track.OnTrackAddedToTransceiver(this);
                 Debug.Assert(track == _remoteTrack);
                 Debug.Assert(_localTrack.PeerConnection == PeerConnection);
                 Debug.Assert(_localTrack.Transceiver == this);
