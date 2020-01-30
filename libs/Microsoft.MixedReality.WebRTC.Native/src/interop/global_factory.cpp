@@ -9,6 +9,8 @@
 #include "local_video_track.h"
 #include "peer_connection.h"
 
+#include "api/create_peerconnection_factory.h"
+
 namespace {
 
 using namespace Microsoft::MixedReality::WebRTC;
