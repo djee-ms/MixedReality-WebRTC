@@ -5,7 +5,7 @@
 
 #include <mutex>
 
-#include "api/mediastreaminterface.h"
+#include "api/media_stream_interface.h"
 
 #include "callback.h"
 #include "audio_frame.h"
