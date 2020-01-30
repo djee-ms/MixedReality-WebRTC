@@ -61,6 +61,14 @@ mrsShutdownOptions g_shutdown_options = mrsShutdownOptions::kFailOnLiveObjects |
 
 namespace Microsoft::MixedReality::WebRTC {
 
+uint32_t GlobalFactory::StaticReportLiveObjects() noexcept {
+  auto& factory = MutableInstance(false);
+  if (!factory) {
+    return 0;
+  }
+  return factory->ReportLiveObjects();
+}
+
 void GlobalFactory::SetShutdownOptions(mrsShutdownOptions options) noexcept {
   g_shutdown_options = options;
   auto const& factory = MutableInstance();
@@ -69,12 +77,20 @@ void GlobalFactory::SetShutdownOptions(mrsShutdownOptions options) noexcept {
   }
 }
 
+void GlobalFactory::ForceShutdown() noexcept {
+  std::unique_ptr<GlobalFactory>& factory = MutableInstance(false);
+  if (factory) {
+    factory = nullptr;  // fixme: outside lock...
+  }
+}
+
 RefPtr<GlobalFactory> GlobalFactory::InstancePtr() {
   auto& factory = MutableInstance();
   return RefPtr<GlobalFactory>(factory.get());
 }
 
-std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance() {
+std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance(
+    bool createIfNotExist) {
   /// Global factory of all global objects, including the peer connection
   /// factory itself, with added thread safety. This keeps a track of all
   /// objects alive, to determine when it is safe to release the WebRTC threads,
@@ -83,7 +99,7 @@ std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance() {
   static std::mutex g_mutex;
   // Ensure (in a thread-safe way) the factory is initialized
   std::scoped_lock lock(g_mutex);
-  if (!g_factory) {
+  if (createIfNotExist && !g_factory) {
     g_factory = std::make_unique<GlobalFactory>();
     g_factory->InitializeImplNoLock();
   }
@@ -136,7 +152,7 @@ bool GlobalFactory::TryShutdown() noexcept {
   }
   try {
     if (factory->TryShutdownImpl()) {
-      factory = nullptr;
+      factory = nullptr;  // fixme : outside lock...
       return true;
     }
   } catch (...) {
@@ -145,9 +161,10 @@ bool GlobalFactory::TryShutdown() noexcept {
   return false;
 }
 
-void GlobalFactory::ReportLiveObjects() {
+uint32_t GlobalFactory::ReportLiveObjects() {
   std::scoped_lock lock(mutex_);
   ReportLiveObjectsNoLock();
+  return static_cast<uint32_t>(alive_objects_.size());
 }
 
 #if defined(WINUWP)

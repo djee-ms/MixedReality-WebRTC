@@ -306,8 +306,16 @@ inline rtc::Thread* GetWorkerThread() {
   return GlobalFactory::InstancePtr()->GetWorkerThread();
 }
 
+uint32_t MRS_CALL mrsReportLiveObjects() noexcept {
+  return GlobalFactory::StaticReportLiveObjects();
+}
+
 void MRS_CALL mrsSetShutdownOptions(mrsShutdownOptions options) noexcept {
   GlobalFactory::SetShutdownOptions(options);
+}
+
+void MRS_CALL mrsForceShutdown() noexcept {
+  GlobalFactory::ForceShutdown();
 }
 
 void MRS_CALL mrsCloseEnum(mrsEnumHandle* handleRef) noexcept {

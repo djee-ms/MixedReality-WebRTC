@@ -24,8 +24,15 @@ enum class ObjectType : int {
 /// the peer connection factory, and on UWP the so-called "WebRTC factory".
 class GlobalFactory {
  public:
+  /// Report live objects to debug output, and return the number of live objects
+  /// at the time of the call.
+  static uint32_t StaticReportLiveObjects() noexcept;
+
   /// Set the MixedReality-WebRTC library shutdown options.
   static void SetShutdownOptions(mrsShutdownOptions options) noexcept;
+
+  /// Force-shutdown the library.
+  static void ForceShutdown() noexcept;
 
   /// Global factory of all global objects, including the peer connection
   /// factory itself, with added thread safety.
@@ -58,7 +65,8 @@ class GlobalFactory {
   /// Report live objects to WebRTC logging system for debugging.
   /// This is automatically called if the |mrsShutdownOptions::kLogLiveObjects|
   /// shutdown option is set, but can also be called manually at any time.
-  void ReportLiveObjects();
+  /// Return the number of live objects at the time of the call.
+  uint32_t ReportLiveObjects();
 
 #if defined(WINUWP)
   using WebRtcFactoryPtr =
@@ -80,7 +88,8 @@ class GlobalFactory {
  private:
   GlobalFactory(const GlobalFactory&) = delete;
   GlobalFactory& operator=(const GlobalFactory&) = delete;
-  static std::unique_ptr<GlobalFactory>& MutableInstance();
+  static std::unique_ptr<GlobalFactory>& MutableInstance(
+      bool createIfNotExist = true);
   mrsResult InitializeImplNoLock();
   void ForceShutdownImpl();
   bool TryShutdownImpl();

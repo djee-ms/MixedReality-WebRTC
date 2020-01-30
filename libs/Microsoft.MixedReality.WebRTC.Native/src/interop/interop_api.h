@@ -26,6 +26,9 @@ using mrsResult = Microsoft::MixedReality::WebRTC::Result;
 // Generic utilities
 //
 
+/// Report live objects to debug output, and return the number of live objects.
+MRS_API uint32_t MRS_CALL mrsReportLiveObjects() noexcept;
+
 /// Global MixedReality-WebRTC library shutdown options.
 enum class mrsShutdownOptions : uint32_t {
   kNone = 0,
@@ -50,6 +53,12 @@ enum class mrsShutdownOptions : uint32_t {
 /// terminates.
 MRS_API void MRS_CALL
 mrsSetShutdownOptions(mrsShutdownOptions options) noexcept;
+
+/// Forcefully shutdown the library and release all resources (as possible), and
+/// terminate the WebRTC threads to allow the shared module to be unloaded. This
+/// is a last-resort measure for exceptional situations like unit testing where
+/// loss of data is acceptable.
+MRS_API void MRS_CALL mrsForceShutdown() noexcept;
 
 /// Opaque enumerator type.
 struct mrsEnumerator;

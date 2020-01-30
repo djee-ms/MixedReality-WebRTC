@@ -12,6 +12,18 @@ namespace Microsoft.MixedReality.WebRTC
     public static class Library
     {
         /// <summary>
+        /// Report all objects current alive and tracked by the native implementation.
+        /// This is a live report, which generally gets outdated as soon as the function
+        /// returned, as new objects are created and others destroyed. Nonetheless this
+        /// is may be helpful to diagnose issues with disposing objects.
+        /// </summary>
+        /// <returns>Returns the number of live objects at the time of the call.</returns>
+        public static uint ReportLiveObjects()
+        {
+            return Utils.LibraryReportLiveObjects();
+        }
+
+        /// <summary>
         /// Options of library shutdown.
         /// </summary>
         [Flags]
@@ -43,6 +55,17 @@ namespace Microsoft.MixedReality.WebRTC
         public static void SetShutdownOptions(ShutdownOptions options)
         {
             Utils.LibrarySetShutdownOptions(options);
+        }
+
+        /// <summary>
+        /// Forcefully shutdown the MixedReality-WebRTC library. This shall not be used under normal
+        /// circumstances, but can be useful e.g. in the Unity editor when a test fails and proper
+        /// clean-up is not ensured (in particular, disposing objects), to allow the shared module to
+        /// shutdown and terminate its native threads, and be unloaded.
+        /// </summary>
+        public static void ForceShutdown()
+        {
+            Utils.LibraryForceShutdown();
         }
     }
 }
