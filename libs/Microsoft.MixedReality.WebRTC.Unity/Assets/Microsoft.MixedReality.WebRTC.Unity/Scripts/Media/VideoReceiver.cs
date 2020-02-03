@@ -13,93 +13,67 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// The video track can optionally be displayed locally with a <see cref="MediaPlayer"/>.
     /// </summary>
     [AddComponentMenu("MixedReality-WebRTC/Video Receiver")]
-    public class VideoReceiver : VideoSource
+    public class VideoReceiver : MediaReceiver, IVideoSource
     {
-        /// <summary>
-        /// Peer connection this remote video source is extracted from.
-        /// </summary>
-        [Header("Video track")]
-        public PeerConnection PeerConnection;
-
-        /// <summary>
-        /// Automatically play the remote video track when it is added.
-        /// This is equivalent to manually calling <see cref="Play"/> when the peer connection
-        /// is initialized.
-        /// </summary>
-        /// <seealso cref="Play"/>
-        /// <seealso cref="Stop()"/>
-        public bool AutoPlayOnAdded = true;
-
-        /// <summary>
-        /// Is the video source currently playing?
-        /// The concept of _playing_ is described in the <see cref="Play"/> function.
-        /// </summary>
-        /// <seealso cref="Play"/>
-        /// <seealso cref="Stop()"/>
-        public bool IsPlaying { get; private set; }
-
-        /// <summary>
-        /// Name of the transceiver this component should pair with.
-        /// When a remote track associated with a transceiver with that name is added to the peer connection,
-        /// this component will automatically pair with that added track.
-        /// </summary>
-        public string TargetTransceiverName;
-
         /// <summary>
         /// Remote video track receiving data from the remote peer.
         /// </summary>
         public RemoteVideoTrack Track { get; private set; } = null;
 
         /// <summary>
-        /// Internal queue used to marshal work back to the main Unity thread.
+        /// Event invoked from the main Unity thread when the video stream starts.
+        /// This means that video frames are available and the renderer should start polling.
         /// </summary>
-        private ConcurrentQueue<Action> _mainThreadWorkQueue = new ConcurrentQueue<Action>();
+        public VideoStreamStartedEvent VideoStreamStarted = new VideoStreamStartedEvent();
 
         /// <summary>
-        /// Manually start playback of the remote video feed by registering some listeners
-        /// to the peer connection and starting to enqueue video frames as they become ready.
-        /// 
-        /// Because the WebRTC implementation uses a push model, calling <see cref="Play"/> does
-        /// not necessarily start producing frames immediately. Instead, this starts listening for
-        /// incoming frames from the remote peer. When a track is actually added by the remote peer
-        /// and received locally, the <see cref="VideoSource.VideoStreamStarted"/> event is fired, and soon
-        /// after frames will start being available for rendering in the internal frame queue. Note that
-        /// this event may be fired before <see cref="Play"/> is called, in which case frames are
-        /// produced immediately.
-        /// 
-        /// If <see cref="AutoPlayOnAdded"/> is <c>true</c> then this is called automatically
-        /// as soon as the peer connection is initialized.
+        /// Event invoked from the main Unity thread when the video stream stops.
+        /// This means that the video frame queue is not populated anymore, though some frames
+        /// may still be present in it that may be rendered.
         /// </summary>
-        /// <remarks>
-        /// This is only valid while the peer connection is initialized, that is after the
-        /// <see cref="PeerConnection.OnInitialized"/> event was fired.
-        /// </remarks>
-        /// <seealso cref="Stop()"/>
-        /// <seealso cref="IsPlaying"/>
-        public void Play()
+        public VideoStreamStoppedEvent VideoStreamStopped = new VideoStreamStoppedEvent();
+
+        /// <inheritdoc/>
+        public VideoEncoding FrameEncoding { get; } = VideoEncoding.I420A;
+
+        public void RegisterCallback(I420AVideoFrameDelegate callback)
         {
-            if (!IsPlaying)
+            if (Track != null)
             {
-                IsPlaying = true;
+                Track.I420AVideoFrameReady += callback;
             }
         }
 
-        /// <summary>
-        /// Stop playback of the remote video feed and unregister the handler listening to remote
-        /// video frames.
-        /// 
-        /// Note that this is independent of whether or not a remote track is actually present.
-        /// In particular this does not fire the <see cref="VideoSource.VideoStreamStopped"/>, which corresponds
-        /// to a track being made available to the local peer by the remote peer.
-        /// </summary>
-        /// <seealso cref="Play()"/>
-        /// <seealso cref="IsPlaying"/>
-        public void Stop()
+        public void UnregisterCallback(I420AVideoFrameDelegate callback)
         {
-            if (IsPlaying)
+            if (Track != null)
             {
-                IsPlaying = false;
+                Track.I420AVideoFrameReady -= callback;
             }
+        }
+
+        public void RegisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady += callback;
+            }
+        }
+
+        public void UnregisterCallback(Argb32VideoFrameDelegate callback)
+        {
+            if (Track != null)
+            {
+                Track.Argb32VideoFrameReady -= callback;
+            }
+        }
+
+        protected override void OnPlaybackStarted()
+        {
+        }
+
+        protected override void OnPlaybackStopped()
+        {
             if (Track != null)
             {
                 VideoStreamStopped.Invoke(this);
@@ -108,139 +82,34 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public VideoReceiver() : base(frameEncoding: VideoEncoding.I420A)
+        /// <summary>
+        /// Free-threaded callback invoked by the owning peer connection when a track is paired
+        /// with this receiver, which enqueues the <see cref="VideoSource.VideoStreamStarted"/>
+        /// event to be fired from the main Unity thread.
+        /// </summary>
+        internal void OnPaired(RemoteVideoTrack track)
         {
-        }
+            Debug.Assert(Track == null);
+            Track = track;
 
-        public override void RegisterCallback(I420AVideoFrameDelegate callback)
-        {
-            if (Track != null)
-            {
-                Track.I420AVideoFrameReady += callback;
-            }
-        }
-
-        public override void UnregisterCallback(I420AVideoFrameDelegate callback)
-        {
-            if (Track != null)
-            {
-                Track.I420AVideoFrameReady -= callback;
-            }
-        }
-
-        public override void RegisterCallback(Argb32VideoFrameDelegate callback)
-        {
-            if (Track != null)
-            {
-                Track.Argb32VideoFrameReady += callback;
-            }
-        }
-
-        public override void UnregisterCallback(Argb32VideoFrameDelegate callback)
-        {
-            if (Track != null)
-            {
-                Track.Argb32VideoFrameReady -= callback;
-            }
+            // Enqueue invoking the unity event from the main Unity thread, so that listeners
+            // can directly access Unity objects from their handler function.
+            _mainThreadWorkQueue.Enqueue(() => VideoStreamStarted.Invoke(this));
         }
 
         /// <summary>
-        /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Awake.html">MonoBehaviour.Awake</a>
-        /// which registers some handlers with the peer connection to listen to its <see cref="PeerConnection.OnInitialized"/>
-        /// and <see cref="PeerConnection.OnShutdown"/> events.
+        /// Free-threaded callback invoked by the owning peer connection when a track is unpaired
+        /// from this receiver, which enqueues the <see cref="VideoSource.VideoStreamStopped"/>
+        /// event to be fired from the main Unity thread.
         /// </summary>
-        protected void Awake()
+        internal void OnUnpaired(RemoteVideoTrack track)
         {
-            PeerConnection.RegisterSource(this);
-            PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
-        }
+            Debug.Assert(Track == track);
+            Track = null;
 
-        /// <summary>
-        /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnDestroy.html">MonoBehaviour.OnDestroy</a>
-        /// which unregisters all listeners from the peer connection.
-        /// </summary>
-        protected void OnDestroy()
-        {
-            PeerConnection.OnInitialized.RemoveListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.RemoveListener(OnPeerShutdown);
-            Stop();
-        }
-
-        /// <summary>
-        /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">MonoBehaviour.Update</a>
-        /// to execute from the current Unity main thread any background work enqueued from free-threaded callbacks.
-        /// </summary>
-        protected void Update()
-        {
-            // Execute any pending work enqueued by background tasks
-            while (_mainThreadWorkQueue.TryDequeue(out Action workload))
-            {
-                workload();
-            }
-        }
-
-        /// <summary>
-        /// Internal helper callback fired when the peer is initialized, which starts listening for events
-        /// on remote tracks added and removed, and optionally starts video playback if the
-        /// <see cref="AutoPlayOnAdded"/> property is <c>true</c>.
-        /// </summary>
-        private void OnPeerInitialized()
-        {
-            PeerConnection.Peer.VideoTrackAdded += TrackAdded;
-            PeerConnection.Peer.VideoTrackRemoved += TrackRemoved;
-
-            if (AutoPlayOnAdded)
-            {
-                Play();
-            }
-        }
-
-        /// <summary>
-        /// Internal helper callback fired when the peer is shut down, which stops video playback and
-        /// unregister all the event listeners from the peer connection about to be destroyed.
-        /// </summary>
-        private void OnPeerShutdown()
-        {
-            Stop();
-            PeerConnection.Peer.VideoTrackAdded -= TrackAdded;
-            PeerConnection.Peer.VideoTrackRemoved -= TrackRemoved;
-        }
-
-        /// <summary>
-        /// Internal free-threaded helper callback on track added, which enqueues the
-        /// <see cref="VideoSource.VideoStreamStarted"/> event to be fired from the main
-        /// Unity thread.
-        /// </summary>
-        private void TrackAdded(RemoteVideoTrack track)
-        {
-            // Try to bind to the new track by transceiver name, pairing with the remote
-            // peer's track with the same transceiver name.
-            if ((Track == null) && (track.Transceiver.Name == TargetTransceiverName))
-            {
-                Track = track;
-
-                // Enqueue invoking the unity event from the main Unity thread, so that listeners
-                // can directly access Unity objects from their handler function.
-                _mainThreadWorkQueue.Enqueue(() => VideoStreamStarted.Invoke(this));
-            }
-        }
-
-        /// <summary>
-        /// Internal free-threaded helper callback on track removed, which enqueues the
-        /// <see cref="VideoSource.VideoStreamStopped"/> event to be fired from the main
-        /// Unity thread.
-        /// </summary>
-        private void TrackRemoved(RemoteVideoTrack track)
-        {
-            if (Track == track)
-            {
-                Track = null;
-
-                // Enqueue invoking the unity event from the main Unity thread, so that listeners
-                // can directly access Unity objects from their handler function.
-                _mainThreadWorkQueue.Enqueue(() => VideoStreamStopped.Invoke(this));
-            }
+            // Enqueue invoking the unity event from the main Unity thread, so that listeners
+            // can directly access Unity objects from their handler function.
+            _mainThreadWorkQueue.Enqueue(() => VideoStreamStopped.Invoke(this));
         }
     }
 }

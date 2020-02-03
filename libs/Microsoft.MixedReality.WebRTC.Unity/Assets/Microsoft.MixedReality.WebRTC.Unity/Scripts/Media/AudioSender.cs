@@ -12,7 +12,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// can optionally be rendered locally with a <see cref="MediaPlayer"/>.
     /// </summary>
     [AddComponentMenu("MixedReality-WebRTC/Audio Sender")]
-    public class AudioSender : AudioSource
+    public class AudioSender : MediaSender, IAudioSource
     {
         /// <summary>
         /// Automatically start local audio capture when this component is enabled.
@@ -28,86 +28,52 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         [Tooltip("SDP name of the preferred audio codec to use if supported")]
         public string PreferredAudioCodec = string.Empty;
 
-        /// <summary>
-        /// Peer connection this local audio source will add an audio track to.
-        /// </summary>
-        [Header("Audio track")]
-        public PeerConnection PeerConnection;
-
-        /// <summary>
-        /// Name of the track. This will be sent in the SDP messages.
-        /// </summary>
-        [Tooltip("SDP track name.")]
-        [SdpToken(allowEmpty: true)]
-        public string TrackName;
-
-        /// <summary>
-        /// Automatically register as an audio track when the peer connection is ready.
-        /// </summary>
-        public bool AutoAddTrack = true;
+        public AudioStreamStartedEvent AudioStreamStarted = new AudioStreamStartedEvent();
+        public AudioStreamStoppedEvent AudioStreamStopped = new AudioStreamStoppedEvent();
 
         /// <summary>
         /// Audio track added to the peer connection that this component encapsulates.
         /// </summary>
         public LocalAudioTrack Track { get; private set; } = null;
 
-        /// <summary>
-        /// Frame queue holding the pending frames enqueued by the audio source itself,
-        /// which an audio renderer needs to read and display.
-        /// </summary>
-        //private AudioFrameQueue<AudioFrameStorage> _frameQueue;
+        public void RegisterCallback(AudioFrameDelegate callback) { }
+        public void UnregisterCallback(AudioFrameDelegate callback) { }
 
-        protected void Awake()
+        protected override void MuteImpl(bool mute)
         {
-            PeerConnection.RegisterSource(this);
-            PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
-        }
-
-        protected void OnDestroy()
-        {
-            PeerConnection.OnInitialized.RemoveListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.RemoveListener(OnPeerShutdown);
-        }
-
-        protected void OnEnable()
-        {
-            var nativePeer = PeerConnection?.Peer;
-            if ((nativePeer != null) && nativePeer.Initialized)
+            if (Track != null)
             {
-                DoAutoStartActions(nativePeer);
+                Track.Enabled = mute;
             }
         }
 
-        protected void OnDisable()
-        {
-            var nativePeer = PeerConnection.Peer;
-            if ((Track != null) && (nativePeer != null) && nativePeer.Initialized)
-            {
-                AudioStreamStopped.Invoke();
-                //Track.AudioFrameReady -= AudioFrameReady;
-                Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalAudioTrack(Track);
-                Track.Dispose();
-                Track = null;
-                //_frameQueue.Clear();
-            }
-        }
+        //protected void OnEnable()
+        //{
+        //    var nativePeer = PeerConnection?.Peer;
+        //    if ((nativePeer != null) && nativePeer.Initialized)
+        //    {
+        //        DoStartAction();
+        //    }
+        //}
 
-        private void OnPeerInitialized()
-        {
-            var nativePeer = PeerConnection.Peer;
-            nativePeer.PreferredAudioCodec = PreferredAudioCodec;
+        //protected void OnDisable()
+        //{
+        //    var nativePeer = PeerConnection.Peer;
+        //    if ((Track != null) && (nativePeer != null) && nativePeer.Initialized)
+        //    {
+        //        AudioStreamStopped.Invoke();
+        //        //Track.AudioFrameReady -= AudioFrameReady;
+        //        Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalAudioTrack(Track);
+        //        Track.Dispose();
+        //        Track = null;
+        //        //_frameQueue.Clear();
+        //    }
+        //}
 
-            // Only perform auto-start actions (add track, start capture) if the component
-            // is enabled. Otherwise just do nothing, this component is idle.
-            if (enabled)
-            {
-                DoAutoStartActions(nativePeer);
-            }
-        }
-
-        private async void DoAutoStartActions(WebRTC.PeerConnection nativePeer)
+        protected override async void OnMediaInitialized()
         {
+            PeerConnection.Peer.PreferredAudioCodec = PreferredAudioCodec;
+
             if (AutoStartCapture)
             {
                 //nativePeer.LocalAudioFrameReady += LocalAudioFrameReady;
@@ -117,6 +83,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
             if (AutoAddTrack)
             {
+                var nativePeer = PeerConnection.Peer;
+                Debug.Assert(nativePeer.Initialized);
+
                 // Force again PreferredAudioCodec right before starting the local capture,
                 // so that modifications to the property done after OnPeerInitialized() are
                 // accounted for.
@@ -154,12 +123,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        private void OnPeerShutdown()
+        protected override void OnMediaShutdown()
         {
             if (Track != null)
             {
                 AudioStreamStopped.Invoke();
-                //Track.AudioFrameReady -= AudioFrameReady;
                 Track.Transceiver.LocalTrack = null;
                 Track.Dispose();
                 Track = null;

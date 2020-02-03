@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
 {
@@ -21,7 +22,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
         }
 
-        protected override void DoAddTrackAction()
+        protected override Task DoAddTrackAsyncAction()
         {
             // Ensure the track has a valid name
             string trackName = TrackName;
@@ -62,6 +63,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
             // Synchronize the track status with the Unity component status
             Track.Enabled = enabled;
+
+            // This implementation is fast, so executes synchronously.
+            return Task.CompletedTask;
         }
 
         protected override void DoRemoveTrackAction()

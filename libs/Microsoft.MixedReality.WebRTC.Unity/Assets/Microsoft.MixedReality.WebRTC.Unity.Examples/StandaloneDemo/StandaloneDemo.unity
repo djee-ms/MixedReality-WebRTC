@@ -601,15 +601,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29b5ec2fdf160bb4ebd2d5159450fd2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PeerConnection: {fileID: 114452440398351871}
+  TrackName: video_C
+  AutoAddTrack: 1
+  AutoStartCapture: 1
+  PreferredVideoCodec: 
   VideoStreamStarted:
     m_PersistentCalls:
       m_Calls: []
   VideoStreamStopped:
     m_PersistentCalls:
       m_Calls: []
-  PeerConnection: {fileID: 114452440398351871}
-  TrackName: video_C
-  AutoAddTrackOnStart: 1
   Colors:
   - serializedVersion: 2
     rgba: 65340
@@ -632,8 +634,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource: {fileID: 0}
-  VideoSource: {fileID: 447630319}
+  AudioSource2: {fileID: 0}
+  VideoSource2: {fileID: 0}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 744769662}
@@ -2021,15 +2023,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5c8b8e916d2cbf40a9dd142c021c4d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PeerConnection: {fileID: 1537901323}
+  AutoPlayOnAdded: 1
   VideoStreamStarted:
     m_PersistentCalls:
       m_Calls: []
   VideoStreamStopped:
     m_PersistentCalls:
       m_Calls: []
-  PeerConnection: {fileID: 1537901323}
-  AutoPlayOnAdded: 1
-  TargetTransceiverName: video_D
 --- !u!114 &989215900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2042,8 +2043,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource: {fileID: 0}
-  VideoSource: {fileID: 989215899}
+  AudioSource2: {fileID: 0}
+  VideoSource2: {fileID: 0}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 694614437}
@@ -3104,15 +3105,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5c8b8e916d2cbf40a9dd142c021c4d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PeerConnection: {fileID: 1537901323}
+  AutoPlayOnAdded: 1
   VideoStreamStarted:
     m_PersistentCalls:
       m_Calls: []
   VideoStreamStopped:
     m_PersistentCalls:
       m_Calls: []
-  PeerConnection: {fileID: 1537901323}
-  AutoPlayOnAdded: 1
-  TargetTransceiverName: video_A
 --- !u!114 &1533694090
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3125,8 +3125,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource: {fileID: 0}
-  VideoSource: {fileID: 1533694088}
+  AudioSource2: {fileID: 0}
+  VideoSource2: {fileID: 0}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 521926238}
@@ -3223,6 +3223,16 @@ MonoBehaviour:
   OnError:
     m_PersistentCalls:
       m_Calls: []
+  _transceivers:
+  - Type: 1
+    Sender: {fileID: 0}
+    Receiver: {fileID: 1533694088}
+  - Type: 1
+    Sender: {fileID: 0}
+    Receiver: {fileID: 0}
+  - Type: 1
+    Sender: {fileID: 0}
+    Receiver: {fileID: 1712234956}
 --- !u!4 &1537901324
 Transform:
   m_ObjectHideFlags: 0
@@ -3294,15 +3304,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29b5ec2fdf160bb4ebd2d5159450fd2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PeerConnection: {fileID: 114452440398351871}
+  TrackName: video_B
+  AutoAddTrack: 1
+  AutoStartCapture: 1
+  PreferredVideoCodec: 
   VideoStreamStarted:
     m_PersistentCalls:
       m_Calls: []
   VideoStreamStopped:
     m_PersistentCalls:
       m_Calls: []
-  PeerConnection: {fileID: 114452440398351871}
-  TrackName: video_B
-  AutoAddTrackOnStart: 1
   Colors:
   - serializedVersion: 2
     rgba: 65535
@@ -3323,8 +3335,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource: {fileID: 0}
-  VideoSource: {fileID: 1645256671}
+  AudioSource2: {fileID: 0}
+  VideoSource2: {fileID: 0}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 2120561397}
@@ -3517,15 +3529,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5c8b8e916d2cbf40a9dd142c021c4d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PeerConnection: {fileID: 1537901323}
+  AutoPlayOnAdded: 1
   VideoStreamStarted:
     m_PersistentCalls:
       m_Calls: []
   VideoStreamStopped:
     m_PersistentCalls:
       m_Calls: []
-  PeerConnection: {fileID: 1537901323}
-  AutoPlayOnAdded: 1
-  TargetTransceiverName: video_C
 --- !u!114 &1712234957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3538,8 +3549,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource: {fileID: 0}
-  VideoSource: {fileID: 1712234956}
+  AudioSource2: {fileID: 0}
+  VideoSource2: {fileID: 0}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 1149091332}
@@ -4569,6 +4580,19 @@ MonoBehaviour:
   OnError:
     m_PersistentCalls:
       m_Calls: []
+  _transceivers:
+  - Type: 1
+    Sender: {fileID: 8066520111486228012}
+    Receiver: {fileID: 0}
+  - Type: 1
+    Sender: {fileID: 1645256671}
+    Receiver: {fileID: 0}
+  - Type: 1
+    Sender: {fileID: 447630319}
+    Receiver: {fileID: 0}
+  - Type: 1
+    Sender: {fileID: 0}
+    Receiver: {fileID: 989215899}
 --- !u!114 &114460246451956513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4920,8 +4944,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource: {fileID: 0}
-  VideoSource: {fileID: 8066520111486228012}
+  AudioSource2: {fileID: 0}
+  VideoSource2: {fileID: 0}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 8067683105943324948}
@@ -5004,15 +5028,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29b5ec2fdf160bb4ebd2d5159450fd2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PeerConnection: {fileID: 114452440398351871}
+  TrackName: video_A
+  AutoAddTrack: 1
+  AutoStartCapture: 1
+  PreferredVideoCodec: 
   VideoStreamStarted:
     m_PersistentCalls:
       m_Calls: []
   VideoStreamStopped:
     m_PersistentCalls:
       m_Calls: []
-  PeerConnection: {fileID: 114452440398351871}
-  TrackName: video_A
-  AutoAddTrackOnStart: 1
   Colors:
   - serializedVersion: 2
     rgba: 255

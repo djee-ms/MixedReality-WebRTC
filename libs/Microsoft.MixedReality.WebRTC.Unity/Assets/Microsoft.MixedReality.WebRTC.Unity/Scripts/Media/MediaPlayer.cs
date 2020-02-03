@@ -19,10 +19,24 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     {
         [Header("Source")]
         [Tooltip("Audio source providing the audio data used by this player")]
-        public AudioSource AudioSource;
+        public MediaSource AudioSource2;
+        protected AudioReceiver AudioSource;
 
         [Tooltip("Video source providing the video frames rendered by this player")]
-        public VideoSource VideoSource;
+        public MediaSource VideoSource2;
+        protected VideoReceiver VideoSource;
+
+        protected void OnValidate()
+        {
+            if (!(AudioSource2 is IAudioSource))
+            {
+                AudioSource2 = null;
+            }
+            if (!(VideoSource2 is IVideoSource))
+            {
+                VideoSource2 = null;
+            }
+        }
 
         [Tooltip("Max video playback framerate, in frames per second")]
         [Range(0.001f, 120f)]
@@ -110,26 +124,26 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
         }
 
-        private void VideoStreamStarted(VideoSource source)
+        private void VideoStreamStarted(IVideoSource source)
         {
             bool isRemote = (source is VideoReceiver);
             int frameQueueSize = (isRemote ? 5 : 3);
 
             switch (VideoSource.FrameEncoding)
             {
-                case VideoSource.VideoEncoding.I420A:
+                case VideoEncoding.I420A:
                     _i420aFrameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(frameQueueSize);
                     VideoSource.RegisterCallback(I420AVideoFrameReady);
                     break;
 
-                case VideoSource.VideoEncoding.Argb32:
+                case VideoEncoding.Argb32:
                     _argb32FrameQueue = new VideoFrameQueue<Argb32VideoFrameStorage>(frameQueueSize);
                     VideoSource.RegisterCallback(Argb32VideoFrameReady);
                     break;
             }
         }
 
-        private void VideoStreamStopped(VideoSource source)
+        private void VideoStreamStopped(IVideoSource source)
         {
             // Clear the video display to not confuse the user who could otherwise
             // think that the video is still playing but is lagging/frozen.

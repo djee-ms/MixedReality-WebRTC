@@ -25,9 +25,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// Base class for audio sources plugging into the internal peer connection API to
     /// expose a single audio stream to a renderer (<see cref="MediaPlayer"/> or custom).
     /// </summary>
-    public abstract class AudioSource : MonoBehaviour
+    //public abstract class AudioSource : MonoBehaviour
+    //{
+    //    public AudioStreamStartedEvent AudioStreamStarted = new AudioStreamStartedEvent();
+    //    public AudioStreamStoppedEvent AudioStreamStopped = new AudioStreamStoppedEvent();
+    //}
+
+    public interface IAudioSource
     {
-        public AudioStreamStartedEvent AudioStreamStarted = new AudioStreamStartedEvent();
-        public AudioStreamStoppedEvent AudioStreamStopped = new AudioStreamStoppedEvent();
+        void RegisterCallback(AudioFrameDelegate callback);
+        void UnregisterCallback(AudioFrameDelegate callback);
     }
 }

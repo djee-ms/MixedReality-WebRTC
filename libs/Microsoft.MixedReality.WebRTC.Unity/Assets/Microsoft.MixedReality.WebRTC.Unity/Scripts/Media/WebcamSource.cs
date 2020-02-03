@@ -108,14 +108,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             framerate = 0.0
         };
 
-        protected override async void DoAddTrackAction()
+        public WebcamSource() : base(frameEncoding: VideoEncoding.I420A)
         {
-            // This needs to be awaited because it will initialize Track, which is used
-            // as soon as this callback returns.
-            await AddLocalVideoTrackImplAsync();
         }
 
-        private async Task AddLocalVideoTrackImplAsync()
+        protected override async Task DoAddTrackAsyncAction()
         {
             string videoProfileId = VideoProfileId;
             var videoProfileKind = VideoProfileKind;

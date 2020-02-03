@@ -3,14 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Concurrent;
 using System.Text;
-using System.IO;
+using System.ComponentModel;
 
 #if UNITY_WSA && !UNITY_EDITOR
 using Windows.UI.Core;
@@ -89,6 +88,23 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     [Serializable]
     public class WebRTCErrorEvent : UnityEvent<string>
     {
+    }
+
+    public enum MediaType
+    {
+        Audio,
+        Video
+    }
+
+    [Serializable]
+    public class TransceiverInfo
+    {
+        public MediaType Type;
+        public MediaSender Sender;
+        public MediaReceiver Receiver;
+
+        [NonSerialized]
+        public Transceiver Transceiver;
     }
 
     /// <summary>
@@ -173,7 +189,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <summary>
         /// Event fired after the peer connection is initialized and ready for use.
         /// </summary>
-        [Header("Peer connection events")]
+        [Header("Peer Connection Events")]
         [Tooltip("Event fired after the peer connection is initialized and ready for use")]
         public UnityEvent OnInitialized = new UnityEvent();
 
@@ -208,29 +224,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         private WebRTC.PeerConnection _nativePeer;
 
-        private class AudioStreamInfo
-        {
-            public AudioSender Sender = null;
-            public AudioReceiver Receiver = null;
-            public AudioTransceiver Transceiver = null;
-        }
-
-        private class VideoStreamInfo
-        {
-            public VideoSender Sender = null;
-            public VideoReceiver Receiver = null;
-            public VideoTransceiver Transceiver = null;
-        }
-
         /// <summary>
-        /// Map of stream name to audio stream info.
+        /// List of transceivers and their associated media sender/receiver components.
         /// </summary>
-        private Dictionary<string, AudioStreamInfo> _audioStreams = new Dictionary<string, AudioStreamInfo>();
-
-        /// <summary>
-        /// Map of stream name to video stream info.
-        /// </summary>
-        private Dictionary<string, VideoStreamInfo> _videoStreams = new Dictionary<string, VideoStreamInfo>();
+        [SerializeField]
+        private List<TransceiverInfo> _transceivers = new List<TransceiverInfo>();
 
         private bool _suspendOffers = false;
 
@@ -260,6 +258,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (_nativePeer == null)
             {
                 _nativePeer = new WebRTC.PeerConnection();
+                _nativePeer.AudioTrackAdded += Peer_AudioTrackAdded;
+                _nativePeer.AudioTrackRemoved += Peer_AudioTrackRemoved;
+                _nativePeer.VideoTrackAdded += Peer_VideoTrackAdded;
+                _nativePeer.VideoTrackRemoved += Peer_VideoTrackRemoved;
                 if (Signaler != null)
                 {
                     _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
@@ -317,124 +319,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 #endif
         }
 
-        /// <summary>
-        /// Register an audio sender source with the peer connection, for automated track pairing.
-        /// </summary>
-        /// <param name="source">The audio sender to register</param>
-        /// <remarks>
-        /// Only a single audio sender can be registered for a given stream name (<see cref="AudioSender.TrackName"/>).
-        /// Attempting to register more than one will yield a <see xref="System.InvalidOperationException"/>, and generally
-        /// indicates that multiple <see cref="AudioSender"/> components have the same values for the
-        /// <see cref="AudioSender.TrackName"/> and <see cref="AudioSender.PeerConnection"/> properties.
-        /// 
-        /// This change internally generates a renegotiation needed event on the current Unity peer connection component,
-        /// which creates a new offer unless auto-offers are suspended or the peer is not yet connected.
-        /// </remarks>
-        public void RegisterSource(AudioSender source)
+        public void AddTransceiver(MediaType type)
         {
-            if (_audioStreams.TryGetValue(source.TrackName, out AudioStreamInfo streamInfo))
-            {
-                if (streamInfo.Sender != null)
-                {
-                    throw new InvalidOperationException($"Peer connection '{name}' has already an audio sender '{streamInfo.Sender.name}' for source '{source.TrackName}', cannot add also '{source.name}'.");
-                }
-                streamInfo.Sender = source;
-            }
-            else
-            {
-                _audioStreams.Add(source.TrackName, new AudioStreamInfo { Sender = source });
-            }
-            Peer_RenegotiationNeeded();
-        }
-
-        /// <summary>
-        /// Register a video sender source with the peer connection, for automated track pairing.
-        /// </summary>
-        /// <param name="source">The video sender to register</param>
-        /// <remarks>
-        /// Only a single video sender can be registered for a given stream name (<see cref="VideoSender.TrackName"/>).
-        /// Attempting to register more than one will yield a <see xref="System.InvalidOperationException"/>, and generally
-        /// indicates that multiple <see cref="VideoSender"/> components have the same values for the
-        /// <see cref="VideoSender.TrackName"/> and <see cref="VideoSender.PeerConnection"/> properties.
-        /// 
-        /// This change internally generates a renegotiation needed event on the current Unity peer connection component,
-        /// which creates a new offer unless auto-offers are suspended or the peer is not yet connected.
-        /// </remarks>
-        public void RegisterSource(VideoSender source)
-        {
-            if (_videoStreams.TryGetValue(source.TrackName, out VideoStreamInfo streamInfo))
-            {
-                if (streamInfo.Sender != null)
-                {
-                    throw new InvalidOperationException($"Peer connection '{name}' has already a video sender '{streamInfo.Sender.name}' for source '{source.TrackName}', cannot add also '{source.name}'.");
-                }
-                streamInfo.Sender = source;
-            }
-            else
-            {
-                _videoStreams.Add(source.TrackName, new VideoStreamInfo { Sender = source });
-            }
-            Peer_RenegotiationNeeded();
-        }
-
-        /// <summary>
-        /// Register an audio receiver source with the peer connection, for automated track pairing.
-        /// </summary>
-        /// <param name="source">The audio receiver to register</param>
-        /// <remarks>
-        /// Only a single audio receiver can be registered for a given stream name (<see cref="AudioReceiver.TargetTransceiverName"/>).
-        /// Attempting to register more than one will yield a <see xref="System.InvalidOperationException"/>, and generally
-        /// indicates that multiple <see cref="AudioReceiver"/> components have the same values for the
-        /// <see cref="AudioReceiver.TargetTransceiverName"/> and <see cref="AudioReceiver.PeerConnection"/> properties.
-        /// 
-        /// This change internally generates a renegotiation needed event on the current Unity peer connection component,
-        /// which creates a new offer unless auto-offers are suspended or the peer is not yet connected.
-        /// </remarks>
-        public void RegisterSource(AudioReceiver source)
-        {
-            if (_audioStreams.TryGetValue(source.TargetTransceiverName, out AudioStreamInfo streamInfo))
-            {
-                if (streamInfo.Receiver != null)
-                {
-                    throw new InvalidOperationException($"Peer connection '{name}' has already an audio receiver '{streamInfo.Receiver.name}' for source '{source.TargetTransceiverName}', cannot add also '{source.name}'.");
-                }
-                streamInfo.Receiver = source;
-            }
-            else
-            {
-                _audioStreams.Add(source.TargetTransceiverName, new AudioStreamInfo { Receiver = source });
-            }
-            Peer_RenegotiationNeeded();
-        }
-
-        /// <summary>
-        /// Register a video receiver source with the peer connection, for automated track pairing.
-        /// </summary>
-        /// <param name="source">The video receiver to register</param>
-        /// <remarks>
-        /// Only a single video receiver can be registered for a given stream name (<see cref="AudioSender.TargetTransceiverName"/>).
-        /// Attempting to register more than one will yield a <see xref="System.InvalidOperationException"/>, and generally
-        /// indicates that multiple <see cref="VideoReceiver"/> components have the same values for the
-        /// <see cref="VideoReceiver.TargetTransceiverName"/> and <see cref="VideoReceiver.PeerConnection"/> properties.
-        /// 
-        /// This change internally generates a renegotiation needed event on the current Unity peer connection component,
-        /// which creates a new offer unless auto-offers are suspended or the peer is not yet connected.
-        /// </remarks>
-        public void RegisterSource(VideoReceiver source)
-        {
-            if (_videoStreams.TryGetValue(source.TargetTransceiverName, out VideoStreamInfo streamInfo))
-            {
-                if (streamInfo.Receiver != null)
-                {
-                    throw new InvalidOperationException($"Peer connection '{name}' has already a video receiver '{streamInfo.Receiver.name}' for source '{source.TargetTransceiverName}', cannot add also '{source.name}'.");
-                }
-                streamInfo.Receiver = source;
-            }
-            else
-            {
-                _videoStreams.Add(source.TargetTransceiverName, new VideoStreamInfo { Receiver = source });
-            }
-            Peer_RenegotiationNeeded();
+            _transceivers.Add(new TransceiverInfo{ Type = type });
         }
 
         /// <summary>
@@ -452,85 +339,83 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             _suspendOffers = true;
 
             // Add all new transceivers for local tracks
-            foreach (var pair in _audioStreams)
             {
-                var streamId = pair.Key;
-                var streamInfo = pair.Value;
+                var audioTransceivers = _nativePeer.AudioTransceivers;
+                var videoTransceivers = _nativePeer.VideoTransceivers;
+                int numNativeTransceivers = audioTransceivers.Count + videoTransceivers.Count;
 
-                // Compute the transceiver desired direction based on what the local peer expects, both in terms
-                // of sending and in terms of receiving. Note that this means the remote peer will not be able to
-                // send any data if the local peer did not add a remote source first.
-                // Tracks are not tested explicitly since the local track can be swapped on-the-fly without renegotiation,
-                // and the remote track is generally not added yet at the beginning of the negotiation.
-                bool wantsSend = (streamInfo.Sender != null);
-                bool wantsRecv = (streamInfo.Receiver != null);
-                var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.SendOnly)
-                    : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
-
-                // Create a new transceiver if none exists
-                if (streamInfo.Transceiver == null)
+                for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
                 {
-                    var settings = new AudioTransceiverInitSettings
+                    var transceiverInfo = _transceivers[mlineIndex];
+
+                    // Compute the transceiver desired direction based on what the local peer expects, both in terms
+                    // of sending and in terms of receiving. Note that this means the remote peer will not be able to
+                    // send any data if the local peer did not add a remote source first.
+                    // Tracks are not tested explicitly since the local track can be swapped on-the-fly without renegotiation,
+                    // and the remote track is generally not added yet at the beginning of the negotiation.
+                    bool wantsSend = (transceiverInfo.Sender != null);
+                    bool wantsRecv = (transceiverInfo.Receiver != null);
+                    var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.SendOnly)
+                        : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+
+                    // Create a new transceiver if none exists
+                    if (transceiverInfo.Transceiver == null)
                     {
-                        Name = streamId,
-                        InitialDesiredDirection = wantsDir
-                    };
-                    streamInfo.Transceiver = _nativePeer.AddAudioTransceiver(settings);
-                }
-                else
-                {
-                    streamInfo.Transceiver.DesiredDirection = wantsDir;
-                }
-
-                // Associate the tracks with the transceiver, if any
-                if (wantsSend)
-                {
-                    streamInfo.Transceiver.LocalTrack = streamInfo.Sender.Track;
-                }
-                //if (hasRecv)
-                //{
-                //    streamInfo.Transceiver.RemoteTrack = streamInfo.Receiver.Track;
-                //}
-            }
-            foreach (var pair in _videoStreams)
-            {
-                var streamId = pair.Key;
-                var streamInfo = pair.Value;
-
-                // Compute the transceiver desired direction based on what the local peer expects, both in terms
-                // of sending and in terms of receiving. Note that this means the remote peer will not be able to
-                // send any data if the local peer did not add a remote source first.
-                // Tracks are not tested explicitly since the local track can be swapped on-the-fly without renegotiation,
-                // and the remote track is generally not added yet at the beginning of the negotiation.
-                bool wantsSend = (streamInfo.Sender != null);
-                bool wantsRecv = (streamInfo.Receiver != null);
-                var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.SendOnly)
-                    : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
-
-                // Create a new transceiver if none exists
-                if (streamInfo.Transceiver == null)
-                {
-                    var settings = new VideoTransceiverInitSettings
+                        if (transceiverInfo.Type == MediaType.Audio)
+                        {
+                            if (mlineIndex < audioTransceivers.Count)
+                            {
+                                // Use an existing transceiver created during a previous negotiation
+                                transceiverInfo.Transceiver = audioTransceivers[mlineIndex];
+                                transceiverInfo.Transceiver.DesiredDirection = wantsDir;
+                            }
+                            else
+                            {
+                                // Create a new transceiver if none exists
+                                var settings = new AudioTransceiverInitSettings
+                                {
+                                    Name = $"mrsw#{mlineIndex}",
+                                    InitialDesiredDirection = wantsDir
+                                };
+                                transceiverInfo.Transceiver = _nativePeer.AddAudioTransceiver(settings);
+                            }
+                        }
+                        else if (transceiverInfo.Type == MediaType.Video)
+                        {
+                            if (mlineIndex < videoTransceivers.Count)
+                            {
+                                // Use an existing transceiver created during a previous negotiation
+                                transceiverInfo.Transceiver = videoTransceivers[mlineIndex];
+                                transceiverInfo.Transceiver.DesiredDirection = wantsDir;
+                            }
+                            else
+                            {
+                                // Create a new transceiver if none exists
+                                var settings = new VideoTransceiverInitSettings
+                                {
+                                    Name = $"mrsw#{mlineIndex}",
+                                    InitialDesiredDirection = wantsDir
+                                };
+                                transceiverInfo.Transceiver = _nativePeer.AddVideoTransceiver(settings);
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidEnumArgumentException("Unknown media type for transceiver");
+                        }
+                    }
+                    else
                     {
-                        Name = streamId,
-                        InitialDesiredDirection = wantsDir
-                    };
-                    streamInfo.Transceiver = _nativePeer.AddVideoTransceiver(settings);
-                }
-                else
-                {
-                    streamInfo.Transceiver.DesiredDirection = wantsDir;
+                        // Update the existing transceiver direction
+                        transceiverInfo.Transceiver.DesiredDirection = wantsDir;
+                    }
                 }
 
-                // Associate the tracks with the transceiver, if any
-                if (wantsSend)
+                // Ignore extra transceivers without a registered component to attach
+                for (int i = _transceivers.Count; i < numNativeTransceivers; ++i)
                 {
-                    streamInfo.Transceiver.LocalTrack = streamInfo.Sender.Track;
+                    Debug.LogWarning($"Peer connection {name} has transceiver #{i} but no sender/receiver component to process it. The transceiver will be ignored.");
                 }
-                //if (hasRecv)
-                //{
-                //    streamInfo.Transceiver.RemoteTrack = streamInfo.Receiver.Track;
-                //}
             }
 
             // Create the offer
@@ -553,123 +438,87 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // list of local streams that this peer wants added, and add the ones missing, while updating the
             // stream info for existing ones.
             {
-                var transceivers = _nativePeer.AudioTransceivers;
-                foreach (var pair in _audioStreams)
+                var audioTransceivers = _nativePeer.AudioTransceivers;
+                var videoTransceivers = _nativePeer.VideoTransceivers;
+                int numNativeTransceivers = audioTransceivers.Count + videoTransceivers.Count;
+                int numExisting = Math.Min(numNativeTransceivers, _transceivers.Count);
+
+                // Associate streams with existing transceivers
+                for (int i = 0; i < numExisting; ++i)
                 {
-                    var streamId = pair.Key;
-                    var streamInfo = pair.Value;
+                    var transceiverInfo = _transceivers[i];
+                    Transceiver tr = (i < audioTransceivers.Count ? (Transceiver)audioTransceivers[i] : videoTransceivers[i - audioTransceivers.Count]);
+                    transceiverInfo.Transceiver = tr;
 
-                    // Note: do not use the ?. operator with Unity objects
-                    bool wantsSend = (streamInfo.Sender != null);
-                    bool wantsRecv = (streamInfo.Receiver != null);
-
-                    // Try to find a matching transceiver, or create a new one
-                    var tr = transceivers.Find(t => t.Name == streamId);
-                    if (tr != null)
+                    // If sending, fix up transceiver direction. Because the remote description was already applied before
+                    // any sending transceiver was added, all transceivers automatically added are in ReceiveOnly or Inactive
+                    // state, since the implementation couldn't associate them with existing senders (none were added yet).
+                    // This ensures that a TrackAdded event is fired on the remote peer when it receives the answer.
+                    bool wantsSend = (transceiverInfo.Sender != null);
+                    if (wantsSend)
                     {
-                        streamInfo.Transceiver = tr;
-
-                        // If sending, fix up transceiver direction. Because the remote description was already applied before
-                        // any sending transceiver was added, all transceivers automatically added are in ReceiveOnly or Inactive
-                        // state, since the implementation couldn't associate them with existing senders (none were added yet).
-                        // This ensures that a TrackAdded event is fired on the remote peer when it receives the answer.
-                        if (wantsSend)
+                        var desDir = tr.DesiredDirection;
+                        if (desDir == Transceiver.Direction.ReceiveOnly)
                         {
-                            var desDir = tr.DesiredDirection;
-                            if (desDir == Transceiver.Direction.ReceiveOnly)
-                            {
-                                tr.DesiredDirection = Transceiver.Direction.SendReceive;
-                            }
-                            else if (desDir == Transceiver.Direction.Inactive)
-                            {
-                                tr.DesiredDirection = Transceiver.Direction.SendOnly;
-                            }
+                            tr.DesiredDirection = Transceiver.Direction.SendReceive;
+                        }
+                        else if (desDir == Transceiver.Direction.Inactive)
+                        {
+                            tr.DesiredDirection = Transceiver.Direction.SendOnly;
                         }
                     }
-                    else
+                }
+
+                // Add missing transceivers
+                for (int i = numExisting; i < _transceivers.Count; ++i)
+                {
+                    var transceiverInfo = _transceivers[i];
+
+                    // Note: do not use the ?. operator with Unity objects
+                    bool wantsSend = (transceiverInfo.Sender != null);
+                    bool wantsRecv = (transceiverInfo.Receiver != null);
+                    var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
+                        : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+
+                    // Create a new transceiver for the stream
+                    if (transceiverInfo.Type == MediaType.Audio)
                     {
-                        // Create a new transceiver for the video stream
-                        var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
-                            : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
                         var settings = new AudioTransceiverInitSettings
                         {
-                            Name = streamId,
+                            Name = $"mrsw#{i}",
                             InitialDesiredDirection = wantsDir
                         };
-                        tr = _nativePeer.AddAudioTransceiver(settings);
-                        streamInfo.Transceiver = tr;
-                    }
+                        var tr = _nativePeer.AddAudioTransceiver(settings);
+                        transceiverInfo.Transceiver = tr;
 
-                    // Associate the tracks with the transceiver, if any
-                    if (wantsSend)
-                    {
-                        tr.LocalTrack = streamInfo.Sender.Track;
-                    }
-                    //if (wantsRecv)
-                    //{
-                    //    Debug.Assert(tr.RemoteTrack != null);
-                    //    Debug.Assert(tr.RemoteTrack == streamInfo.Receiver.Track);
-                    //}
-                }
-            }
-            {
-                var transceivers = _nativePeer.VideoTransceivers;
-                foreach (var pair in _videoStreams)
-                {
-                    var streamId = pair.Key;
-                    var streamInfo = pair.Value;
-
-                    // Note: do not use the ?. operator with Unity objects
-                    bool wantsSend = (streamInfo.Sender != null);
-                    bool wantsRecv = (streamInfo.Receiver != null);
-
-                    // Try to find a matching transceiver, or create a new one
-                    var tr = transceivers.Find(t => t.Name == streamId);
-                    if (tr != null)
-                    {
-                        streamInfo.Transceiver = tr;
-
-                        // If sending, fix up transceiver direction. Because the remote description was already applied before
-                        // any sending transceiver was added, all transceivers automatically added are in ReceiveOnly or Inactive
-                        // state, since the implementation couldn't associate them with existing senders (none were added yet).
-                        // This ensures that a TrackAdded event is fired on the remote peer when it receives the answer.
+                        // Associate the tracks with the transceiver, if any
                         if (wantsSend)
                         {
-                            var desDir = tr.DesiredDirection;
-                            if (desDir == Transceiver.Direction.ReceiveOnly)
-                            {
-                                tr.DesiredDirection = Transceiver.Direction.SendReceive;
-                            }
-                            else if (desDir == Transceiver.Direction.Inactive)
-                            {
-                                tr.DesiredDirection = Transceiver.Direction.SendOnly;
-                            }
+                            tr.LocalTrack = (transceiverInfo.Sender as AudioSender).Track;
                         }
                     }
-                    else
+                    else if (transceiverInfo.Type == MediaType.Video)
                     {
-                        // Create a new transceiver for the video stream
-                        var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.SendOnly)
-                            : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
                         var settings = new VideoTransceiverInitSettings
                         {
-                            Name = streamId,
+                            Name = $"mrsw#{i}",
                             InitialDesiredDirection = wantsDir
                         };
-                        tr = _nativePeer.AddVideoTransceiver(settings);
-                        streamInfo.Transceiver = tr;
-                    }
+                        var tr = _nativePeer.AddVideoTransceiver(settings);
+                        transceiverInfo.Transceiver = tr;
 
-                    // Associate the tracks with the transceiver, if any
-                    if (wantsSend)
-                    {
-                        tr.LocalTrack = streamInfo.Sender.Track;
+                        // Associate the tracks with the transceiver, if any
+                        if (wantsSend)
+                        {
+                            tr.LocalTrack = (transceiverInfo.Sender as VideoSender).Track;
+                        }
                     }
-                    //if (wantsRecv)
-                    //{
-                    //    Debug.Assert(tr.RemoteTrack != null);
-                    //    Debug.Assert(tr.RemoteTrack == streamInfo.Receiver.Track);
-                    //}
+                }
+
+                // Ignore extra transceivers without a registered component to attach
+                for (int i = numExisting; i < numNativeTransceivers; ++i)
+                {
+                    Debug.LogWarning($"Peer connection {name} has transceiver #{i} but no sender/receveiver component to process it. The transceiver will be ignored.");
                 }
             }
 
@@ -898,6 +747,78 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 Signaler.OnMessage += Signaler_OnMessage;
             }
             OnInitialized.Invoke();
+        }
+
+        private void Peer_AudioTrackAdded(RemoteAudioTrack track)
+        {
+            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+            {
+                var transceiverInfo = _transceivers[mlineIndex];
+                if (transceiverInfo.Transceiver == track.Transceiver)
+                {
+                    Debug.Assert(transceiverInfo.Type == MediaType.Audio);
+                    if (transceiverInfo.Receiver != null)
+                    {
+                        (transceiverInfo.Receiver as AudioReceiver).OnPaired(track);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Received audio track {track.Name} for transceiver #{mlineIndex} but no audio receiver is registered to handle it. Ignoring that track.");
+                    }
+                }
+            }
+        }
+
+        private void Peer_AudioTrackRemoved(RemoteAudioTrack track)
+        {
+            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+            {
+                var transceiverInfo = _transceivers[mlineIndex];
+                if (transceiverInfo.Transceiver == track.Transceiver)
+                {
+                    Debug.Assert(transceiverInfo.Type == MediaType.Audio);
+                    if (transceiverInfo.Receiver != null)
+                    {
+                        (transceiverInfo.Receiver as AudioReceiver).OnUnpaired(track);
+                    }
+                }
+            }
+        }
+
+        private void Peer_VideoTrackAdded(RemoteVideoTrack track)
+        {
+            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+            {
+                var transceiverInfo = _transceivers[mlineIndex];
+                if (transceiverInfo.Transceiver == track.Transceiver)
+                {
+                    Debug.Assert(transceiverInfo.Type == MediaType.Video);
+                    if (transceiverInfo.Receiver != null)
+                    {
+                        (transceiverInfo.Receiver as VideoReceiver).OnPaired(track);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Received video track {track.Name} for transceiver #{mlineIndex} but no video receiver is registered to handle it. Ignoring that track.");
+                    }
+                }
+            }
+        }
+
+        private void Peer_VideoTrackRemoved(RemoteVideoTrack track)
+        {
+            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+            {
+                var transceiverInfo = _transceivers[mlineIndex];
+                if (transceiverInfo.Transceiver == track.Transceiver)
+                {
+                    Debug.Assert(transceiverInfo.Type == MediaType.Video);
+                    if (transceiverInfo.Receiver != null)
+                    {
+                        (transceiverInfo.Receiver as VideoReceiver).OnUnpaired(track);
+                    }
+                }
+            }
         }
 
         private void Signaler_LocalSdpReadyToSend(string type, string sdp)

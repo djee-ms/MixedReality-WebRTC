@@ -23,8 +23,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
         SerializedProperty _preferredVideoCodec;
         SerializedProperty _enableMixedRealityCapture;
         SerializedProperty _enableMrcRecordingIndicator;
-        SerializedProperty _autoAddTrack;
-        SerializedProperty _mode;
+        SerializedProperty _formatMode;
         SerializedProperty _videoProfileId;
         SerializedProperty _videoProfileKind;
         SerializedProperty _constraints;
@@ -83,8 +82,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
             _preferredVideoCodec = serializedObject.FindProperty("PreferredVideoCodec");
             _enableMixedRealityCapture = serializedObject.FindProperty("EnableMixedRealityCapture");
             _enableMrcRecordingIndicator = serializedObject.FindProperty("EnableMRCRecordingIndicator");
-            _autoAddTrack = serializedObject.FindProperty("AutoAddTrack");
-            _mode = serializedObject.FindProperty("Mode");
+            _formatMode = serializedObject.FindProperty("FormatMode");
             _videoProfileId = serializedObject.FindProperty("VideoProfileId");
             _videoProfileKind = serializedObject.FindProperty("VideoProfileKind");
             _constraints = serializedObject.FindProperty("Constraints");
@@ -104,7 +102,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
             GUILayout.Space(10);
             EditorGUILayout.PropertyField(_peerConnection);
             EditorGUILayout.PropertyField(_trackName);
-            EditorGUILayout.PropertyField(_autoAddTrack);
             EditorGUILayout.PropertyField(_autoStartCapture);
 
             EditorGUILayout.PropertyField(_enableMixedRealityCapture);
@@ -187,8 +184,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
                 EditorGUILayout.PropertyField(_preferredVideoCodec);
             }
 
-            EditorGUILayout.PropertyField(_mode);
-            if ((LocalVideoSourceFormatMode)_mode.intValue == LocalVideoSourceFormatMode.Manual)
+            EditorGUILayout.PropertyField(_formatMode);
+            if ((LocalVideoSourceFormatMode)_formatMode.intValue == LocalVideoSourceFormatMode.Manual)
             {
                 ++EditorGUI.indentLevel;
 

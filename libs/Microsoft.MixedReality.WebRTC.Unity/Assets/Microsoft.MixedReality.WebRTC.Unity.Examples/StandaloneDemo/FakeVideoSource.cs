@@ -50,9 +50,10 @@ public class FakeVideoSource : CustomVideoSender<Argb32VideoFrameStorage>
         UpdateBuffer();
     }
 
-    protected void Update()
+    protected new void Update()
     {
         UpdateBuffer();
+        base.Update();
     }
 
     protected void UpdateBuffer()

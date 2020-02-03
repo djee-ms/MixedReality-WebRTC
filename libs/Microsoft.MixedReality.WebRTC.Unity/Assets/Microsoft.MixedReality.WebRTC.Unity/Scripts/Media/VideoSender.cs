@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
@@ -11,7 +12,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// can optionally be displayed locally with a <see cref="MediaPlayer"/>.
     /// </summary>
     [AddComponentMenu("MixedReality-WebRTC/Video Sender")]
-    public abstract class VideoSender : VideoSource
+    public abstract class VideoSender : MediaSender, IVideoSource
     {
         /// <summary>
         /// Automatically start local video capture when this component is enabled.
@@ -28,48 +29,32 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public string PreferredVideoCodec = string.Empty;
 
         /// <summary>
-        /// Peer connection this local video source will add a video track to.
+        /// Event invoked from the main Unity thread when the video stream starts.
+        /// This means that video frames are available and the renderer should start polling.
         /// </summary>
-        [Header("Video track")]
-        public PeerConnection PeerConnection;
+        public VideoStreamStartedEvent VideoStreamStarted = new VideoStreamStartedEvent();
 
         /// <summary>
-        /// Name of the track.
+        /// Event invoked from the main Unity thread when the video stream stops.
+        /// This means that the video frame queue is not populated anymore, though some frames
+        /// may still be present in it that may be rendered.
         /// </summary>
-        /// <remarks>
-        /// This must comply with the 'msid' attribute rules as defined in
-        /// https://tools.ietf.org/html/draft-ietf-mmusic-msid-05#section-2, which in
-        /// particular constraints the set of allows characters to those allowed for a
-        /// 'token' element as specified in https://tools.ietf.org/html/rfc4566#page-43:
-        /// - Symbols [!#$%'*+-.^_`{|}~] and ampersand &amp;
-        /// - Alphanumerical [A-Za-z0-9]
-        /// </remarks>
-        /// <seealso xref="SdpTokenAttribute.ValidateSdpTokenName"/>
-        [Tooltip("SDP track name.")]
-        [SdpToken(allowEmpty: true)]
-        public string TrackName;
+        public VideoStreamStoppedEvent VideoStreamStopped = new VideoStreamStoppedEvent();
 
-        /// <summary>
-        /// Automatically register as a video track when the peer connection is ready and the
-        /// component is enabled.
-        /// </summary>
-        /// <remarks>
-        /// If this is <c>false</c> then the user needs to manually call <cref href="AddTrack"/> to add
-        /// a video track to the peer connection and start sending video data to the remote peer.
-        /// </remarks>
-        [Tooltip("Automatically add the video track to the peer connection on Start")]
-        public bool AutoAddTrackOnStart = true;
+        /// <inheritdoc/>
+        public VideoEncoding FrameEncoding { get; } = VideoEncoding.I420A;
 
         /// <summary>
         /// Video track added to the peer connection that this component encapsulates.
         /// </summary>
         public LocalVideoTrack Track { get; protected set; }
 
-        public VideoSender(VideoEncoding frameEncoding = VideoEncoding.I420A) : base(frameEncoding)
+        public VideoSender(VideoEncoding frameEncoding)
         {
+            FrameEncoding = frameEncoding;
         }
 
-        public override void RegisterCallback(I420AVideoFrameDelegate callback)
+        public void RegisterCallback(I420AVideoFrameDelegate callback)
         {
             if (Track != null)
             {
@@ -77,7 +62,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public override void UnregisterCallback(I420AVideoFrameDelegate callback)
+        public void UnregisterCallback(I420AVideoFrameDelegate callback)
         {
             if (Track != null)
             {
@@ -85,7 +70,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public override void RegisterCallback(Argb32VideoFrameDelegate callback)
+        public void RegisterCallback(Argb32VideoFrameDelegate callback)
         {
             if (Track != null)
             {
@@ -93,7 +78,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public override void UnregisterCallback(Argb32VideoFrameDelegate callback)
+        public void UnregisterCallback(Argb32VideoFrameDelegate callback)
         {
             if (Track != null)
             {
@@ -101,18 +86,26 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public void AddTrack()
+        public async Task AddTrackAsync()
         {
             if (Track == null)
             {
-                DoAddTrackAction();
+                await DoAddTrackAsyncAction();
                 Debug.Assert(Track != null, "Implementation did not create a valid Track property yet did not throw any exception.", this);
-                Debug.Assert(Track.Enabled == enabled, "Track.Enabled is not in sync with component's enabled property.", this);
+                //Debug.Assert(Track.Enabled == enabled, "Track.Enabled is not in sync with component's enabled property.", this);
                 VideoStreamStarted.Invoke(this);
             }
         }
 
-        public void RemoveTrack()
+        protected override void OnMediaInitialized()
+        {
+            if (AutoStartCapture && isActiveAndEnabled)
+            {
+                _ = AddTrackAsync();
+            }
+        }
+
+        protected override void OnMediaShutdown()
         {
             if (Track != null)
             {
@@ -121,50 +114,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        protected void Awake()
-        {
-            PeerConnection.RegisterSource(this);
-            PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
-        }
-
-        protected void OnDestroy()
-        {
-            PeerConnection.OnInitialized.RemoveListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.RemoveListener(OnPeerShutdown);
-            RemoveTrack();
-        }
-
-        protected void OnEnable()
+        protected override void MuteImpl(bool mute)
         {
             if (Track != null)
             {
-                Track.Enabled = true;
+                Track.Enabled = mute;
             }
-        }
-
-        protected void OnDisable()
-        {
-            if (Track != null)
-            {
-                Track.Enabled = false;
-            }
-        }
-
-        private void OnPeerInitialized()
-        {
-            var nativePeer = PeerConnection.Peer;
-            nativePeer.PreferredVideoCodec = PreferredVideoCodec;
-
-            if (AutoAddTrackOnStart)
-            {
-                AddTrack();
-            }
-        }
-
-        private void OnPeerShutdown()
-        {
-            RemoveTrack();
         }
 
         /// <summary>
@@ -173,7 +128,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// The track must be enabled according to the <see xref="UnityEngine.Behaviour.enabled"/>
         /// property of the Unity component.
         /// </summary>
-        protected abstract void DoAddTrackAction();
+        protected abstract Task DoAddTrackAsyncAction();
 
         /// <summary>
         /// Re-implement this callback to destroy the <see cref="Track"/> instance
