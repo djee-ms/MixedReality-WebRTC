@@ -3224,13 +3224,13 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _transceivers:
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 0}
     Receiver: {fileID: 1533694088}
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 0}
     Receiver: {fileID: 0}
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 0}
     Receiver: {fileID: 1712234956}
 --- !u!4 &1537901324
@@ -4581,16 +4581,16 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _transceivers:
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 8066520111486228012}
     Receiver: {fileID: 0}
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 1645256671}
     Receiver: {fileID: 0}
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 447630319}
     Receiver: {fileID: 0}
-  - Type: 1
+  - Kind: 1
     Sender: {fileID: 0}
     Receiver: {fileID: 989215899}
 --- !u!114 &114460246451956513
