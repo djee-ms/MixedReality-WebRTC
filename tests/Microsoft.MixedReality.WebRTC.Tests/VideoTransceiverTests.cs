@@ -285,7 +285,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendReceive); // from implementation
             Assert.AreEqual(transceiver1.NegotiatedDirection, null);
             Assert.AreEqual(pc1_, transceiver1.PeerConnection);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1));
             Assert.IsNull(transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
 
@@ -358,7 +358,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendOnly);
             Assert.AreEqual(transceiver1.NegotiatedDirection, null);
             Assert.AreEqual(pc1_, transceiver1.PeerConnection);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1));
             Assert.IsNull(transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
 
@@ -378,8 +378,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             remoteDescAppliedEvent1_.Reset();
 
             // Find the remote transceiver
-            Assert.AreEqual(1, pc2_.VideoTransceivers.Count);
-            var transceiver2 = pc2_.VideoTransceivers[0];
+            Assert.AreEqual(1, pc2_.Transceivers.Count);
+            var transceiver2 = pc2_.Transceivers[0];
             Assert.NotNull(transceiver2);
 
             // Check name was associated

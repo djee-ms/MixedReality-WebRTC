@@ -51,7 +51,7 @@ namespace Microsoft.MixedReality.WebRTC
 
         // Constructor for interop-based creation; SetHandle() will be called later
         internal AudioTransceiver(PeerConnection peerConnection, string name, Direction initialDesiredDirection)
-            : base(peerConnection, name)
+            : base(MediaKind.Audio, peerConnection, name)
         {
             _desiredDirection = initialDesiredDirection;
         }

@@ -383,7 +383,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.AreEqual(pc1_, track1.PeerConnection);
             Assert.AreEqual(track1, transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1));
             Assert.IsTrue(pc1_.LocalVideoTracks.Contains(track1));
             Assert.AreEqual(0, pc1_.RemoteVideoTracks.Count);
 
@@ -404,7 +404,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.IsNull(track1.PeerConnection);
             Assert.IsNull(track1.Transceiver);
             Assert.AreEqual(0, pc1_.LocalVideoTracks.Count);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1)); // never removed
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1)); // never removed
             Assert.IsNull(transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
             track1.Dispose();
@@ -465,7 +465,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             };
             var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1));
 
             // Confirm (inactive) remote track was added on #2 due to transceiver being added
             Assert.True(videoTrackAddedEvent2_.Wait(TimeSpan.FromSeconds(60.0)));
@@ -506,7 +506,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.AreEqual(pc1_, track1.PeerConnection);
             Assert.AreEqual(track1, transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1));
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1));
             Assert.IsTrue(pc1_.LocalVideoTracks.Contains(track1));
             Assert.AreEqual(0, pc1_.RemoteVideoTracks.Count);
 
@@ -522,7 +522,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.IsNull(track1.Transceiver);
             Assert.AreEqual(0, pc1_.LocalVideoTracks.Count);
             Assert.AreEqual(0, pc1_.RemoteVideoTracks.Count);
-            Assert.IsTrue(pc1_.VideoTransceivers.Contains(transceiver1)); // never removed
+            Assert.IsTrue(pc1_.Transceivers.Contains(transceiver1)); // never removed
             Assert.IsNull(transceiver1.LocalTrack);
             Assert.IsNull(transceiver1.RemoteTrack);
             track1.Dispose();

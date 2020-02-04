@@ -4,6 +4,22 @@
 namespace Microsoft.MixedReality.WebRTC
 {
     /// <summary>
+    /// Type of media track or media transceiver.
+    /// </summary>
+    public enum MediaKind
+    {
+        /// <summary>
+        /// Audio data.
+        /// </summary>
+        Audio,
+
+        /// <summary>
+        /// Video data.
+        /// </summary>
+        Video
+    }
+
+    /// <summary>
     /// Transceiver of a peer connection.
     /// 
     /// A transceiver is a media "pipe" connecting the local and remote peers, and used to transmit media
@@ -60,6 +76,11 @@ namespace Microsoft.MixedReality.WebRTC
         public string Name { get; } = string.Empty;
 
         /// <summary>
+        /// Type of media carried by the transceiver, and by extension type of media of its tracks.
+        /// </summary>
+        public MediaKind MediaKind { get; }
+
+        /// <summary>
         /// Peer connection this transceiver is part of.
         /// </summary>
         public PeerConnection PeerConnection { get; } = null;
@@ -104,10 +125,12 @@ namespace Microsoft.MixedReality.WebRTC
         /// <summary>
         /// Create a new transceiver associated with a given peer connection.
         /// </summary>
+        /// <param name="mediaKind">The media kind of the transceiver and its tracks.</param>
         /// <param name="peerConnection">The peer connection owning this transceiver.</param>
         /// <param name="name">The transceiver name.</param>
-        protected Transceiver(PeerConnection peerConnection, string name)
+        protected Transceiver(MediaKind mediaKind, PeerConnection peerConnection, string name)
         {
+            MediaKind = mediaKind;
             PeerConnection = peerConnection;
             Name = name;
         }

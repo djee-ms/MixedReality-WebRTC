@@ -478,13 +478,8 @@ class PeerConnectionImpl : public PeerConnection,
                      rtc::scoped_refptr<webrtc::MediaStreamInterface>>
       remote_streams_;
 
-  /// Collection of all audio transceivers of this peer connection.
-  std::vector<RefPtr<AudioTransceiver>> audio_transceivers_
-      RTC_GUARDED_BY(tracks_mutex_);
-
-  /// Collection of all video transceivers of this peer connection.
-  std::vector<RefPtr<VideoTransceiver>> video_transceivers_
-      RTC_GUARDED_BY(tracks_mutex_);
+  /// Collection of all transceivers of this peer connection.
+  std::vector<RefPtr<Transceiver>> transceivers_ RTC_GUARDED_BY(tracks_mutex_);
 
   /// Collection of all local audio tracks associated with this peer connection.
   std::vector<RefPtr<LocalAudioTrack>> local_audio_tracks_
@@ -777,7 +772,7 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
   RTC_DCHECK(transceiver);
   {
     rtc::CritScope lock(&tracks_mutex_);
-    video_transceivers_.emplace_back(transceiver);
+    transceivers_.emplace_back(transceiver);
   }
   return transceiver;
 }
@@ -905,7 +900,7 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
   RTC_DCHECK(transceiver);
   {
     rtc::CritScope lock(&tracks_mutex_);
-    audio_transceivers_.emplace_back(transceiver);
+    transceivers_.emplace_back(transceiver);
   }
   return transceiver;
 }
@@ -1249,8 +1244,7 @@ void PeerConnectionImpl::Close() noexcept {
     // peer_ is cleared, so before the connection is actually closed, which
     // doesn't prevent add(Audio|Video)Transceiver from being called again in
     // parallel...
-    audio_transceivers_.clear();
-    video_transceivers_.clear();
+    transceivers_.clear();
   }
 
   remote_streams_.clear();
@@ -1736,11 +1730,11 @@ void PeerConnectionImpl::OnLocalTrackAddedToAudioTransceiver(
     AudioTransceiver& transceiver,
     LocalAudioTrack& track) {
   rtc::CritScope lock(&tracks_mutex_);
-  RTC_DCHECK(std::find_if(audio_transceivers_.begin(),
-                          audio_transceivers_.end(),
-                          [&transceiver](const RefPtr<AudioTransceiver>& tr) {
-                            return (tr.get() == &transceiver);
-                          }) != audio_transceivers_.end());
+  RTC_DCHECK(std::find_if(transceivers_.begin(), transceivers_.end(),
+                          [&transceiver](const RefPtr<Transceiver>& tr) {
+                            return ((tr.get() == &transceiver) &&
+                                    (tr->GetMediaKind() == MediaKind::kAudio));
+                          }) != transceivers_.end());
   RTC_DCHECK(std::find_if(local_audio_tracks_.begin(),
                           local_audio_tracks_.end(),
                           [&track](const RefPtr<LocalAudioTrack>& tr) {
@@ -1753,11 +1747,11 @@ void PeerConnectionImpl::OnLocalTrackRemovedFromAudioTransceiver(
     AudioTransceiver& transceiver,
     LocalAudioTrack& track) {
   rtc::CritScope lock(&tracks_mutex_);
-  RTC_DCHECK(std::find_if(audio_transceivers_.begin(),
-                          audio_transceivers_.end(),
-                          [&transceiver](const RefPtr<AudioTransceiver>& tr) {
-                            return (tr.get() == &transceiver);
-                          }) != audio_transceivers_.end());
+  RTC_DCHECK(std::find_if(transceivers_.begin(), transceivers_.end(),
+                          [&transceiver](const RefPtr<Transceiver>& tr) {
+                            return ((tr.get() == &transceiver) &&
+                                    (tr->GetMediaKind() == MediaKind::kAudio));
+                          }) != transceivers_.end());
   auto it = std::find_if(local_audio_tracks_.begin(), local_audio_tracks_.end(),
                          [&track](const RefPtr<LocalAudioTrack>& tr) {
                            return (tr.get() == &track);
@@ -1770,11 +1764,11 @@ void PeerConnectionImpl::OnLocalTrackAddedToVideoTransceiver(
     VideoTransceiver& transceiver,
     LocalVideoTrack& track) {
   rtc::CritScope lock(&tracks_mutex_);
-  RTC_DCHECK(std::find_if(video_transceivers_.begin(),
-                          video_transceivers_.end(),
-                          [&transceiver](const RefPtr<VideoTransceiver>& tr) {
-                            return (tr.get() == &transceiver);
-                          }) != video_transceivers_.end());
+  RTC_DCHECK(std::find_if(transceivers_.begin(), transceivers_.end(),
+                          [&transceiver](const RefPtr<Transceiver>& tr) {
+                            return ((tr.get() == &transceiver) &&
+                                    (tr->GetMediaKind() == MediaKind::kVideo));
+                          }) != transceivers_.end());
   RTC_DCHECK(std::find_if(local_video_tracks_.begin(),
                           local_video_tracks_.end(),
                           [&track](const RefPtr<LocalVideoTrack>& tr) {
@@ -1787,11 +1781,11 @@ void PeerConnectionImpl::OnLocalTrackRemovedFromVideoTransceiver(
     VideoTransceiver& transceiver,
     LocalVideoTrack& track) {
   rtc::CritScope lock(&tracks_mutex_);
-  RTC_DCHECK(std::find_if(video_transceivers_.begin(),
-                          video_transceivers_.end(),
-                          [&transceiver](const RefPtr<VideoTransceiver>& tr) {
-                            return (tr.get() == &transceiver);
-                          }) != video_transceivers_.end());
+  RTC_DCHECK(std::find_if(transceivers_.begin(), transceivers_.end(),
+                          [&transceiver](const RefPtr<Transceiver>& tr) {
+                            return ((tr.get() == &transceiver) &&
+                                    (tr->GetMediaKind() == MediaKind::kVideo));
+                          }) != transceivers_.end());
   auto it = std::find_if(local_video_tracks_.begin(), local_video_tracks_.end(),
                          [&track](const RefPtr<LocalVideoTrack>& tr) {
                            return (tr.get() == &track);
@@ -1807,13 +1801,17 @@ PeerConnectionImpl::GetOrCreateAudioTransceiverForSender(
   RTC_DCHECK(sender->media_type() == cricket::MediaType::MEDIA_TYPE_AUDIO);
 
   // Find existing transceiver for sender
-  auto it = std::find_if(audio_transceivers_.begin(), audio_transceivers_.end(),
-                         [sender](const RefPtr<AudioTransceiver>& tr) {
+  auto it = std::find_if(transceivers_.begin(), transceivers_.end(),
+                         [sender](const RefPtr<Transceiver>& tr) {
                            return (tr->impl()->sender() == sender);
                          });
-  if (it != audio_transceivers_.end()) {
-    RTC_DCHECK_EQ(transceiver_interop_handle, it->get()->GetInteropHandle());
-    return RefPtr<AudioTransceiver>(*it);
+  if (it != transceivers_.end()) {
+    RTC_DCHECK(MediaKind::kAudio == it->get()->GetMediaKind());
+    RefPtr<AudioTransceiver> audio_transceiver =
+        static_cast<AudioTransceiver*>(it->get());
+    RTC_DCHECK_EQ(transceiver_interop_handle,
+                  audio_transceiver->GetInteropHandle());
+    return audio_transceiver;
   }
 
   std::string name = ExtractTransceiverNameFromSender(sender);
@@ -1854,7 +1852,7 @@ PeerConnectionImpl::GetOrCreateAudioTransceiverForSender(
   }
   if (transceiver) {
     rtc::CritScope lock(&tracks_mutex_);
-    audio_transceivers_.push_back(transceiver);
+    transceivers_.push_back(transceiver);
     return transceiver;
   }
   return Error(Result::kUnknownError,
@@ -1868,13 +1866,17 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForSender(
   RTC_DCHECK(sender->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO);
 
   // Find existing transceiver for sender
-  auto it = std::find_if(video_transceivers_.begin(), video_transceivers_.end(),
-                         [sender](const RefPtr<VideoTransceiver>& tr) {
+  auto it = std::find_if(transceivers_.begin(), transceivers_.end(),
+                         [sender](const RefPtr<Transceiver>& tr) {
                            return (tr->impl()->sender() == sender);
                          });
-  if (it != video_transceivers_.end()) {
-    RTC_DCHECK_EQ(transceiver_interop_handle, it->get()->GetInteropHandle());
-    return RefPtr<VideoTransceiver>(*it);
+  if (it != transceivers_.end()) {
+    RTC_DCHECK(MediaKind::kVideo == it->get()->GetMediaKind());
+    RefPtr<VideoTransceiver> video_transceiver =
+        static_cast<VideoTransceiver*>(it->get());
+    RTC_DCHECK_EQ(transceiver_interop_handle,
+                  video_transceiver->GetInteropHandle());
+    return video_transceiver;
   }
 
   std::string name = ExtractTransceiverNameFromSender(sender);
@@ -1915,7 +1917,7 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForSender(
   }
   if (transceiver) {
     rtc::CritScope lock(&tracks_mutex_);
-    video_transceivers_.push_back(transceiver);
+    transceivers_.push_back(transceiver);
     return transceiver;
   }
   return Error(Result::kUnknownError,
@@ -1930,13 +1932,15 @@ PeerConnectionImpl::GetOrCreateAudioTransceiverForNewRemoteTrack(
   // Try to find an existing audio transceiver wrapper for the given RTP
   // receiver of the remote track.
   {
-    auto it_tr =
-        std::find_if(audio_transceivers_.begin(), audio_transceivers_.end(),
-                     [receiver](const RefPtr<AudioTransceiver>& tr) {
-                       return (tr->impl()->receiver() == receiver);
-                     });
-    if (it_tr != audio_transceivers_.end()) {
-      return RefPtr<AudioTransceiver>(*it_tr);
+    auto it_tr = std::find_if(transceivers_.begin(), transceivers_.end(),
+                              [receiver](const RefPtr<Transceiver>& tr) {
+                                return (tr->impl()->receiver() == receiver);
+                              });
+    if (it_tr != transceivers_.end()) {
+      RTC_DCHECK(MediaKind::kAudio == (*it_tr)->GetMediaKind());
+      RefPtr<AudioTransceiver> audio_transceiver =
+          static_cast<AudioTransceiver*>(it_tr->get());
+      return audio_transceiver;
     }
   }
 
@@ -1966,13 +1970,15 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForRemoteNewTrack(
   // Try to find an existing video transceiver wrapper for the given RTP
   // receiver of the remote track.
   {
-    auto it_tr =
-        std::find_if(video_transceivers_.begin(), video_transceivers_.end(),
-                     [receiver](const RefPtr<VideoTransceiver>& tr) {
-                       return (tr->impl()->receiver() == receiver);
-                     });
-    if (it_tr != video_transceivers_.end()) {
-      return RefPtr<VideoTransceiver>(*it_tr);
+    auto it_tr = std::find_if(transceivers_.begin(), transceivers_.end(),
+                              [receiver](const RefPtr<Transceiver>& tr) {
+                                return (tr->impl()->receiver() == receiver);
+                              });
+    if (it_tr != transceivers_.end()) {
+      RTC_DCHECK(MediaKind::kVideo == (*it_tr)->GetMediaKind());
+      RefPtr<VideoTransceiver> video_transceiver =
+          static_cast<VideoTransceiver*>(it_tr->get());
+      return video_transceiver;
     }
   }
 
@@ -2002,9 +2008,10 @@ ErrorOr<RefPtr<Transceiver>> PeerConnectionImpl::GetOrCreateTransceiver(
       // Find an existing transceiver wrapper which would have been created just
       // a moment ago by the remote track added callback.
       rtc::CritScope lock(&tracks_mutex_);
-      for (auto&& tr : audio_transceivers_) {
+      for (auto&& tr : transceivers_) {
         if (tr->impl() == rtp_transceiver) {
-          return RefPtr<Transceiver>(tr);
+          RTC_DCHECK(MediaKind::kAudio == tr->GetMediaKind());
+          return static_cast<RefPtr<Transceiver>>(tr);
         }
       }
       // Not found - create a new one
@@ -2015,9 +2022,10 @@ ErrorOr<RefPtr<Transceiver>> PeerConnectionImpl::GetOrCreateTransceiver(
       // Find an existing transceiver wrapper which would have been created just
       // a moment ago by the remote track added callback.
       rtc::CritScope lock(&tracks_mutex_);
-      for (auto&& tr : video_transceivers_) {
+      for (auto&& tr : transceivers_) {
         if (tr->impl() == rtp_transceiver) {
-          return RefPtr<Transceiver>(tr);
+          RTC_DCHECK(MediaKind::kVideo == tr->GetMediaKind());
+          return static_cast<RefPtr<Transceiver>>(tr);
         }
       }
       // Not found - create a new one
@@ -2064,7 +2072,7 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::CreateAudioTransceiver(
   }
   if (transceiver) {
     rtc::CritScope lock(&tracks_mutex_);
-    audio_transceivers_.push_back(transceiver);
+    transceivers_.push_back(transceiver);
   }
   return transceiver;
 }
@@ -2104,7 +2112,7 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::CreateVideoTransceiver(
   }
   if (transceiver) {
     rtc::CritScope lock(&tracks_mutex_);
-    video_transceivers_.push_back(transceiver);
+    transceivers_.push_back(transceiver);
   }
   return transceiver;
 }

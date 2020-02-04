@@ -90,16 +90,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     {
     }
 
-    public enum MediaType
-    {
-        Audio,
-        Video
-    }
-
     [Serializable]
     public class TransceiverInfo
     {
-        public MediaType Type;
+        public MediaKind Kind;
         public MediaSender Sender;
         public MediaReceiver Receiver;
 
@@ -319,9 +313,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 #endif
         }
 
-        public void AddTransceiver(MediaType type)
+        public void AddTransceiver(MediaKind kind)
         {
-            _transceivers.Add(new TransceiverInfo{ Type = type });
+            _transceivers.Add(new TransceiverInfo { Kind = kind });
         }
 
         /// <summary>
@@ -340,9 +334,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
             // Add all new transceivers for local tracks
             {
-                var audioTransceivers = _nativePeer.AudioTransceivers;
-                var videoTransceivers = _nativePeer.VideoTransceivers;
-                int numNativeTransceivers = audioTransceivers.Count + videoTransceivers.Count;
+                var transceivers = _nativePeer.Transceivers;
+                int numNativeTransceivers = transceivers.Count;
 
                 for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
                 {
@@ -361,17 +354,18 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     // Create a new transceiver if none exists
                     if (transceiverInfo.Transceiver == null)
                     {
-                        if (transceiverInfo.Type == MediaType.Audio)
+                        if (mlineIndex < transceivers.Count)
                         {
-                            if (mlineIndex < audioTransceivers.Count)
+                            // Use an existing transceiver created during a previous negotiation
+                            Debug.Assert(transceiverInfo.Kind == transceivers[mlineIndex].MediaKind);
+                            transceiverInfo.Transceiver = transceivers[mlineIndex];
+                            transceiverInfo.Transceiver.DesiredDirection = wantsDir;
+                        }
+                        else
+                        {
+                            // Create a new transceiver if none exists
+                            if (transceiverInfo.Kind == MediaKind.Audio)
                             {
-                                // Use an existing transceiver created during a previous negotiation
-                                transceiverInfo.Transceiver = audioTransceivers[mlineIndex];
-                                transceiverInfo.Transceiver.DesiredDirection = wantsDir;
-                            }
-                            else
-                            {
-                                // Create a new transceiver if none exists
                                 var settings = new AudioTransceiverInitSettings
                                 {
                                     Name = $"mrsw#{mlineIndex}",
@@ -379,18 +373,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                                 };
                                 transceiverInfo.Transceiver = _nativePeer.AddAudioTransceiver(settings);
                             }
-                        }
-                        else if (transceiverInfo.Type == MediaType.Video)
-                        {
-                            if (mlineIndex < videoTransceivers.Count)
+                            else if (transceiverInfo.Kind == MediaKind.Video)
                             {
-                                // Use an existing transceiver created during a previous negotiation
-                                transceiverInfo.Transceiver = videoTransceivers[mlineIndex];
-                                transceiverInfo.Transceiver.DesiredDirection = wantsDir;
-                            }
-                            else
-                            {
-                                // Create a new transceiver if none exists
                                 var settings = new VideoTransceiverInitSettings
                                 {
                                     Name = $"mrsw#{mlineIndex}",
@@ -398,10 +382,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                                 };
                                 transceiverInfo.Transceiver = _nativePeer.AddVideoTransceiver(settings);
                             }
-                        }
-                        else
-                        {
-                            throw new InvalidEnumArgumentException("Unknown media type for transceiver");
+                            else
+                            {
+                                throw new InvalidEnumArgumentException("Unknown media kind for transceiver");
+                            }
                         }
                     }
                     else
@@ -438,16 +422,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // list of local streams that this peer wants added, and add the ones missing, while updating the
             // stream info for existing ones.
             {
-                var audioTransceivers = _nativePeer.AudioTransceivers;
-                var videoTransceivers = _nativePeer.VideoTransceivers;
-                int numNativeTransceivers = audioTransceivers.Count + videoTransceivers.Count;
+                var transceivers = _nativePeer.Transceivers;
+                int numNativeTransceivers = transceivers.Count;
                 int numExisting = Math.Min(numNativeTransceivers, _transceivers.Count);
 
                 // Associate streams with existing transceivers
                 for (int i = 0; i < numExisting; ++i)
                 {
                     var transceiverInfo = _transceivers[i];
-                    Transceiver tr = (i < audioTransceivers.Count ? (Transceiver)audioTransceivers[i] : videoTransceivers[i - audioTransceivers.Count]);
+                    Transceiver tr = transceivers[i];
                     transceiverInfo.Transceiver = tr;
 
                     // If sending, fix up transceiver direction. Because the remote description was already applied before
@@ -481,7 +464,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                         : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
 
                     // Create a new transceiver for the stream
-                    if (transceiverInfo.Type == MediaType.Audio)
+                    if (transceiverInfo.Kind == MediaKind.Audio)
                     {
                         var settings = new AudioTransceiverInitSettings
                         {
@@ -497,7 +480,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                             tr.LocalTrack = (transceiverInfo.Sender as AudioSender).Track;
                         }
                     }
-                    else if (transceiverInfo.Type == MediaType.Video)
+                    else if (transceiverInfo.Kind == MediaKind.Video)
                     {
                         var settings = new VideoTransceiverInitSettings
                         {
@@ -512,6 +495,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                         {
                             tr.LocalTrack = (transceiverInfo.Sender as VideoSender).Track;
                         }
+                    }
+                    else
+                    {
+                        throw new InvalidEnumArgumentException("Unknown media kind for transceiver");
                     }
                 }
 
@@ -635,7 +622,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             OnError.RemoveListener(OnError_Listener);
         }
 
-#endregion
+        #endregion
 
 
         #region Private implementation
@@ -756,7 +743,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 var transceiverInfo = _transceivers[mlineIndex];
                 if (transceiverInfo.Transceiver == track.Transceiver)
                 {
-                    Debug.Assert(transceiverInfo.Type == MediaType.Audio);
+                    Debug.Assert(transceiverInfo.Kind == MediaKind.Audio);
                     if (transceiverInfo.Receiver != null)
                     {
                         (transceiverInfo.Receiver as AudioReceiver).OnPaired(track);
@@ -776,7 +763,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 var transceiverInfo = _transceivers[mlineIndex];
                 if (transceiverInfo.Transceiver == track.Transceiver)
                 {
-                    Debug.Assert(transceiverInfo.Type == MediaType.Audio);
+                    Debug.Assert(transceiverInfo.Kind == MediaKind.Audio);
                     if (transceiverInfo.Receiver != null)
                     {
                         (transceiverInfo.Receiver as AudioReceiver).OnUnpaired(track);
@@ -792,7 +779,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 var transceiverInfo = _transceivers[mlineIndex];
                 if (transceiverInfo.Transceiver == track.Transceiver)
                 {
-                    Debug.Assert(transceiverInfo.Type == MediaType.Video);
+                    Debug.Assert(transceiverInfo.Kind == MediaKind.Video);
                     if (transceiverInfo.Receiver != null)
                     {
                         (transceiverInfo.Receiver as VideoReceiver).OnPaired(track);
@@ -812,7 +799,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 var transceiverInfo = _transceivers[mlineIndex];
                 if (transceiverInfo.Transceiver == track.Transceiver)
                 {
-                    Debug.Assert(transceiverInfo.Type == MediaType.Video);
+                    Debug.Assert(transceiverInfo.Kind == MediaKind.Video);
                     if (transceiverInfo.Receiver != null)
                     {
                         (transceiverInfo.Receiver as VideoReceiver).OnUnpaired(track);

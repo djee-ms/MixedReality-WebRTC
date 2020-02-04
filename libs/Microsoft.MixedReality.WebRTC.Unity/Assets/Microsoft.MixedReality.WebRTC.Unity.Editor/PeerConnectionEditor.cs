@@ -58,9 +58,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
 
                     //EditorGUI.PropertyField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("Type"), GUIContent.none);
                     //EditorGUI.DrawTextureTransparent(new Rect(rect.x, rect.y, 16, 16), EditorGUIUtility.IconContent(""));
-                    MediaType type = (MediaType)element.FindPropertyRelative("Type").intValue;
+                    MediaKind kind = (MediaKind)element.FindPropertyRelative("Kind").intValue;
                     System.Type senderType, receiverType;
-                    if (type == MediaType.Audio)
+                    if (kind == MediaKind.Audio)
                     {
                         senderType = typeof(AudioSender);
                         receiverType = typeof(AudioReceiver);
@@ -146,11 +146,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
             {
                 if (GUILayout.Button("+ Audio"))
                 {
-                    ((PeerConnection)serializedObject.targetObject).AddTransceiver(MediaType.Audio);
+                    ((PeerConnection)serializedObject.targetObject).AddTransceiver(MediaKind.Audio);
                 }
                 if (GUILayout.Button("+ Video"))
                 {
-                    ((PeerConnection)serializedObject.targetObject).AddTransceiver(MediaType.Video);
+                    ((PeerConnection)serializedObject.targetObject).AddTransceiver(MediaKind.Video);
                 }
             }
 

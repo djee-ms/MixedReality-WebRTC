@@ -492,18 +492,54 @@ namespace Microsoft.MixedReality.WebRTC
         public bool IsConnected { get; private set; } = false;
 
         /// <summary>
+        /// Collection of transceivers for the peer conneciton.
+        /// Transceivers are present in the list in order of their media index.
+        /// Once a transceiver is added to the peer connection, it cannot be removed,
+        /// but its tracks can be changed. This requires some renegotiation.
+        /// </summary>
+        public List<Transceiver> Transceivers { get; } = new List<Transceiver>();
+
+        /// <summary>
         /// Collection of audio transceivers of the peer connection.
         /// Once a transceiver is added to the peer connection, it cannot be removed,
         /// but its tracks can be changed. This requires some renegotiation.
         /// </summary>
-        public List<AudioTransceiver> AudioTransceivers { get; } = new List<AudioTransceiver>();
+        public IEnumerable<AudioTransceiver> AudioTransceivers
+        {
+            get
+            {
+                int num = Transceivers.Count;
+                for (int i = 0; i < num; ++i)
+                {
+                    var tr = Transceivers[i];
+                    if (tr.MediaKind == MediaKind.Audio)
+                    {
+                        yield return (AudioTransceiver)tr;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Collection of video transceivers of the peer connection.
         /// Once a transceiver is added to the peer connection, it cannot be removed,
         /// but its tracks can be changed. This requires some renegotiation.
         /// </summary>
-        public List<VideoTransceiver> VideoTransceivers { get; } = new List<VideoTransceiver>();
+        public IEnumerable<VideoTransceiver> VideoTransceivers
+        {
+            get
+            {
+                int num = Transceivers.Count;
+                for (int i = 0; i < num; ++i)
+                {
+                    var tr = Transceivers[i];
+                    if (tr.MediaKind == MediaKind.Video)
+                    {
+                        yield return (VideoTransceiver)tr;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Collection of local audio tracks attached to the peer connection.
@@ -964,16 +1000,18 @@ namespace Microsoft.MixedReality.WebRTC
             // Dispose of owned objects
             lock (_tracksLock)
             {
-                foreach (var transceiver in AudioTransceivers)
+                foreach (var transceiver in Transceivers)
                 {
-                    transceiver._nativeHandle.Close();
+                    if (transceiver.MediaKind == MediaKind.Audio)
+                    {
+                        ((AudioTransceiver)transceiver)._nativeHandle.Close();
+                    }
+                    else
+                    {
+                        ((VideoTransceiver)transceiver)._nativeHandle.Close();
+                    }
                 }
-                AudioTransceivers.Clear();
-                foreach (var transceiver in VideoTransceivers)
-                {
-                    transceiver._nativeHandle.Close();
-                }
-                VideoTransceivers.Clear();
+                Transceivers.Clear();
             }
 
             // Complete shutdown sequence and re-enable InitializeAsync()
@@ -1021,7 +1059,7 @@ namespace Microsoft.MixedReality.WebRTC
             transceiver.SetHandle(transceiverHandle);
             lock (_tracksLock)
             {
-                AudioTransceivers.Add(transceiver);
+                Transceivers.Add(transceiver);
             }
             AudioTransceiverAdded?.Invoke(transceiver);
             return transceiver;
@@ -1053,7 +1091,7 @@ namespace Microsoft.MixedReality.WebRTC
             transceiver.SetHandle(transceiverHandle);
             lock (_tracksLock)
             {
-                VideoTransceivers.Add(transceiver);
+                Transceivers.Add(transceiver);
             }
             VideoTransceiverAdded?.Invoke(transceiver);
             return transceiver;
@@ -1561,9 +1599,9 @@ namespace Microsoft.MixedReality.WebRTC
             MainEventSource.Log.AudioTrackAdded(track.Name);
             lock (_tracksLock)
             {
-                if (!AudioTransceivers.Contains(transceiver))
+                if (!Transceivers.Contains(transceiver))
                 {
-                    AudioTransceivers.Add(transceiver);
+                    Transceivers.Add(transceiver);
                 }
             }
             track.OnTrackAddedToTransceiver(transceiver);
@@ -1586,9 +1624,9 @@ namespace Microsoft.MixedReality.WebRTC
             MainEventSource.Log.VideoTrackAdded(track.Name);
             lock (_tracksLock)
             {
-                if (!VideoTransceivers.Contains(transceiver))
+                if (!Transceivers.Contains(transceiver))
                 {
-                    VideoTransceivers.Add(transceiver);
+                    Transceivers.Add(transceiver);
                 }
             }
             track.OnTrackAddedToTransceiver(transceiver);
@@ -1612,7 +1650,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(!LocalAudioTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 LocalAudioTracks.Add(track);
             }
         }
@@ -1623,7 +1661,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(LocalAudioTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 LocalAudioTracks.Remove(track);
             }
         }
@@ -1634,7 +1672,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(!LocalVideoTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 LocalVideoTracks.Add(track);
             }
         }
@@ -1645,7 +1683,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(LocalVideoTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 LocalVideoTracks.Remove(track);
             }
         }
@@ -1656,7 +1694,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(!RemoteAudioTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 RemoteAudioTracks.Add(track);
             }
         }
@@ -1667,7 +1705,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(RemoteAudioTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(AudioTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 RemoteAudioTracks.Remove(track);
             }
         }
@@ -1678,7 +1716,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(!RemoteVideoTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 RemoteVideoTracks.Add(track);
             }
         }
@@ -1689,7 +1727,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 Debug.Assert(RemoteVideoTracks.Contains(track));
                 Debug.Assert(track.Transceiver != null);
-                Debug.Assert(VideoTransceivers.Contains(track.Transceiver));
+                Debug.Assert(Transceivers.Contains(track.Transceiver));
                 RemoteVideoTracks.Remove(track);
             }
         }

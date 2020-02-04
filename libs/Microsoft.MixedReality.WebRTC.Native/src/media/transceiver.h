@@ -49,7 +49,7 @@ class Transceiver : public TrackedObject {
   /// type to static_cast<> a |Transceiver| pointer to. If this is |kAudio| then
   /// the object is an |AudioTransceiver| instance, and if this is |kVideo| then
   /// the object is a |VideoTransceiver| instance.
-  MRS_API MediaKind GetKind() const noexcept { return kind_; }
+  MRS_API MediaKind GetMediaKind() const noexcept { return kind_; }
 
   /// Get the current transceiver direction.
   MRS_API OptDirection GetDirection() const noexcept { return direction_; }
