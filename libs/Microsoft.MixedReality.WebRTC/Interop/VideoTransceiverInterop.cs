@@ -191,6 +191,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         {
             var transceiverWrapper = Utils.ToWrapper<VideoTransceiver>(transceiver);
             transceiverWrapper.SetHandle(new VideoTransceiverHandle(interopHandle));
+            transceiverWrapper.PeerConnection.OnTransceiverAdded(transceiverWrapper);
         }
 
         [MonoPInvokeCallback(typeof(StateUpdatedDelegate))]

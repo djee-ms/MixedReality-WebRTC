@@ -19,6 +19,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public AudioStreamStartedEvent AudioStreamStarted = new AudioStreamStartedEvent();
         public AudioStreamStoppedEvent AudioStreamStopped = new AudioStreamStoppedEvent();
 
+        public AudioStreamStartedEvent GetAudioStreamStarted() { return AudioStreamStarted; }
+        public AudioStreamStoppedEvent GetAudioStreamStopped() { return AudioStreamStopped; }
+
         /// <summary>
         /// Remote audio track receiving data from the remote peer.
         /// </summary>
@@ -27,13 +30,23 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public void RegisterCallback(AudioFrameDelegate callback) { }
         public void UnregisterCallback(AudioFrameDelegate callback) { }
 
-        protected override void OnPlaybackStarted() { }
+        protected override void OnPlaybackStarted()
+        {
+        }
+
         protected override void OnPlaybackStopped()
         {
             if (Track != null)
             {
                 AudioStreamStopped.Invoke();
-                Track.Transceiver.LocalTrack = null;
+
+                // Track may not be added to any transceiver (e.g. no connection)
+                if (Track.Transceiver != null)
+                {
+                    Track.Transceiver.LocalTrack = null;
+                }
+
+                // Remote tracks are owned by the peer connection (not disposable)
                 Track = null;
             }
         }

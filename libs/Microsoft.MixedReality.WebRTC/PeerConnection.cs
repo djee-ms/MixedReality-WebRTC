@@ -1057,11 +1057,7 @@ namespace Microsoft.MixedReality.WebRTC
                 out AudioTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
-            lock (_tracksLock)
-            {
-                Transceivers.Add(transceiver);
-            }
-            AudioTransceiverAdded?.Invoke(transceiver);
+            OnTransceiverAdded(transceiver);
             return transceiver;
         }
 
@@ -1089,11 +1085,7 @@ namespace Microsoft.MixedReality.WebRTC
                 out VideoTransceiverHandle transceiverHandle);
             Utils.ThrowOnErrorCode(res);
             transceiver.SetHandle(transceiverHandle);
-            lock (_tracksLock)
-            {
-                Transceivers.Add(transceiver);
-            }
-            VideoTransceiverAdded?.Invoke(transceiver);
+            OnTransceiverAdded(transceiver);
             return transceiver;
         }
 
@@ -1594,6 +1586,36 @@ namespace Microsoft.MixedReality.WebRTC
             RenegotiationNeeded?.Invoke();
         }
 
+        /// <summary>
+        /// Callback on transceiver created for the peer connection, irrelevant of whether
+        /// it has tracks or not. This is called both when created from the managed side or
+        /// from the native side.
+        /// </summary>
+        /// <param name="tr">The newly created transceiver which has this peer connection as owner</param>
+        internal void OnTransceiverAdded(AudioTransceiver tr)
+        {
+            lock (_tracksLock)
+            {
+                Transceivers.Add(tr);
+            }
+            AudioTransceiverAdded?.Invoke(tr);
+        }
+
+        /// <summary>
+        /// Callback on transceiver created for the peer connection, irrelevant of whether
+        /// it has tracks or not. This is called both when created from the managed side or
+        /// from the native side.
+        /// </summary>
+        /// <param name="tr">The newly created transceiver which has this peer connection as owner</param>
+        internal void OnTransceiverAdded(VideoTransceiver tr)
+        {
+            lock (_tracksLock)
+            {
+                Transceivers.Add(tr);
+            }
+            VideoTransceiverAdded?.Invoke(tr);
+        }
+
         internal void OnAudioTrackAdded(RemoteAudioTrack track, AudioTransceiver transceiver)
         {
             MainEventSource.Log.AudioTrackAdded(track.Name);
@@ -1619,6 +1641,12 @@ namespace Microsoft.MixedReality.WebRTC
             track.Dispose();
         }
 
+        /// <summary>
+        /// Callback invoked when a transceiver starts receiving, and a remote video track is
+        /// created as a result to receive its video data.
+        /// </summary>
+        /// <param name="track">The newly created remote video track.</param>
+        /// <param name="transceiver">The video transceiver now receiving from the remote peer.</param>
         internal void OnVideoTrackAdded(RemoteVideoTrack track, VideoTransceiver transceiver)
         {
             MainEventSource.Log.VideoTrackAdded(track.Name);
@@ -1633,6 +1661,11 @@ namespace Microsoft.MixedReality.WebRTC
             VideoTrackAdded?.Invoke(track);
         }
 
+        /// <summary>
+        /// Callback invoked when a transceiver stops receiving, and a remote video track is
+        /// removed from it as a result.
+        /// </summary>
+        /// <param name="track">The remote video track removed from the video transceiver.</param>
         internal void OnVideoTrackRemoved(RemoteVideoTrack track)
         {
             MainEventSource.Log.VideoTrackRemoved(track.Name);
@@ -1644,6 +1677,11 @@ namespace Microsoft.MixedReality.WebRTC
             track.Dispose();
         }
 
+        /// <summary>
+        /// Callback invoked when a transceiver starts receiving, and a remote audio track is
+        /// created as a result to receive its audio data.
+        /// </summary>
+        /// <param name="track">The newly created remote audio track.</param>
         internal void OnLocalTrackAdded(LocalAudioTrack track)
         {
             lock (_tracksLock)
@@ -1655,6 +1693,11 @@ namespace Microsoft.MixedReality.WebRTC
             }
         }
 
+        /// <summary>
+        /// Callback invoked when a transceiver stops receiving, and a remote audio track is
+        /// removed from it as a result.
+        /// </summary>
+        /// <param name="track">The remote video track removed from the video transceiver.</param>
         internal void OnLocalTrackRemoved(LocalAudioTrack track)
         {
             lock (_tracksLock)

@@ -33,6 +33,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         public VideoStreamStoppedEvent VideoStreamStopped = new VideoStreamStoppedEvent();
 
+        public VideoStreamStartedEvent GetVideoStreamStarted() { return VideoStreamStarted; }
+        public VideoStreamStoppedEvent GetVideoStreamStopped() { return VideoStreamStopped; }
+
         /// <inheritdoc/>
         public VideoEncoding FrameEncoding { get; } = VideoEncoding.I420A;
 
@@ -77,7 +80,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (Track != null)
             {
                 VideoStreamStopped.Invoke(this);
-                Track.Transceiver.LocalTrack = null;
+
+                // Track may not be added to any transceiver (e.g. no connection)
+                if (Track.Transceiver != null)
+                {
+                    Track.Transceiver.LocalTrack = null;
+                }
+
+                // Remote tracks are owned by the peer connection (not disposable)
                 Track = null;
             }
         }

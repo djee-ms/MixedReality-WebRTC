@@ -3,6 +3,7 @@
 
 using UnityEngine;
 using Unity.Profiling;
+using System;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
 {
@@ -19,24 +20,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     {
         [Header("Source")]
         [Tooltip("Audio source providing the audio data used by this player")]
-        public MediaSource AudioSource2;
-        protected AudioReceiver AudioSource;
+        [SerializeField]
+        protected MediaSource AudioSource;
 
         [Tooltip("Video source providing the video frames rendered by this player")]
-        public MediaSource VideoSource2;
-        protected VideoReceiver VideoSource;
-
-        protected void OnValidate()
-        {
-            if (!(AudioSource2 is IAudioSource))
-            {
-                AudioSource2 = null;
-            }
-            if (!(VideoSource2 is IVideoSource))
-            {
-                VideoSource2 = null;
-            }
-        }
+        [SerializeField]
+        protected MediaSource VideoSource;
 
         [Tooltip("Max video playback framerate, in frames per second")]
         [Range(0.001f, 120f)]
@@ -94,6 +83,21 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private ProfilerMarker loadTextureDataMarker = new ProfilerMarker("LoadTextureData");
         private ProfilerMarker uploadTextureToGpuMarker = new ProfilerMarker("UploadTextureToGPU");
 
+        private void OnValidate()
+        {
+            // Ensure that AudioSource implements IAudioSource
+            if (!(AudioSource is IAudioSource))
+            {
+                AudioSource = null;
+            }
+
+            // Ensure that VideoSource implements IVideoSource
+            if (!(VideoSource is IVideoSource))
+            {
+                VideoSource = null;
+            }
+        }
+
         private void Start()
         {
             CreateEmptyVideoTextures();
@@ -102,18 +106,47 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // when Unity is running at 60 FPS.
             _minUpdateDelay = Mathf.Max(0f, 1f / Mathf.Max(0.001f, MaxVideoFramerate) - 0.003f);
 
-            AudioSource?.AudioStreamStarted.AddListener(AudioStreamStarted);
-            AudioSource?.AudioStreamStopped.AddListener(AudioStreamStopped);
-            VideoSource?.VideoStreamStarted.AddListener(VideoStreamStarted);
-            VideoSource?.VideoStreamStopped.AddListener(VideoStreamStopped);
+            if (AudioSource != null)
+            {
+                if (AudioSource is IAudioSource audioSrc)
+                {
+                    audioSrc.GetAudioStreamStarted().AddListener(AudioStreamStarted);
+                    audioSrc.GetAudioStreamStopped().AddListener(AudioStreamStopped);
+                }
+                else
+                {
+                    throw new ArgumentException("Audio source does not implement IAudioSource.");
+                }
+            }
+
+            if (VideoSource != null)
+            {
+                if (VideoSource is IVideoSource videoSrc)
+                {
+                    videoSrc.GetVideoStreamStarted().AddListener(VideoStreamStarted);
+                    videoSrc.GetVideoStreamStopped().AddListener(VideoStreamStopped);
+                }
+                else
+                {
+                    throw new ArgumentException("Video source does not implement IVideoSource.");
+                }
+            }
         }
 
         private void OnDestroy()
         {
-            AudioSource?.AudioStreamStarted.RemoveListener(AudioStreamStarted);
-            AudioSource?.AudioStreamStopped.RemoveListener(AudioStreamStopped);
-            VideoSource?.VideoStreamStarted.RemoveListener(VideoStreamStarted);
-            VideoSource?.VideoStreamStopped.RemoveListener(VideoStreamStopped);
+            var audioSrc = (IAudioSource)AudioSource;
+            if (audioSrc != null) // depends in particular on Unity's component destruction order
+            {
+                audioSrc.GetAudioStreamStarted().RemoveListener(AudioStreamStarted);
+                audioSrc.GetAudioStreamStopped().RemoveListener(AudioStreamStopped);
+            }
+            var videoSrc = (IVideoSource)VideoSource;
+            if (videoSrc != null) // depends in particular on Unity's component destruction order
+            {
+                videoSrc.GetVideoStreamStarted().RemoveListener(VideoStreamStarted);
+                videoSrc.GetVideoStreamStopped().RemoveListener(VideoStreamStopped);
+            }
         }
 
         private void AudioStreamStarted()
@@ -128,17 +161,17 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             bool isRemote = (source is VideoReceiver);
             int frameQueueSize = (isRemote ? 5 : 3);
-
-            switch (VideoSource.FrameEncoding)
+            var videoSrc = (IVideoSource)VideoSource;
+            switch (videoSrc.FrameEncoding)
             {
                 case VideoEncoding.I420A:
                     _i420aFrameQueue = new VideoFrameQueue<I420AVideoFrameStorage>(frameQueueSize);
-                    VideoSource.RegisterCallback(I420AVideoFrameReady);
+                    videoSrc.RegisterCallback(I420AVideoFrameReady);
                     break;
 
                 case VideoEncoding.Argb32:
                     _argb32FrameQueue = new VideoFrameQueue<Argb32VideoFrameStorage>(frameQueueSize);
-                    VideoSource.RegisterCallback(Argb32VideoFrameReady);
+                    videoSrc.RegisterCallback(Argb32VideoFrameReady);
                     break;
             }
         }

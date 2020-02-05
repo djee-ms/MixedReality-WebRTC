@@ -69,21 +69,21 @@ public class HardcodedSignaler : MonoBehaviour
 
     private async void Peer1_LocalSdpReadytoSend(string type, string sdp)
     {
-        await Peer2.Peer.SetRemoteDescriptionAsync(type, sdp);
+        await Peer2.SetRemoteDescriptionAsync(type, sdp);
         _remoteApplied2.Set();
         if (type == "offer")
         {
-            Peer2.CreateAnswer();
+            Peer2.Peer.CreateAnswer();
         }
     }
 
     private async void Peer2_LocalSdpReadytoSend(string type, string sdp)
     {
-        await Peer1.Peer.SetRemoteDescriptionAsync(type, sdp);
+        await Peer1.SetRemoteDescriptionAsync(type, sdp);
         _remoteApplied1.Set();
         if (type == "offer")
         {
-            Peer1.CreateAnswer();
+            Peer1.Peer.CreateAnswer();
         }
     }
 

@@ -306,16 +306,15 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 369270284}
-  m_Text: 'No sender
+  m_Text: 'No VideoSender
 
-    (LocalVideoSource)
-
+    -
 
     No data sent'
   m_OffsetZ: 0
   m_CharacterSize: 0.25
   m_LineSpacing: 1
-  m_Anchor: 5
+  m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
   m_FontSize: 32
@@ -370,7 +369,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 369270284}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7, y: -2.65, z: -1.625}
+  m_LocalPosition: {x: 5.8, y: -2.65, z: -1.625}
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_Children: []
   m_Father: {fileID: 1537901324}
@@ -402,16 +401,15 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 427831467}
-  m_Text: 'No receiver
+  m_Text: 'No VideoReceiver
 
-    (RemoteVideoSource)
+    -
 
-
-    Video data discarded'
+    No data received'
   m_OffsetZ: 0
   m_CharacterSize: 0.25
   m_LineSpacing: 1
-  m_Anchor: 5
+  m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
   m_FontSize: 32
@@ -466,7 +464,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 427831467}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.625, y: -2.65, z: -1.625}
+  m_LocalPosition: {x: -1.8, y: -2.65, z: -1.625}
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_Children: []
   m_Father: {fileID: 1537901324}
@@ -484,7 +482,7 @@ GameObject:
   - component: {fileID: 434916401}
   - component: {fileID: 434916400}
   m_Layer: 0
-  m_Name: ArrowC
+  m_Name: Arrow2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -564,7 +562,7 @@ GameObject:
   - component: {fileID: 447630320}
   - component: {fileID: 447630319}
   m_Layer: 0
-  m_Name: send_C
+  m_Name: send_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -634,8 +632,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource2: {fileID: 0}
-  VideoSource2: {fileID: 0}
+  AudioSource: {fileID: 0}
+  VideoSource: {fileID: 447630319}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 744769662}
@@ -971,7 +969,7 @@ GameObject:
   - component: {fileID: 578281756}
   - component: {fileID: 578281755}
   m_Layer: 0
-  m_Name: video_B
+  m_Name: video1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -999,7 +997,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 578281753}
-  m_Text: '"video_B"'
+  m_Text: '#1'
   m_OffsetZ: 0
   m_CharacterSize: 0.25
   m_LineSpacing: 1
@@ -1128,7 +1126,7 @@ GameObject:
   - component: {fileID: 683396262}
   - component: {fileID: 683396261}
   m_Layer: 0
-  m_Name: ArrowA
+  m_Name: Arrow0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1297,7 +1295,7 @@ GameObject:
   - component: {fileID: 715738128}
   - component: {fileID: 715738127}
   m_Layer: 0
-  m_Name: ArrowD
+  m_Name: Arrow3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1634,7 +1632,7 @@ GameObject:
   - component: {fileID: 828658423}
   - component: {fileID: 828658422}
   m_Layer: 0
-  m_Name: video_A
+  m_Name: video0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1662,7 +1660,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 828658420}
-  m_Text: '"video_A"'
+  m_Text: '#0'
   m_OffsetZ: 0
   m_CharacterSize: 0.25
   m_LineSpacing: 1
@@ -1986,7 +1984,7 @@ GameObject:
   - component: {fileID: 989215900}
   - component: {fileID: 989215899}
   m_Layer: 0
-  m_Name: recv_D
+  m_Name: recv_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2043,8 +2041,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource2: {fileID: 0}
-  VideoSource2: {fileID: 0}
+  AudioSource: {fileID: 0}
+  VideoSource: {fileID: 989215899}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 694614437}
@@ -2793,7 +2791,7 @@ GameObject:
   - component: {fileID: 1447539515}
   - component: {fileID: 1447539514}
   m_Layer: 0
-  m_Name: video_D
+  m_Name: video3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2821,7 +2819,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1447539512}
-  m_Text: '"video_D"'
+  m_Text: '#3'
   m_OffsetZ: 0
   m_CharacterSize: 0.25
   m_LineSpacing: 1
@@ -3068,7 +3066,7 @@ GameObject:
   - component: {fileID: 1533694090}
   - component: {fileID: 1533694088}
   m_Layer: 0
-  m_Name: recv_A
+  m_Name: recv_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3125,8 +3123,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource2: {fileID: 0}
-  VideoSource2: {fileID: 0}
+  AudioSource: {fileID: 0}
+  VideoSource: {fileID: 1533694088}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 521926238}
@@ -3267,7 +3265,7 @@ GameObject:
   - component: {fileID: 1645256672}
   - component: {fileID: 1645256671}
   m_Layer: 0
-  m_Name: send_B
+  m_Name: send_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3319,9 +3317,9 @@ MonoBehaviour:
   - serializedVersion: 2
     rgba: 65535
   - serializedVersion: 2
-    rgba: 16776960
+    rgba: 45055
   - serializedVersion: 2
-    rgba: 16711935
+    rgba: 23039
   Speed: 1.8
 --- !u!114 &1645256672
 MonoBehaviour:
@@ -3335,8 +3333,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource2: {fileID: 0}
-  VideoSource2: {fileID: 0}
+  AudioSource: {fileID: 0}
+  VideoSource: {fileID: 1645256671}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 2120561397}
@@ -3492,7 +3490,7 @@ GameObject:
   - component: {fileID: 1712234957}
   - component: {fileID: 1712234956}
   m_Layer: 0
-  m_Name: recv_C
+  m_Name: recv_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3549,8 +3547,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource2: {fileID: 0}
-  VideoSource2: {fileID: 0}
+  AudioSource: {fileID: 0}
+  VideoSource: {fileID: 1712234956}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 1149091332}
@@ -3977,7 +3975,7 @@ GameObject:
   - component: {fileID: 2010716986}
   - component: {fileID: 2010716985}
   m_Layer: 0
-  m_Name: video_C
+  m_Name: video2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4005,7 +4003,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2010716983}
-  m_Text: '"video_C"'
+  m_Text: '#2'
   m_OffsetZ: 0
   m_CharacterSize: 0.25
   m_LineSpacing: 1
@@ -4236,7 +4234,7 @@ GameObject:
   - component: {fileID: 2105603264}
   - component: {fileID: 2105603263}
   m_Layer: 0
-  m_Name: ArrowB
+  m_Name: Arrow1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4537,7 +4535,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.40730688, g: 0.764151, b: 0.5344988, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -4736,9 +4734,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 120, y: 30}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 64.7}
+  m_SizeDelta: {x: 90, y: 20}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!224 &224872842304937207
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4944,8 +4942,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6b02c5bb7ab6b4ea6996c956ebdd21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AudioSource2: {fileID: 0}
-  VideoSource2: {fileID: 0}
+  AudioSource: {fileID: 0}
+  VideoSource: {fileID: 8066520111486228012}
   MaxVideoFramerate: 30
   EnableStatistics: 1
   FrameLoadStatHolder: {fileID: 8067683105943324948}
@@ -5010,7 +5008,7 @@ GameObject:
   - component: {fileID: 7953653824726563719}
   - component: {fileID: 8066520111486228012}
   m_Layer: 0
-  m_Name: send_A
+  m_Name: send_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5041,11 +5039,11 @@ MonoBehaviour:
       m_Calls: []
   Colors:
   - serializedVersion: 2
-    rgba: 255
+    rgba: 8847615
   - serializedVersion: 2
-    rgba: 65280
+    rgba: 16711910
   - serializedVersion: 2
-    rgba: 16711680
+    rgba: 16711779
   Speed: 1
 --- !u!4 &8067683105484297370
 Transform:
