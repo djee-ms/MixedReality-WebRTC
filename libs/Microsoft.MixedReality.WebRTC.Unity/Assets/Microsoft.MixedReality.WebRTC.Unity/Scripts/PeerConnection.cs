@@ -637,24 +637,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         }
 
         /// <summary>
-        /// Create a new native peer connection and register event handlers to it.
-        /// This does not initialize the peer connection yet.
-        /// </summary>
-        private void CreateNativePeerConnection()
-        {
-            _nativePeer = new WebRTC.PeerConnection();
-            _nativePeer.AudioTrackAdded += Peer_AudioTrackAdded;
-            _nativePeer.AudioTrackRemoved += Peer_AudioTrackRemoved;
-            _nativePeer.VideoTrackAdded += Peer_VideoTrackAdded;
-            _nativePeer.VideoTrackRemoved += Peer_VideoTrackRemoved;
-            if (Signaler != null)
-            {
-                _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
-                _nativePeer.IceCandidateReadytoSend += Signaler_IceCandidateReadytoSend;
-            }
-        }
-
-        /// <summary>
         /// Unity Engine Start() hook
         /// </summary>
         /// <remarks>
@@ -666,19 +648,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 OnError.AddListener(OnError_Listener);
             }
-
-            //// List video capture devices to Unity console
-            //GetVideoCaptureDevicesAsync().ContinueWith((prevTask) =>
-            //{
-            //    var devices = prevTask.Result;
-            //    _mainThreadWorkQueue.Enqueue(() =>
-            //    {
-            //        foreach (var device in devices)
-            //        {
-            //            Debug.Log($"Found video capture device '{device.name}' (id:{device.id}).");
-            //        }
-            //    });
-            //});
 
             if (AutoInitializeOnStart)
             {
@@ -722,6 +691,29 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
 
         #region Private implementation
+
+        /// <summary>
+        /// Create a new native peer connection and register event handlers to it.
+        /// This does not initialize the peer connection yet.
+        /// </summary>
+        private void CreateNativePeerConnection()
+        {
+            // Create the peer connection managed wrapper and its native implementation
+            _nativePeer = new WebRTC.PeerConnection();
+
+            // Register event handlers for remote tracks (media receivers)
+            _nativePeer.AudioTrackAdded += Peer_AudioTrackAdded;
+            _nativePeer.AudioTrackRemoved += Peer_AudioTrackRemoved;
+            _nativePeer.VideoTrackAdded += Peer_VideoTrackAdded;
+            _nativePeer.VideoTrackRemoved += Peer_VideoTrackRemoved;
+
+            // Register event handlers for signaling
+            if (Signaler != null)
+            {
+                _nativePeer.LocalSdpReadytoSend += Signaler_LocalSdpReadyToSend;
+                _nativePeer.IceCandidateReadytoSend += Signaler_IceCandidateReadytoSend;
+            }
+        }
 
         /// <summary>
         /// Internal helper to ensure device access and continue initialization.
@@ -808,7 +800,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         }
 
         /// <summary>
-        /// Callback fired on the main UI thread once the WebRTC plugin was initialized successfully.
+        /// Callback fired on the main Unity app thread once the WebRTC plugin was initialized successfully.
         /// </summary>
         private void OnPostInitialize()
         {
@@ -829,6 +821,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 Signaler.OnPeerInitialized(this);
                 Signaler.OnMessage += Signaler_OnMessage;
             }
+
             OnInitialized.Invoke();
         }
 
