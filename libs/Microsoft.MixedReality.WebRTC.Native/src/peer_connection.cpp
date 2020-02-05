@@ -1152,18 +1152,13 @@ bool PeerConnectionImpl::CreateOffer() noexcept {
   if (!peer_) {
     return false;
   }
-  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-  /*if (mandatory_receive_)*/ {
-      //< TODO - This is legacy, should use
-      // transceivers
-      // options.offer_to_receive_audio = true;
-      // options.offer_to_receive_video = true;
-  } {
+  {
     auto lock = std::scoped_lock{data_channel_mutex_};
     if (data_channels_.empty()) {
       sctp_negotiated_ = false;
     }
   }
+  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options{};
   auto observer =
       new rtc::RefCountedObject<CreateSessionDescObserver>(this);  // 0 ref
   peer_->CreateOffer(observer, options);
@@ -1175,12 +1170,7 @@ bool PeerConnectionImpl::CreateAnswer() noexcept {
   if (!peer_) {
     return false;
   }
-  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
-  /*if (mandatory_receive_)*/ {  //< TODO - This is legacy, should use
-                                 // transceivers
-    // options.offer_to_receive_audio = true;
-    // options.offer_to_receive_video = true;
-  }
+  webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options{};
   auto observer =
       new rtc::RefCountedObject<CreateSessionDescObserver>(this);  // 0 ref
   peer_->CreateAnswer(observer, options);
