@@ -16,4 +16,8 @@ FOUNDATION_EXPORT const unsigned char mrwebrtcVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <mrwebrtc/PublicHeader.h>
 
-
+#import "mrs_errors.h"
+#import "interop_api.h"
+#import "local_video_track_interop.h"
+#import "external_video_track_source_interop.h"
+#import "peer_connection_interop.h"
