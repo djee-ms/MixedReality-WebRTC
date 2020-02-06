@@ -7,6 +7,8 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <Microsoft_MixedReality_WebRTC/mrwebrtc.h>
+#import <Microsoft_MixedReality_WebRTC/audio_session.h>
 
 @interface mrwebrtcTests : XCTestCase
 
@@ -15,7 +17,8 @@
 @implementation mrwebrtcTests
 
 - (void)setUp {
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    // Ensure the audio session is configured, otherwise audio setup will fail
+    XCTAssertTrue([AudioSession configureDefault]);
 }
 
 - (void)tearDown {
@@ -23,8 +26,11 @@
 }
 
 - (void)testExample {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
+    PeerConnectionConfiguration config{};
+    mrsPeerConnectionInteropHandle dummyHandle = (void*)0x1;
+    PeerConnectionHandle handle;
+    mrsResult res = mrsPeerConnectionCreate(config, dummyHandle, &handle);
+    XCTAssertEqual(mrsResult::kSuccess, res);
 }
 
 - (void)testPerformanceExample {
