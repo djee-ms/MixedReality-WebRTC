@@ -5,7 +5,7 @@
 
 #include "export.h"
 #include "external_video_track_source.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 #include "refptr.h"
 
 extern "C" {
@@ -66,7 +66,8 @@ MRS_API void MRS_CALL mrsExternalVideoTrackSourceShutdown(
 
 }  // extern "C"
 
-namespace Microsoft::MixedReality::WebRTC::detail {
+namespace Microsoft { namespace MixedReality { namespace WebRTC {
+namespace detail {
 
 //
 // Helpers
@@ -84,4 +85,4 @@ RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceCreateFromArgb32(
     mrsRequestExternalArgb32VideoFrameCallback callback,
     void* user_data);
 
-}  // namespace Microsoft::MixedReality::WebRTC::detail
+}}}}  // namespace Microsoft::MixedReality::WebRTC::detail

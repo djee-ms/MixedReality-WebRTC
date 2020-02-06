@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-namespace Microsoft::MixedReality::WebRTC {
+namespace Microsoft { namespace MixedReality { namespace WebRTC {
 
 /// View over an existing buffer representing an audio frame, in the sense
 /// of a single group of contiguous audio data.
@@ -29,4 +29,4 @@ struct AudioFrame {
   std::uint32_t sample_count_;
 };
 
-}  // namespace Microsoft::MixedReality::WebRTC
+}}}  // namespace Microsoft::MixedReality::WebRTC

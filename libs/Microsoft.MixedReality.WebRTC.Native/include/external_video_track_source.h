@@ -8,7 +8,7 @@
 #include "tracked_object.h"
 #include "video_frame.h"
 
-namespace Microsoft::MixedReality::WebRTC {
+namespace Microsoft { namespace MixedReality { namespace WebRTC {
 
 class ExternalVideoTrackSource;
 
@@ -112,4 +112,4 @@ class ExternalVideoTrackSource : public TrackedObject {
   MRS_API virtual void Shutdown() noexcept = 0;
 };
 
-}  // namespace Microsoft::MixedReality::WebRTC
+}}}  // namespace Microsoft::MixedReality::WebRTC

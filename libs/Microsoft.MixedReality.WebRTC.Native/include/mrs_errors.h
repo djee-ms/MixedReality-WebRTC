@@ -7,7 +7,7 @@
 
 #include "export.h"
 
-namespace Microsoft::MixedReality::WebRTC {
+namespace Microsoft { namespace MixedReality { namespace WebRTC {
 
 /// Result code from an operation, typically used through the interop layer
 /// instead of a full-featured Error object.
@@ -200,4 +200,4 @@ class ErrorOr {
   T value_;
 };
 
-}  // namespace Microsoft::MixedReality::WebRTC
+}}}  // namespace Microsoft::MixedReality::WebRTC
