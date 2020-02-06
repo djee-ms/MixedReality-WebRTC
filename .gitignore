@@ -57,3 +57,9 @@ xdoc.meta
 
 # TODO - TestNetCoreConsole is misconfigured, builds into its own folder
 examples/TestNetCoreConsole/bin
+
+# iOS
+.DS_Store
+/libs/Microsoft.MixedReality.WebRTC.Native.iOS/build
+/libs/Microsoft.MixedReality.WebRTC.Native.iOS/Microsoft.MixedReality.WebRTC.xcodeproj/project.xcworkspace
+/libs/Microsoft.MixedReality.WebRTC.Native.iOS/Microsoft.MixedReality.WebRTC.xcodeproj/xcuserdata
