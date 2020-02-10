@@ -25,12 +25,32 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
 }
 
-- (void)testExample {
+- (void)testPeerConnectionCreate {
     PeerConnectionConfiguration config{};
     mrsPeerConnectionInteropHandle dummyHandle = (void*)0x1;
     PeerConnectionHandle handle;
     mrsResult res = mrsPeerConnectionCreate(config, dummyHandle, &handle);
     XCTAssertEqual(mrsResult::kSuccess, res);
+    mrsPeerConnectionClose(handle);
+}
+
+- (void)testPeerConnectionAddLocalVideoTrack {
+    PeerConnectionConfiguration config{};
+    mrsPeerConnectionInteropHandle dummyHandle = (void*)0x1;
+    PeerConnectionHandle handle;
+    XCTAssertEqual(mrsResult::kSuccess, mrsPeerConnectionCreate(
+        config, dummyHandle, &handle));
+    XCTAssertNotEqual(nullptr, handle);
+    
+    VideoDeviceConfiguration video_config{};
+    LocalVideoTrackHandle track_handle{};
+    XCTAssertEqual(mrsResult::kSuccess, mrsPeerConnectionAddLocalVideoTrack(
+        handle, "videotrack", video_config, &track_handle));
+    XCTAssertNotEqual(nullptr, track_handle);
+    
+    mrsPeerConnectionRemoveLocalVideoTrack(handle, track_handle);
+    mrsLocalVideoTrackRemoveRef(track_handle);
+    mrsPeerConnectionClose(handle);
 }
 
 - (void)testPerformanceExample {
