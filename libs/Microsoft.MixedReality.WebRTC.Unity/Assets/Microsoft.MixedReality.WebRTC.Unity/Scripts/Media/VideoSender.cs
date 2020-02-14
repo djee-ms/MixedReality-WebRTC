@@ -44,6 +44,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public VideoStreamStartedEvent GetVideoStreamStarted() { return VideoStreamStarted; }
         public VideoStreamStoppedEvent GetVideoStreamStopped() { return VideoStreamStopped; }
 
+        public VideoTransceiver Transceiver { get; private set; }
+
         /// <inheritdoc/>
         public VideoEncoding FrameEncoding { get; } = VideoEncoding.I420A;
 
@@ -89,34 +91,50 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public async Task AddTrackAsync()
+        public async Task CreateTrackAsync()
         {
             if (Track == null)
             {
-                await DoAddTrackAsyncAction();
+                // Defer track creation to derived classes, which will invoke some methods like
+                // LocalVideoTrack.CreateFromDeviceAsync() or LocalVideoTrack.CreateFromExternalSourceAsync().
+                await DoCreateTrackAsyncAction();
                 Debug.Assert(Track != null, "Implementation did not create a valid Track property yet did not throw any exception.", this);
-                //Debug.Assert(Track.Enabled == enabled, "Track.Enabled is not in sync with component's enabled property.", this);
+
                 VideoStreamStarted.Invoke(this);
             }
         }
 
-        protected override void OnMediaInitialized()
+        public void RemoveTrack()
         {
-            if (AutoStartCapture && isActiveAndEnabled)
-            {
-                _ = AddTrackAsync();
-            }
+            DoRemoveTrackAction();
         }
 
-        protected override void OnMediaShutdown()
+        protected override Task DoStartMediaPlaybackAsync()
         {
+            return CreateTrackAsync();
+        }
+
+        protected override void DoStopMediaPlayback()
+        {
+            RemoveTrack();
+        }
+
+        internal async Task InitAndAttachTrackAsync(VideoTransceiver videoTransceiver)
+        {
+            Debug.Assert(Transceiver == null);
+            Transceiver = videoTransceiver;
+
+            // Create the local track
+            await CreateTrackAsync();
+
+            // Attach the local track to the transceiver
             if (Track != null)
             {
-                VideoStreamStopped.Invoke(this);
-                DoRemoveTrackAction();
+                Transceiver.LocalTrack = Track;
             }
         }
 
+        /// <inheritdoc/>
         protected override void MuteImpl(bool mute)
         {
             if (Track != null)
@@ -127,11 +145,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         /// <summary>
         /// Implement this callback to create the <see cref="Track"/> instance.
-        /// On failure, this method must throw. Otherwise it must return a non-null track.
-        /// The track must be enabled according to the <see xref="UnityEngine.Behaviour.enabled"/>
-        /// property of the Unity component.
+        /// On failure, this method must throw. Otherwise it must set the <see cref="Track"/> property
+        /// to a non-<c>null</c> instance.
         /// </summary>
-        protected abstract Task DoAddTrackAsyncAction();
+        protected abstract Task DoCreateTrackAsyncAction();
 
         /// <summary>
         /// Re-implement this callback to destroy the <see cref="Track"/> instance
@@ -149,7 +166,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     Track.Transceiver.LocalTrack = null;
                 }
 
-                // Local tracks are disposable objects
+                // Local tracks are disposable objects owned by the user (this component)
                 Track.Dispose();
                 Track = null;
             }

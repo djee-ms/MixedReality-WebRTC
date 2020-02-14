@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
@@ -14,12 +15,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// </summary>
     public abstract class MediaSource : MonoBehaviour
     {
-        /// <summary>
-        /// Peer connection this media sender is extracting its track from.
-        /// </summary>
-        [Header("Connection")]
-        public PeerConnection PeerConnection;
-
         /// <summary>
         /// Is the source currently playing?
         /// The concept of _playing_ is described in the <see cref="Play"/> function.
@@ -54,12 +49,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         /// <seealso cref="Stop()"/>
         /// <seealso cref="IsPlaying"/>
-        public void Play()
+        public async Task PlayAsync()
         {
             if (!IsPlaying)
             {
+                await DoStartMediaPlaybackAsync();
                 IsPlaying = true;
-                OnPlaybackStarted();
             }
         }
 
@@ -77,88 +72,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             if (IsPlaying)
             {
-                OnPlaybackStopped();
+                DoStopMediaPlayback();
                 IsPlaying = false;
             }
         }
 
-        private enum MediaState
-        {
-            Idle,
-            Initializing,
-            Ready,
-            ShuttingDown
-        }
-
-        private MediaState _mediaState = MediaState.Idle;
-        private object _mediaStateLock = new object();
-
-        protected virtual void OnPlaybackStarted() { }
-        protected virtual void OnPlaybackStopped() { }
-
-        protected abstract void OnMediaInitialized();
-        protected abstract void OnMediaShutdown();
-
-        /// <summary>
-        /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Awake.html">MonoBehaviour.Awake</a>
-        /// which registers some handlers with the peer connection to listen to its <see cref="PeerConnection.OnInitialized"/>
-        /// and <see cref="PeerConnection.OnShutdown"/> events.
-        /// </summary>
-        protected void Awake()
-        {
-            PeerConnection.OnInitialized.AddListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.AddListener(OnPeerShutdown);
-        }
-
-        /// <summary>
-        /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnDestroy.html">MonoBehaviour.OnDestroy</a>
-        /// which unregisters all listeners from the peer connection.
-        /// </summary>
-        protected void OnDestroy()
-        {
-            PeerConnection.OnInitialized.RemoveListener(OnPeerInitialized);
-            PeerConnection.OnShutdown.RemoveListener(OnPeerShutdown);
-        }
-
-        protected void OnEnable()
-        {
-            var nativePeer = PeerConnection.Peer;
-            if ((nativePeer != null) && (nativePeer.Initialized))
-            {
-                lock (_mediaStateLock)
-                {
-                    if (_mediaState != MediaState.Idle)
-                    {
-                        return;
-                    }
-                    _mediaState = MediaState.Initializing;
-                }
-                OnMediaInitialized();
-                lock (_mediaStateLock)
-                {
-                    Debug.Assert(_mediaState == MediaState.Initializing);
-                    _mediaState = MediaState.Ready;
-                }
-            }
-        }
-
-        protected void OnDisable()
-        {
-            lock (_mediaStateLock)
-            {
-                if (_mediaState != MediaState.Ready)
-                {
-                    return;
-                }
-                _mediaState = MediaState.ShuttingDown;
-            }
-            OnMediaShutdown();
-            lock (_mediaStateLock)
-            {
-                Debug.Assert(_mediaState == MediaState.ShuttingDown);
-                _mediaState = MediaState.Idle;
-            }
-        }
+        protected abstract Task DoStartMediaPlaybackAsync();
+        protected abstract void DoStopMediaPlayback();
 
         /// <summary>
         /// Implementation of <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">MonoBehaviour.Update</a>
@@ -171,28 +91,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 workload();
             }
-        }
-
-        /// <summary>
-        /// Internal helper callback fired when the peer is initialized, which starts listening for events
-        /// on remote tracks added and removed, and optionally starts video playback if the
-        /// <see cref="AutoPlayOnAdded"/> property is <c>true</c>.
-        /// </summary>
-        private void OnPeerInitialized()
-        {
-            if (enabled)
-            {
-                OnMediaInitialized();
-            }
-        }
-
-        /// <summary>
-        /// Internal helper callback fired when the peer is shut down, which stops video playback and
-        /// unregister all the event listeners from the peer connection about to be destroyed.
-        /// </summary>
-        private void OnPeerShutdown()
-        {
-            OnMediaShutdown();
         }
     }
 }

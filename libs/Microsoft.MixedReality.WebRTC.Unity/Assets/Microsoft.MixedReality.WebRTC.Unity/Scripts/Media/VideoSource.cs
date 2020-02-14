@@ -45,6 +45,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// </summary>
     public interface IVideoSource
     {
+        bool IsPlaying { get; }
+
         VideoStreamStartedEvent GetVideoStreamStarted();
         VideoStreamStoppedEvent GetVideoStreamStopped();
         

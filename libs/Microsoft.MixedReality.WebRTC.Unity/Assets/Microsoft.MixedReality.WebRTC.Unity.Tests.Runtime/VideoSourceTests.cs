@@ -48,13 +48,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Create the sender video source
             var sender1 = pc1_go.AddComponent<FakeVideoSource>();
             sender1.AutoAddTrack = true;
-            sender1.PeerConnection = pc1;
             sender1.TrackName = "track_name";
 
             // Create the receiver video source
             var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-            receiver2.AutoPlayOnAdded = true;
-            receiver2.PeerConnection = pc2;
+            receiver2.AutoPlayOnPaired = true;
 
             // Activate
             pc1_go.SetActive(true);
@@ -111,7 +109,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Create the sender video source
             var sender1 = pc1_go.AddComponent<FakeVideoSource>();
             sender1.AutoAddTrack = true;
-            sender1.PeerConnection = pc1;
             sender1.TrackName = "track_name";
 
             // Missing video receiver on peer #2
@@ -183,8 +180,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
 
             // Create the receiver video source
             var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-            receiver2.AutoPlayOnAdded = true;
-            receiver2.PeerConnection = pc2;
+            receiver2.AutoPlayOnPaired = true;
 
             // Activate
             pc1_go.SetActive(true);
@@ -321,16 +317,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Create the video sources on peer #1
             var sender1 = pc1_go.AddComponent<FakeVideoSource>();
             sender1.AutoAddTrack = true;
-            sender1.PeerConnection = pc1;
             sender1.TrackName = "track_name";
             var receiver1 = pc1_go.AddComponent<VideoReceiver>();
-            receiver1.AutoPlayOnAdded = true;
-            receiver1.PeerConnection = pc1;
+            receiver1.AutoPlayOnPaired = true;
 
             // Create the video sources on peer #2
             var sender2 = pc2_go.AddComponent<FakeVideoSource>();
             sender2.AutoAddTrack = true;
-            sender2.PeerConnection = pc2;
             sender2.TrackName = "track_name";
 
             // Activate
@@ -393,17 +386,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Create the video sources on peer #1
             var sender1 = pc1_go.AddComponent<FakeVideoSource>();
             sender1.AutoAddTrack = true;
-            sender1.PeerConnection = pc1;
             sender1.TrackName = "track_name";
 
             // Create the video sources on peer #2
             var sender2 = pc2_go.AddComponent<FakeVideoSource>();
             sender2.AutoAddTrack = true;
-            sender2.PeerConnection = pc2;
             sender2.TrackName = "track_name";
             var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-            receiver2.AutoPlayOnAdded = true;
-            receiver2.PeerConnection = pc2;
+            receiver2.AutoPlayOnPaired = true;
 
             // Activate
             pc1_go.SetActive(true);
@@ -465,16 +455,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Create the video sources on peer #1
             var sender1 = pc1_go.AddComponent<FakeVideoSource>();
             sender1.AutoAddTrack = true;
-            sender1.PeerConnection = pc1;
             sender1.TrackName = "track_name";
             var receiver1 = pc2_go.AddComponent<VideoReceiver>();
-            receiver1.AutoPlayOnAdded = true;
-            receiver1.PeerConnection = pc1;
+            receiver1.AutoPlayOnPaired = true;
 
             // Create the video sources on peer #2
             var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-            receiver2.AutoPlayOnAdded = true;
-            receiver2.PeerConnection = pc2;
+            receiver2.AutoPlayOnPaired = true;
 
             // Activate
             pc1_go.SetActive(true);
@@ -535,20 +522,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // Create the senders
             var sender1 = pc1_go.AddComponent<FakeVideoSource>();
             sender1.AutoAddTrack = true;
-            sender1.PeerConnection = pc1;
             sender1.TrackName = "track_name";
             var sender2 = pc2_go.AddComponent<FakeVideoSource>();
             sender2.AutoAddTrack = true;
-            sender2.PeerConnection = pc2;
             sender2.TrackName = "track_name";
 
             // Create the receivers
             var receiver1 = pc1_go.AddComponent<VideoReceiver>();
-            receiver1.AutoPlayOnAdded = true;
-            receiver1.PeerConnection = pc1;
+            receiver1.AutoPlayOnPaired = true;
             var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-            receiver2.AutoPlayOnAdded = true;
-            receiver2.PeerConnection = pc2;
+            receiver2.AutoPlayOnPaired = true;
 
             // Activate
             pc1_go.SetActive(true);
@@ -689,22 +672,19 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
                 {
                     var sender1 = pc1_go.AddComponent<FakeVideoSource>();
                     sender1.AutoAddTrack = true;
-                    sender1.PeerConnection = pc1;
                     sender1.TrackName = $"track{i}";
                     cfg.sender1 = sender1;
                 }
                 if ((cfg.dir1 == Transceiver.Direction.ReceiveOnly) || (cfg.dir1 == Transceiver.Direction.SendReceive))
                 {
                     var receiver1 = pc1_go.AddComponent<VideoReceiver>();
-                    receiver1.AutoPlayOnAdded = true;
-                    receiver1.PeerConnection = pc1;
+                    receiver1.AutoPlayOnPaired = true;
                     cfg.receiver1 = receiver1;
                 }
                 if ((cfg.dir2 == Transceiver.Direction.SendOnly) || (cfg.dir2 == Transceiver.Direction.SendReceive))
                 {
                     var sender2 = pc2_go.AddComponent<FakeVideoSource>();
                     sender2.AutoAddTrack = true;
-                    sender2.PeerConnection = pc2;
                     sender2.TrackName = "track_name";
                     sender2.TrackName = $"track{i}";
                     cfg.sender2 = sender2;
@@ -712,8 +692,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
                 if ((cfg.dir2 == Transceiver.Direction.ReceiveOnly) || (cfg.dir2 == Transceiver.Direction.SendReceive))
                 {
                     var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-                    receiver2.AutoPlayOnAdded = true;
-                    receiver2.PeerConnection = pc2;
+                    receiver2.AutoPlayOnPaired = true;
                     cfg.receiver2 = receiver2;
                 }
             }

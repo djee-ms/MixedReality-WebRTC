@@ -105,13 +105,22 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // Leave 3ms of margin, otherwise it misses 1 frame and drops to ~20 FPS
             // when Unity is running at 60 FPS.
             _minUpdateDelay = Mathf.Max(0f, 1f / Mathf.Max(0.001f, MaxVideoFramerate) - 0.003f);
+        }
 
+        private void OnEnable()
+        {
             if (AudioSource != null)
             {
                 if (AudioSource is IAudioSource audioSrc)
                 {
                     audioSrc.GetAudioStreamStarted().AddListener(AudioStreamStarted);
                     audioSrc.GetAudioStreamStopped().AddListener(AudioStreamStopped);
+
+                    // If registering while the audio source is already playing, invoke manually
+                    if (audioSrc.IsPlaying)
+                    {
+                        AudioStreamStarted();
+                    }
                 }
                 else
                 {
@@ -125,6 +134,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 {
                     videoSrc.GetVideoStreamStarted().AddListener(VideoStreamStarted);
                     videoSrc.GetVideoStreamStopped().AddListener(VideoStreamStopped);
+
+                    // If registering while the audio source is already playing, invoke manually
+                    if (videoSrc.IsPlaying)
+                    {
+                        VideoStreamStarted(videoSrc);
+                    }
                 }
                 else
                 {
@@ -133,7 +148,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             var audioSrc = (IAudioSource)AudioSource;
             if (audioSrc != null) // depends in particular on Unity's component destruction order

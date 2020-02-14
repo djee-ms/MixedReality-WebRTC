@@ -26,6 +26,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// </summary>
     public interface IAudioSource
     {
+        bool IsPlaying { get; }
+
         AudioStreamStartedEvent GetAudioStreamStarted();
         AudioStreamStoppedEvent GetAudioStreamStopped();
 

@@ -22,7 +22,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
         }
 
-        protected override Task DoAddTrackAsyncAction()
+        protected override Task DoCreateTrackAsyncAction()
         {
             // Ensure the track has a valid name
             string trackName = TrackName;
@@ -35,7 +35,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             SdpTokenAttribute.Validate(trackName, allowEmpty: false);
 
             // Create the external source
-            var nativePeer = PeerConnection.Peer;
             //< TODO - Better abstraction
             if (typeof(T) == typeof(I420AVideoFrameStorage))
             {

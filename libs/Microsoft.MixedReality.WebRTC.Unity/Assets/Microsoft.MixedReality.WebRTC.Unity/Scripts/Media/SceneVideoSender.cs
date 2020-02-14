@@ -75,40 +75,40 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </summary>
         private VideoFrameQueue<Argb32VideoFrameStorage> _frameQueue = new VideoFrameQueue<Argb32VideoFrameStorage>(3);
 
-        protected new void OnEnable()
-        {
-            // If no camera provided, attempt to fallback to main camera
-            if (SourceCamera == null)
-            {
-                var mainCameraGameObject = GameObject.FindGameObjectWithTag("MainCamera");
-                if (mainCameraGameObject != null)
-                {
-                    SourceCamera = mainCameraGameObject.GetComponent<Camera>();
-                }
-            }
-            if (SourceCamera == null)
-            {
-                throw new NullReferenceException("Empty source camera for SceneVideoSource, and could not find MainCamera as fallback.");
-            }
+        //protected new void OnEnable()
+        //{
+        //    // If no camera provided, attempt to fallback to main camera
+        //    if (SourceCamera == null)
+        //    {
+        //        var mainCameraGameObject = GameObject.FindGameObjectWithTag("MainCamera");
+        //        if (mainCameraGameObject != null)
+        //        {
+        //            SourceCamera = mainCameraGameObject.GetComponent<Camera>();
+        //        }
+        //    }
+        //    if (SourceCamera == null)
+        //    {
+        //        throw new NullReferenceException("Empty source camera for SceneVideoSource, and could not find MainCamera as fallback.");
+        //    }
 
-            CreateCommandBuffer();
-            SourceCamera.AddCommandBuffer(CameraEvent, _commandBuffer);
+        //    CreateCommandBuffer();
+        //    SourceCamera.AddCommandBuffer(CameraEvent, _commandBuffer);
 
-            base.OnEnable();
-        }
+        //    base.OnEnable();
+        //}
 
-        protected new void OnDisable()
-        {
-            base.OnDisable();
+        //protected new void OnDisable()
+        //{
+        //    base.OnDisable();
 
-            // The camera sometimes goes away before this component.
-            if (SourceCamera != null)
-            {
-                SourceCamera.RemoveCommandBuffer(CameraEvent, _commandBuffer);
-            }
-            _commandBuffer.Dispose();
-            _commandBuffer = null;
-        }
+        //    // The camera sometimes goes away before this component.
+        //    if (SourceCamera != null)
+        //    {
+        //        SourceCamera.RemoveCommandBuffer(CameraEvent, _commandBuffer);
+        //    }
+        //    _commandBuffer.Dispose();
+        //    _commandBuffer = null;
+        //}
 
         /// <summary>
         /// Create the command buffer reading the scene content from the source camera back into CPU memory

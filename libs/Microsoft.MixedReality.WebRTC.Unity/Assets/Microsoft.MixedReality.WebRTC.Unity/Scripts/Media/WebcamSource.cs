@@ -112,7 +112,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
         }
 
-        protected override async Task DoAddTrackAsyncAction()
+        protected override async Task DoCreateTrackAsyncAction()
         {
             string videoProfileId = VideoProfileId;
             var videoProfileKind = VideoProfileKind;
@@ -155,7 +155,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // Force again PreferredVideoCodec right before starting the local capture,
             // so that modifications to the property done after OnPeerInitialized() are
             // accounted for.
-            PeerConnection.Peer.PreferredVideoCodec = PreferredVideoCodec;
+            //< FIXME
+            //PeerConnection.Peer.PreferredVideoCodec = PreferredVideoCodec;
 
             // Ensure the track has a valid name
             string trackName = TrackName;
