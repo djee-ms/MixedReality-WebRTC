@@ -304,9 +304,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 #endif
         }
 
-        public void AddTransceiver(MediaKind kind)
+        public TransceiverInfo AddTransceiver(MediaKind kind)
         {
-            _transceivers.Add(new TransceiverInfo { Kind = kind });
+            var tr = new TransceiverInfo { Kind = kind };
+            _transceivers.Add(tr);
+            return tr;
         }
 
         /// <summary>
@@ -477,7 +479,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             var task = Peer.SetRemoteDescriptionAsync(type, sdp);
 
             // Once applied, try to pair transceivers and remote tracks with the Unity receiver components
-            return task.ContinueWith(_ =>
+            return task.ContinueWith(async _ =>
             {
                 // If receiving an offer, this is the first opportunity for the answering side to add its local tracks
                 // (media senders) and any extra transceiver it wants. The offering peer already did that in CreateOffer().
@@ -516,6 +518,21 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                             {
                                 tr.DesiredDirection = Transceiver.Direction.SendOnly;
                             }
+
+                            // If the offer doesn't allow to send (2 cases above) then this below will generate a renegotiation
+                            // needed event, which will be temporarily delayed since we are in the middle of a negotiation already.
+                            if (transceiverInfo.Kind == MediaKind.Audio)
+                            {
+                                var audioTransceiver = (AudioTransceiver)tr;
+                                var audioSender = (AudioSender)transceiverInfo.Sender;
+                                await audioSender.InitAndAttachTrackAsync(audioTransceiver);
+                            }
+                            else if (transceiverInfo.Kind == MediaKind.Video)
+                            {
+                                var videoTransceiver = (VideoTransceiver)tr;
+                                var videoSender = (VideoSender)transceiverInfo.Sender;
+                                await videoSender.InitAndAttachTrackAsync(videoTransceiver);
+                            }
                         }
 
                         // If receiving, pair remote tracks just created by the offer description with the media receivers
@@ -542,104 +559,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                             }
                         }
                     }
-
-                    //// Add missing transceivers
-                    //for (int i = numExisting; i < _transceivers.Count; ++i)
-                    //{
-                    //    var transceiverInfo = _transceivers[i];
-
-                    //    // Note: do not use the ?. operator with Unity objects
-                    //    bool wantsSend = (transceiverInfo.Sender != null);
-                    //    bool wantsRecv = (transceiverInfo.Receiver != null);
-                    //    var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.ReceiveOnly)
-                    //        : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
-
-                    //    // Important note here : we set the desired direction to the direction inferred from the
-                    //    // Unity components. However, if the remote peer sent an offer without a transceiver, this
-                    //    // means it won't be able to send anything through it. So the negotiated direction will never
-                    //    // have a receive component in it. Nonetheless, setting the desired direction is useful for
-                    //    // the next negotiation if initiated by this peer.
-
-                    //    // Create a new transceiver for the stream
-                    //    if (transceiverInfo.Kind == MediaKind.Audio)
-                    //    {
-                    //        var settings = new AudioTransceiverInitSettings
-                    //        {
-                    //            Name = $"mrsw#{i}",
-                    //            InitialDesiredDirection = wantsDir
-                    //        };
-                    //        var tr = _nativePeer.AddAudioTransceiver(settings);
-                    //        transceiverInfo.Transceiver = tr;
-
-                    //        // Associate the tracks with the transceiver, if any
-                    //        if (wantsSend)
-                    //        {
-                    //            tr.LocalTrack = ((AudioSender)transceiverInfo.Sender).Track;
-                    //        }
-                    //    }
-                    //    else if (transceiverInfo.Kind == MediaKind.Video)
-                    //    {
-                    //        var settings = new VideoTransceiverInitSettings
-                    //        {
-                    //            Name = $"mrsw#{i}",
-                    //            InitialDesiredDirection = wantsDir
-                    //        };
-                    //        var tr = _nativePeer.AddVideoTransceiver(settings);
-                    //        transceiverInfo.Transceiver = tr;
-
-                    //        // Associate the tracks with the transceiver, if any
-                    //        if (wantsSend)
-                    //        {
-                    //            tr.LocalTrack = ((VideoSender)transceiverInfo.Sender).Track;
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        throw new InvalidEnumArgumentException("Unknown media kind for transceiver");
-                    //    }
-
-                    //    // Create the local sender track and attach it to the transceiver
-                    //    if (wantsSend)
-                    //    {
-                    //        if (transceiverInfo.Kind == MediaKind.Audio)
-                    //        {
-                    //            var audioTransceiver = (AudioTransceiver)transceiverInfo.Transceiver;
-                    //            var audioSender = (AudioSender)transceiverInfo.Sender;
-                    //            //< FIXME - CreateOfferAsync()
-                    //            //await audioSender.InitAndAttachTrackAsync(audioTransceiver);
-                    //            audioSender.InitAndAttachTrackAsync(audioTransceiver).Wait();
-                    //        }
-                    //        else if (transceiverInfo.Kind == MediaKind.Video)
-                    //        {
-                    //            var videoTransceiver = (VideoTransceiver)transceiverInfo.Transceiver;
-                    //            var videoSender = (VideoSender)transceiverInfo.Sender;
-                    //            //< FIXME - CreateOfferAsync()
-                    //            //await videoSender.InitAndAttachTrackAsync(videoTransceiver);
-                    //            videoSender.InitAndAttachTrackAsync(videoTransceiver).Wait();
-                    //        }
-                    //    }
-
-                    //    // The remote track is only created when applying a description, so only attach
-                    //    // the transceiver for now.
-                    //    // Again, this won't happen during this negotiation because the remote peer did
-                    //    // not create the transceiver so obviously did not offer to send through it, but
-                    //    // 
-                    //    if (wantsRecv)
-                    //    {
-                    //        if (transceiverInfo.Kind == MediaKind.Audio)
-                    //        {
-                    //            var audioTransceiver = (AudioTransceiver)transceiverInfo.Transceiver;
-                    //            var audioReceiver = (AudioReceiver)transceiverInfo.Receiver;
-                    //            audioReceiver.AttachToTransceiver(audioTransceiver);
-                    //        }
-                    //        else if (transceiverInfo.Kind == MediaKind.Video)
-                    //        {
-                    //            var videoTransceiver = (VideoTransceiver)transceiverInfo.Transceiver;
-                    //            var videoReceiver = (VideoReceiver)transceiverInfo.Receiver;
-                    //            videoReceiver.AttachToTransceiver(videoTransceiver);
-                    //        }
-                    //    }
-                    //}
 
                     // Ignore extra transceivers without a registered component to attach
                     for (int i = numExisting; i < numNativeTransceivers; ++i)
@@ -935,22 +854,22 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         private void Peer_AudioTrackAdded(RemoteAudioTrack track)
         {
-            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
-            {
-                var transceiverInfo = _transceivers[mlineIndex];
-                if (transceiverInfo.Transceiver == track.Transceiver)
-                {
-                    Debug.Assert(transceiverInfo.Kind == MediaKind.Audio);
-                    if (transceiverInfo.Receiver != null)
-                    {
-                        (transceiverInfo.Receiver as AudioReceiver).OnPaired(track);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Received audio track {track.Name} for transceiver #{mlineIndex} but no audio receiver is registered to handle it. Ignoring that track.");
-                    }
-                }
-            }
+            //for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+            //{
+            //    var transceiverInfo = _transceivers[mlineIndex];
+            //    if (transceiverInfo.Transceiver == track.Transceiver)
+            //    {
+            //        Debug.Assert(transceiverInfo.Kind == MediaKind.Audio);
+            //        if (transceiverInfo.Receiver != null)
+            //        {
+            //            (transceiverInfo.Receiver as AudioReceiver).OnPaired(track);
+            //        }
+            //        else
+            //        {
+            //            Debug.LogWarning($"Received audio track {track.Name} for transceiver #{mlineIndex} but no audio receiver is registered to handle it. Ignoring that track.");
+            //        }
+            //    }
+            //}
         }
 
         private void Peer_AudioTrackRemoved(RemoteAudioTrack track)
@@ -971,23 +890,23 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         private void Peer_VideoTrackAdded(RemoteVideoTrack track)
         {
-            //< FIXME - This can't work because transceivers have not been paired with components yet
-            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
-            {
-                var transceiverInfo = _transceivers[mlineIndex];
-                if (transceiverInfo.Transceiver == track.Transceiver)
-                {
-                    Debug.Assert(transceiverInfo.Kind == MediaKind.Video);
-                    if (transceiverInfo.Receiver != null)
-                    {
-                        (transceiverInfo.Receiver as VideoReceiver).OnPaired(track);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Received video track {track.Name} for transceiver #{mlineIndex} but no video receiver is registered to handle it. Ignoring that track.");
-                    }
-                }
-            }
+            ////< FIXME - This can't work because transceivers have not been paired with components yet
+            //for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+            //{
+            //    var transceiverInfo = _transceivers[mlineIndex];
+            //    if (transceiverInfo.Transceiver == track.Transceiver)
+            //    {
+            //        Debug.Assert(transceiverInfo.Kind == MediaKind.Video);
+            //        if (transceiverInfo.Receiver != null)
+            //        {
+            //            (transceiverInfo.Receiver as VideoReceiver).OnPaired(track);
+            //        }
+            //        else
+            //        {
+            //            Debug.LogWarning($"Received video track {track.Name} for transceiver #{mlineIndex} but no video receiver is registered to handle it. Ignoring that track.");
+            //        }
+            //    }
+            //}
         }
 
         private void Peer_VideoTrackRemoved(RemoteVideoTrack track)
