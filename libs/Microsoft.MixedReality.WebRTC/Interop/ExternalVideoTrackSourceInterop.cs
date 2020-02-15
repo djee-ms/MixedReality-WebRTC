@@ -132,6 +132,10 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             RequestExternalArgb32VideoFrameCallback callback, IntPtr userData, out ExternalVideoTrackSourceHandle sourceHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsExternalVideoTrackSourceFinishCreation")]
+        public static unsafe extern uint ExternalVideoTrackSource_FinishCreation(ExternalVideoTrackSourceHandle sourceHandle);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsExternalVideoTrackSourceAddRef")]
         public static unsafe extern void ExternalVideoTrackSource_AddRef(ExternalVideoTrackSourceHandle handle);
 
@@ -185,7 +189,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
                     out ExternalVideoTrackSourceHandle sourceHandle);
                     Utils.ThrowOnErrorCode(res);
                 source.OnCreated(sourceHandle);
-
+                ExternalVideoTrackSource_FinishCreation(sourceHandle);
                 return source;
             }
             catch (Exception e)
@@ -221,7 +225,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
                     out ExternalVideoTrackSourceHandle sourceHandle);
                 Utils.ThrowOnErrorCode(res);
                 source.OnCreated(sourceHandle);
-
+                ExternalVideoTrackSource_FinishCreation(sourceHandle);
                 return source;
             }
             catch (Exception e)

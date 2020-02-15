@@ -65,6 +65,13 @@ mrsResult MRS_CALL mrsExternalVideoTrackSourceCreateFromArgb32Callback(
   return Result::kSuccess;
 }
 
+void MRS_CALL mrsExternalVideoTrackSourceFinishCreation(
+    ExternalVideoTrackSourceHandle source_handle) noexcept {
+  if (auto source = static_cast<ExternalVideoTrackSource*>(source_handle)) {
+    source->FinishCreation();
+  }
+}
+
 mrsResult MRS_CALL mrsExternalVideoTrackSourceCompleteI420AFrameRequest(
     ExternalVideoTrackSourceHandle handle,
     uint32_t request_id,

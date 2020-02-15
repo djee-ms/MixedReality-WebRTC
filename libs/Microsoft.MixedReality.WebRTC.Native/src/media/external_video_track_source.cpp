@@ -118,12 +118,10 @@ constexpr const size_t kMaxPendingRequestCount = 64;
 RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceImpl::create(
     std::unique_ptr<BufferAdapter> adapter) {
   auto source = new ExternalVideoTrackSourceImpl(std::move(adapter));
-
-  // Video track sources start already capturing; there is no start/stop
-  // mechanism at the track level in WebRTC. A source is either being
-  // initialized, or is already live.
-  source->StartCapture();
-
+  // Note: Video track sources always start already capturing; there is no
+  // start/stop mechanism at the track level in WebRTC. A source is either being
+  // initialized, or is already live. However because of wrappers and interop
+  // this step is delayed until |FinishCreation()| is called by the wrapper.
   return source;
 }
 
@@ -134,14 +132,17 @@ ExternalVideoTrackSourceImpl::ExternalVideoTrackSourceImpl(
       capture_thread_(rtc::Thread::Create()) {
   capture_thread_->SetName("ExternalVideoTrackSource capture thread", this);
   GlobalFactory::InstancePtr()->AddObject(ObjectType::kExternalVideoTrackSource,
-                                       this);
+                                          this);
 }
 
 ExternalVideoTrackSourceImpl::~ExternalVideoTrackSourceImpl() {
   StopCapture();
   GlobalFactory::InstancePtr()->RemoveObject(
-      ObjectType::kExternalVideoTrackSource,
-                                          this);
+      ObjectType::kExternalVideoTrackSource, this);
+}
+
+void ExternalVideoTrackSourceImpl::FinishCreation() {
+  StartCapture();
 }
 
 void ExternalVideoTrackSourceImpl::StartCapture() {
