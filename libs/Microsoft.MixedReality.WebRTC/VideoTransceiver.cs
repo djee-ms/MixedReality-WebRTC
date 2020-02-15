@@ -50,8 +50,8 @@ namespace Microsoft.MixedReality.WebRTC
         private IntPtr _argsRef = IntPtr.Zero;
 
         // Constructor for interop-based creation; SetHandle() will be called later
-        internal VideoTransceiver(PeerConnection peerConnection, string name, Direction initialDesiredDirection)
-            : base(MediaKind.Video, peerConnection, name)
+        internal VideoTransceiver(PeerConnection peerConnection, int mlineIndex, string name, Direction initialDesiredDirection)
+            : base(MediaKind.Video, peerConnection, mlineIndex, name)
         {
             _desiredDirection = initialDesiredDirection;
         }

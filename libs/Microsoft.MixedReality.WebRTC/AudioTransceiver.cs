@@ -50,8 +50,8 @@ namespace Microsoft.MixedReality.WebRTC
         private IntPtr _argsRef = IntPtr.Zero;
 
         // Constructor for interop-based creation; SetHandle() will be called later
-        internal AudioTransceiver(PeerConnection peerConnection, string name, Direction initialDesiredDirection)
-            : base(MediaKind.Audio, peerConnection, name)
+        internal AudioTransceiver(PeerConnection peerConnection, int mlineIndex, string name, Direction initialDesiredDirection)
+            : base(MediaKind.Audio, peerConnection, mlineIndex, name)
         {
             _desiredDirection = initialDesiredDirection;
         }

@@ -86,6 +86,12 @@ namespace Microsoft.MixedReality.WebRTC
         public PeerConnection PeerConnection { get; } = null;
 
         /// <summary>
+        /// Index of the media line in the SDP protocol for this transceiver. This also corresponds
+        /// to the index of the transceiver inside <see cref="PeerConnection.Transceivers"/>.
+        /// </summary>
+        public int MlineIndex { get; } = -1;
+
+        /// <summary>
         /// Transceiver direction desired by the user.
         /// If a negotiation is pending, then this is the next direction that will be negotiated when
         /// calling <see cref="PeerConnection.CreateOffer"/> or <see cref="PeerConnection.CreateAnswer"/>.
@@ -127,11 +133,13 @@ namespace Microsoft.MixedReality.WebRTC
         /// </summary>
         /// <param name="mediaKind">The media kind of the transceiver and its tracks.</param>
         /// <param name="peerConnection">The peer connection owning this transceiver.</param>
+        /// <param name="mlineIndex">The transceiver media line index in SDP.</param>
         /// <param name="name">The transceiver name.</param>
-        protected Transceiver(MediaKind mediaKind, PeerConnection peerConnection, string name)
+        protected Transceiver(MediaKind mediaKind, PeerConnection peerConnection, int mlineIndex, string name)
         {
             MediaKind = mediaKind;
             PeerConnection = peerConnection;
+            MlineIndex = mlineIndex;
             Name = name;
         }
 

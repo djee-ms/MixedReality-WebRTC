@@ -106,6 +106,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             public string Name;
 
             /// <summary>
+            /// Media line index of the transceiver.
+            /// </summary>
+            public int MlineIndex;
+
+            /// <summary>
             /// Initial desired direction of the transceiver on creation.
             /// </summary>
             public Transceiver.Direction DesiredDirection;
@@ -210,7 +215,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
 
         public static VideoTransceiver CreateWrapper(PeerConnection parent, in CreateConfig config)
         {
-            return new VideoTransceiver(parent, config.Name, config.DesiredDirection);
+            return new VideoTransceiver(parent, config.MlineIndex, config.Name, config.DesiredDirection);
         }
 
         public static void RegisterCallbacks(VideoTransceiver transceiver, out IntPtr argsRef)

@@ -379,6 +379,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                                     InitialDesiredDirection = wantsDir
                                 };
                                 transceiverInfo.Transceiver = _nativePeer.AddAudioTransceiver(settings);
+                                Debug.Assert(transceiverInfo.Transceiver.MlineIndex == mlineIndex);
                             }
                             else if (transceiverInfo.Kind == MediaKind.Video)
                             {
@@ -388,6 +389,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                                     InitialDesiredDirection = wantsDir
                                 };
                                 transceiverInfo.Transceiver = _nativePeer.AddVideoTransceiver(settings);
+                                Debug.Assert(transceiverInfo.Transceiver.MlineIndex == mlineIndex);
                             }
                             else
                             {

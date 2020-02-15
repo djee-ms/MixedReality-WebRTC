@@ -589,19 +589,33 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             Assert.NotNull(receiver2.Track);
         }
 
-        class Config
+        class PeerConfig
         {
-            public Transceiver.Direction dir1;
-            public Transceiver.Direction dir2;
-            public FakeVideoSource sender1;
-            public FakeVideoSource sender2;
-            public VideoReceiver receiver1;
-            public VideoReceiver receiver2;
-            public bool hasSender1;
-            public bool hasSender2;
-            public bool hasReceiver1;
-            public bool hasReceiver2;
+            // Input
+            public Transceiver.Direction dir;
+            public FakeVideoSource sender;
+            public VideoReceiver receiver;
+
+            // Output
+            public bool expectSender;
+            public bool expectReceiver;
+        }
+
+        class MultiConfig
+        {
+            public PeerConfig peer1;
+            public PeerConfig peer2;
         };
+
+        private bool HasSend(Transceiver.Direction dir)
+        {
+            return ((dir == Transceiver.Direction.SendOnly) || (dir == Transceiver.Direction.SendReceive));
+        }
+
+        private bool HasRecv(Transceiver.Direction dir)
+        {
+            return ((dir == Transceiver.Direction.ReceiveOnly) || (dir == Transceiver.Direction.SendReceive));
+        }
 
         [UnityTest]
         public IEnumerator Multi()
@@ -630,6 +644,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // 3 :  R <=  SR
             // 4 : S   =>  R
 
+            const int NumTransceivers = 5;
+
             // P1 has 4 senders added to it
             int numLocal1 = 4;
 
@@ -642,83 +658,111 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             // P2 receives 4 tracks from the 4 P1 senders
             int numRemote2 = 4;
 
-            var cfgs = new Config[5]
+            var cfgs = new MultiConfig[NumTransceivers]
             {
-                new Config {
-                    dir1 = Transceiver.Direction.SendOnly,
-                    dir2 = Transceiver.Direction.ReceiveOnly,
-                    hasSender1 = true,
-                    hasSender2 = false,
-                    hasReceiver1 = false,
-                    hasReceiver2 = true,
+                new MultiConfig {
+                    peer1 = new PeerConfig {
+                        dir = Transceiver.Direction.SendOnly,
+                        expectSender = true,
+                        expectReceiver = false,
+                    },
+                    peer2 = new PeerConfig {
+                        dir = Transceiver.Direction.ReceiveOnly,
+                        expectSender = false,
+                        expectReceiver = true,
+                    }
                 },
-                new Config {
-                    dir1 = Transceiver.Direction.SendReceive,
-                    dir2 = Transceiver.Direction.SendReceive,
-                    hasSender1 = true,
-                    hasSender2 = true,
-                    hasReceiver1 = true,
-                    hasReceiver2 = true,
+                new MultiConfig {
+                    peer1 = new PeerConfig {
+                        dir = Transceiver.Direction.SendReceive,
+                        expectSender = true,
+                        expectReceiver = true,
+                    },
+                    peer2 = new PeerConfig {
+                        dir = Transceiver.Direction.SendReceive,
+                        expectSender = true,
+                        expectReceiver = true,
+                    },
                 },
-                new Config {
-                    dir1 = Transceiver.Direction.SendOnly,
-                    dir2 = Transceiver.Direction.SendReceive,
-                    hasSender1 = true,
-                    hasSender2 = true,
-                    hasReceiver1 = false,
-                    hasReceiver2 = true,
+                new MultiConfig {
+                    peer1 = new PeerConfig {
+                        dir = Transceiver.Direction.SendOnly,
+                        expectSender = true,
+                        expectReceiver = false,
+                    },
+                    peer2 = new PeerConfig {
+                        dir = Transceiver.Direction.SendReceive,
+                        expectSender = true,
+                        expectReceiver = true,
+                    },
                 },
-                new Config {
-                    dir1 = Transceiver.Direction.ReceiveOnly,
-                    dir2 = Transceiver.Direction.SendReceive,
-                    hasSender1 = false,
-                    hasSender2 = true,
-                    hasReceiver1 = true,
-                    hasReceiver2 = false,
+                new MultiConfig {
+                    peer1 = new PeerConfig {
+                        dir = Transceiver.Direction.ReceiveOnly,
+                        expectSender = false,
+                        expectReceiver = true,
+                    },
+                    peer2 = new PeerConfig {
+                        dir = Transceiver.Direction.SendReceive,
+                        expectSender = true,
+                        expectReceiver = false,
+                    },
                 },
-                new Config {
-                    dir1 = Transceiver.Direction.SendOnly,
-                    dir2 = Transceiver.Direction.ReceiveOnly,
-                    hasSender1 = true,
-                    hasSender2 = false,
-                    hasReceiver1 = false,
-                    hasReceiver2 = true,
+                new MultiConfig {
+                    peer1 = new PeerConfig {
+                        dir = Transceiver.Direction.SendOnly,
+                        expectSender = true,
+                        expectReceiver = false,
+                    },
+                    peer2 = new PeerConfig {
+                        dir = Transceiver.Direction.ReceiveOnly,
+                        expectSender = false,
+                        expectReceiver = true,
+                    },
                 },
             };
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < NumTransceivers; ++i)
             {
-                TransceiverInfo tr1 = pc1.AddTransceiver(MediaKind.Video);
-                TransceiverInfo tr2 = pc2.AddTransceiver(MediaKind.Video);
                 var cfg = cfgs[i];
-                if ((cfg.dir1 == Transceiver.Direction.SendOnly) || (cfg.dir1 == Transceiver.Direction.SendReceive))
+
                 {
-                    var sender1 = pc1_go.AddComponent<FakeVideoSource>();
-                    sender1.AutoAddTrack = true;
-                    sender1.TrackName = $"track{i}";
-                    cfg.sender1 = sender1;
-                    tr1.Sender = sender1;
+                    TransceiverInfo tr1 = pc1.AddTransceiver(MediaKind.Video);
+                    var peer = cfg.peer1;
+                    if (HasSend(peer.dir))
+                    {
+                        var sender1 = pc1_go.AddComponent<FakeVideoSource>();
+                        sender1.AutoAddTrack = true;
+                        sender1.TrackName = $"track{i}";
+                        peer.sender = sender1;
+                        tr1.Sender = sender1;
+                    }
+                    if (HasRecv(peer.dir))
+                    {
+                        var receiver1 = pc1_go.AddComponent<VideoReceiver>();
+                        receiver1.AutoPlayOnPaired = true;
+                        peer.receiver = receiver1;
+                        tr1.Receiver = receiver1;
+                    }
                 }
-                if ((cfg.dir1 == Transceiver.Direction.ReceiveOnly) || (cfg.dir1 == Transceiver.Direction.SendReceive))
+
                 {
-                    var receiver1 = pc1_go.AddComponent<VideoReceiver>();
-                    receiver1.AutoPlayOnPaired = true;
-                    cfg.receiver1 = receiver1;
-                    tr1.Receiver = receiver1;
-                }
-                if ((cfg.dir2 == Transceiver.Direction.SendOnly) || (cfg.dir2 == Transceiver.Direction.SendReceive))
-                {
-                    var sender2 = pc2_go.AddComponent<FakeVideoSource>();
-                    sender2.AutoAddTrack = true;
-                    sender2.TrackName = $"track{i}";
-                    cfg.sender2 = sender2;
-                    tr2.Sender = sender2;
-                }
-                if ((cfg.dir2 == Transceiver.Direction.ReceiveOnly) || (cfg.dir2 == Transceiver.Direction.SendReceive))
-                {
-                    var receiver2 = pc2_go.AddComponent<VideoReceiver>();
-                    receiver2.AutoPlayOnPaired = true;
-                    cfg.receiver2 = receiver2;
-                    tr2.Receiver = receiver2;
+                    TransceiverInfo tr2 = pc2.AddTransceiver(MediaKind.Video);
+                    var peer = cfg.peer2;
+                    if (HasSend(peer.dir))
+                    {
+                        var sender2 = pc2_go.AddComponent<FakeVideoSource>();
+                        sender2.AutoAddTrack = true;
+                        sender2.TrackName = $"track{i}";
+                        peer.sender = sender2;
+                        tr2.Sender = sender2;
+                    }
+                    if (HasRecv(peer.dir))
+                    {
+                        var receiver2 = pc2_go.AddComponent<VideoReceiver>();
+                        receiver2.AutoPlayOnPaired = true;
+                        peer.receiver = receiver2;
+                        tr2.Receiver = receiver2;
+                    }
                 }
             }
 
@@ -746,16 +790,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             Assert.IsNotNull(pc2.Peer);
 
             // Confirm the senders are ready
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < NumTransceivers; ++i)
             {
                 var cfg = cfgs[i];
-                if (cfg.hasSender1)
+                if (cfg.peer1.expectSender)
                 {
-                    Assert.NotNull(cfg.sender1.Track, $"Transceiver #{i} missing local track on Peer #1");
+                    Assert.NotNull(cfg.peer1.sender.Track, $"Transceiver #{i} missing local track on Peer #1");
                 }
-                if (cfg.hasSender2)
+                if (cfg.peer2.expectSender)
                 {
-                    Assert.NotNull(cfg.sender2.Track, $"Transceiver #{i} missing local track on Peer #2");
+                    Assert.NotNull(cfg.peer2.sender.Track, $"Transceiver #{i} missing local track on Peer #2");
                 }
             }
 
@@ -767,16 +811,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Tests.Runtime
             Assert.AreEqual(numRemote1, pc1.Peer.RemoteVideoTracks.Count);
             Assert.AreEqual(numLocal2, pc2.Peer.LocalVideoTracks.Count);
             Assert.AreEqual(numRemote2, pc2.Peer.RemoteVideoTracks.Count);
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < NumTransceivers; ++i)
             {
                 var cfg = cfgs[i];
-                if (cfg.hasReceiver1)
+                if (cfg.peer1.expectReceiver)
                 {
-                    Assert.NotNull(cfg.receiver1.Track, $"Transceiver #{i} missing remote track on Peer #1");
+                    Assert.NotNull(cfg.peer1.receiver.Track, $"Transceiver #{i} missing remote track on Peer #1");
                 }
-                if (cfg.hasReceiver2)
+                if (cfg.peer2.expectReceiver)
                 {
-                    Assert.NotNull(cfg.receiver2.Track, $"Transceiver #{i} Missing remote track on Peer #2");
+                    Assert.NotNull(cfg.peer2.receiver.Track, $"Transceiver #{i} Missing remote track on Peer #2");
                 }
             }
         }

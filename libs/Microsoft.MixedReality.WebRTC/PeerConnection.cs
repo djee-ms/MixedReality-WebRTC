@@ -493,9 +493,10 @@ namespace Microsoft.MixedReality.WebRTC
 
         /// <summary>
         /// Collection of transceivers for the peer conneciton.
-        /// Transceivers are present in the list in order of their media index.
-        /// Once a transceiver is added to the peer connection, it cannot be removed,
-        /// but its tracks can be changed. This requires some renegotiation.
+        /// Transceivers are present in the list in order of their media line index
+        /// (<see cref="Transceiver.MlineIndex"/>). Once a transceiver is added to the
+        /// peer connection, it cannot be removed, but its tracks can be changed.
+        /// This requires some renegotiation.
         /// </summary>
         public List<Transceiver> Transceivers { get; } = new List<Transceiver>();
 
@@ -1002,6 +1003,10 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 foreach (var transceiver in Transceivers)
                 {
+                    if (transceiver == null)
+                    {
+                        continue;
+                    }
                     if (transceiver.MediaKind == MediaKind.Audio)
                     {
                         ((AudioTransceiver)transceiver)._nativeHandle.Close();
@@ -1050,7 +1055,8 @@ namespace Microsoft.MixedReality.WebRTC
         {
             ThrowIfConnectionNotOpen();
             settings = settings ?? new AudioTransceiverInitSettings();
-            var transceiver = new AudioTransceiver(this, settings.Name, settings.InitialDesiredDirection);
+            int mlineIndex = Transceivers.Count; //< TODO: retrieve from interop for robustness?
+            var transceiver = new AudioTransceiver(this, mlineIndex, settings.Name, settings.InitialDesiredDirection);
             var config = new AudioTransceiverInterop.InitConfig(transceiver, settings);
             Debug.Assert(transceiver.DesiredDirection == config.desiredDirection);
             uint res = PeerConnectionInterop.PeerConnection_AddAudioTransceiver(_nativePeerhandle, in config,
@@ -1078,7 +1084,8 @@ namespace Microsoft.MixedReality.WebRTC
         {
             ThrowIfConnectionNotOpen();
             settings = settings ?? new VideoTransceiverInitSettings();
-            var transceiver = new VideoTransceiver(this, settings.Name, settings.InitialDesiredDirection);
+            int mlineIndex = Transceivers.Count; //< TODO: retrieve from interop for robustness?
+            var transceiver = new VideoTransceiver(this, mlineIndex, settings.Name, settings.InitialDesiredDirection);
             var config = new VideoTransceiverInterop.InitConfig(transceiver, settings);
             Debug.Assert(transceiver.DesiredDirection == config.desiredDirection);
             uint res = PeerConnectionInterop.PeerConnection_AddVideoTransceiver(_nativePeerhandle, in config,
@@ -1587,6 +1594,29 @@ namespace Microsoft.MixedReality.WebRTC
         }
 
         /// <summary>
+        /// Insert the given transceiver into the <see cref="Transceivers"/> list at the index
+        /// corresponding to its <see cref="Transceiver.MlineIndex"/>.
+        /// </summary>
+        /// <param name="transceiver">Transceiver object to insert.</param>
+        internal void InsertTransceiverNoLock(Transceiver transceiver)
+        {
+            int mlineIndex = transceiver.MlineIndex;
+            if (mlineIndex >= Transceivers.Count)
+            {
+                while (mlineIndex >= Transceivers.Count + 1)
+                {
+                    Transceivers.Add(null);
+                }
+                Transceivers.Add(transceiver);
+            }
+            else
+            {
+                Debug.Assert(Transceivers[mlineIndex] == null);
+                Transceivers[mlineIndex] = transceiver;
+            }
+        }
+
+        /// <summary>
         /// Callback on transceiver created for the peer connection, irrelevant of whether
         /// it has tracks or not. This is called both when created from the managed side or
         /// from the native side.
@@ -1596,7 +1626,7 @@ namespace Microsoft.MixedReality.WebRTC
         {
             lock (_tracksLock)
             {
-                Transceivers.Add(tr);
+                InsertTransceiverNoLock(tr);
             }
             AudioTransceiverAdded?.Invoke(tr);
         }
@@ -1611,7 +1641,7 @@ namespace Microsoft.MixedReality.WebRTC
         {
             lock (_tracksLock)
             {
-                Transceivers.Add(tr);
+                InsertTransceiverNoLock(tr);
             }
             VideoTransceiverAdded?.Invoke(tr);
         }
@@ -1623,7 +1653,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 if (!Transceivers.Contains(transceiver))
                 {
-                    Transceivers.Add(transceiver);
+                    InsertTransceiverNoLock(transceiver);
                 }
             }
             track.OnTrackAddedToTransceiver(transceiver);
@@ -1654,7 +1684,7 @@ namespace Microsoft.MixedReality.WebRTC
             {
                 if (!Transceivers.Contains(transceiver))
                 {
-                    Transceivers.Add(transceiver);
+                    InsertTransceiverNoLock(transceiver);
                 }
             }
             track.OnTrackAddedToTransceiver(transceiver);

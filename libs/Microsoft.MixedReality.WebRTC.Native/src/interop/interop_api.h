@@ -741,6 +741,12 @@ struct mrsAudioTransceiverConfig {
   /// with |AddAudioTransceiver()|.
   const char* name{};
 
+  /// Zero-based media line index for the transceiver. This is the index of the
+  /// m= line in the SDP offer/answer as determined when adding the transceiver.
+  /// This is provided by the implementation and is immutable (since we don't
+  /// support stopping transceivers, so m= lines are not recycled).
+  int mline_index = -1;
+
   /// Initial desired direction when the transceiver is created. If the
   /// transceiver is created by the implementation, this is generally set to the
   /// current value on the implementation object, to keep the interop wrapper in
@@ -756,6 +762,12 @@ struct mrsVideoTransceiverConfig {
   /// for a remote track, or is determined by the user-provided value if created
   /// with |AddVideoTransceiver()|.
   const char* name{};
+
+  /// Zero-based media line index for the transceiver. This is the index of the
+  /// m= line in the SDP offer/answer as determined when adding the transceiver.
+  /// This is provided by the implementation and is immutable (since we don't
+  /// support stopping transceivers, so m= lines are not recycled).
+  int mline_index = -1;
 
   /// Initial desired direction when the transceiver is created. If the
   /// transceiver is created by the implementation, this is generally set to the

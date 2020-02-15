@@ -19,12 +19,14 @@ class VideoTransceiver : public Transceiver {
  public:
   /// Constructor for Plan B.
   VideoTransceiver(PeerConnection& owner,
+                   int mline_index,
                    std::string name,
                    mrsVideoTransceiverInteropHandle interop_handle) noexcept;
 
   /// Constructor for Unified Plan.
   VideoTransceiver(
       PeerConnection& owner,
+      int mline_index,
       std::string name,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
       mrsVideoTransceiverInteropHandle interop_handle) noexcept;
@@ -43,6 +45,8 @@ class VideoTransceiver : public Transceiver {
     return remote_track_;
   }
 
+  int GetMlineIndex() const noexcept { return mline_index_; }
+
   //
   // Internal
   //
@@ -58,6 +62,8 @@ class VideoTransceiver : public Transceiver {
  protected:
   RefPtr<LocalVideoTrack> local_track_;
   RefPtr<RemoteVideoTrack> remote_track_;
+
+  int mline_index_ = -1;
 
   /// Transceiver name, for pairing with the remote peer.
   std::string name_;

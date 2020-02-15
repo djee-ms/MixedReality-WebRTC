@@ -10,9 +10,11 @@ namespace Microsoft::MixedReality::WebRTC {
 
 VideoTransceiver::VideoTransceiver(
     PeerConnection& owner,
+    int mline_index,
     std::string name,
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kVideo, owner),
+      mline_index_(mline_index),
       name_(std::move(name)),
       interop_handle_(interop_handle) {
   GlobalFactory::InstancePtr()->AddObject(ObjectType::kVideoTransceiver, this);
@@ -20,10 +22,12 @@ VideoTransceiver::VideoTransceiver(
 
 VideoTransceiver::VideoTransceiver(
     PeerConnection& owner,
+    int mline_index,
     std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
     : Transceiver(MediaKind::kVideo, owner, transceiver),
+      mline_index_(mline_index),
       name_(std::move(name)),
       interop_handle_(interop_handle) {
   GlobalFactory::InstancePtr()->AddObject(ObjectType::kVideoTransceiver, this);
