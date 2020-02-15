@@ -560,14 +560,34 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                                 }
                             }
                         }
+                        else
+                        {
+                            // Check if the remote peer was planning to send something to this peer
+                            var desDir = tr.DesiredDirection;
+                            if ((desDir == Transceiver.Direction.ReceiveOnly) || (desDir == Transceiver.Direction.SendReceive))
+                            {
+                                int mlineIndex = i;
+                                _mainThreadWorkQueue.Enqueue(() =>
+                                {
+                                    Debug.LogWarning($"The remote peer of peer connection {name} offered to send through transceiver #{mlineIndex},"
+                                        + $" but peer connection {name} has no receiver component to process this media. The remote peer's media will not be negotiated."
+                                        + $" Ensure that peer connection {name} has a receiver component associated with its transceiver #{mlineIndex}.");
+                                });
+                            }
+                        }
                     }
 
                     // Ignore extra transceivers without a registered component to attach
-                    for (int i = numExisting; i < numNativeTransceivers; ++i)
+                    if (numExisting < numNativeTransceivers)
                     {
                         _mainThreadWorkQueue.Enqueue(() =>
                         {
-                            Debug.LogWarning($"Peer connection {name} has transceiver #{i} but no sender/receveiver component to process it. The transceiver will be ignored.");
+                            for (int mlineIndex = numExisting; mlineIndex < numNativeTransceivers; ++mlineIndex)
+                            {
+                                Debug.LogWarning($"The remote peer of peer connection {name} has transceiver #{mlineIndex}, but the peer connection"
+                                    + " doesn't have a local transceiver to pair with it. The remote peer's media for this transceiver will not be negotiated."
+                                    + $" Ensure that peer connection {name} has transceiver #{mlineIndex} and a receiver component associated with it.");
+                            }
                         });
                     }
                 }
@@ -610,11 +630,16 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     }
 
                     // Ignore extra transceivers without a registered component to attach
-                    for (int i = numExisting; i < numNativeTransceivers; ++i)
+                    if (numExisting < numNativeTransceivers)
                     {
                         _mainThreadWorkQueue.Enqueue(() =>
                         {
-                            Debug.LogWarning($"Peer connection {name} has transceiver #{i} but no sender/receveiver component to process it. The transceiver will be ignored.");
+                            for (int mlineIndex = numExisting; mlineIndex < numNativeTransceivers; ++mlineIndex)
+                            {
+                                Debug.LogWarning($"The remote peer of peer connection {name} has transceiver #{mlineIndex}, but the peer connection"
+                                    + " doesn't have a local transceiver to pair with it. The remote peer's media for this transceiver will not be negotiated."
+                                    + $" Ensure that peer connection {name} has transceiver #{mlineIndex} and a receiver component associated with it.");
+                            }
                         });
                     }
                 }
@@ -952,26 +977,26 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             switch (message.MessageType)
             {
-                case Signaler.Message.WireMessageType.Offer:
-                    await SetRemoteDescriptionAsync("offer", message.Data);
-                    // If we get an offer, we immediately send an answer back
-                    _nativePeer.CreateAnswer();
-                    break;
+            case Signaler.Message.WireMessageType.Offer:
+                await SetRemoteDescriptionAsync("offer", message.Data);
+                // If we get an offer, we immediately send an answer back
+                _nativePeer.CreateAnswer();
+                break;
 
-                case Signaler.Message.WireMessageType.Answer:
-                    await SetRemoteDescriptionAsync("answer", message.Data);
-                    break;
+            case Signaler.Message.WireMessageType.Answer:
+                await SetRemoteDescriptionAsync("answer", message.Data);
+                break;
 
-                case Signaler.Message.WireMessageType.Ice:
-                    // TODO - This is NodeDSS-specific
-                    // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
-                    var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
-                    // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
-                    _nativePeer.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
-                    break;
+            case Signaler.Message.WireMessageType.Ice:
+                // TODO - This is NodeDSS-specific
+                // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
+                var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
+                // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
+                _nativePeer.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
+                break;
 
-                default:
-                    throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
+            default:
+                throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
             }
         }
 
