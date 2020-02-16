@@ -11,7 +11,7 @@ using NUnit.Framework.Internal;
 namespace Microsoft.MixedReality.WebRTC.Tests
 {
     [TestFixture]
-    internal class VideoTransceiverTests
+    internal class AudioTransceiverTests
     {
         PeerConnection pc1_ = null;
         PeerConnection pc2_ = null;
@@ -276,11 +276,11 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             suspendOffer1_ = true;
 
             // Create video transceiver on #1. This triggers a renegotiation needed event.
-            var transceiver_settings = new VideoTransceiverInitSettings
+            var transceiver_settings = new AudioTransceiverInitSettings
             {
                 Name = "transceiver1",
             };
-            var transceiver1 = pc1_.AddVideoTransceiver(transceiver_settings);
+            var transceiver1 = pc1_.AddAudioTransceiver(transceiver_settings);
             Assert.NotNull(transceiver1);
             Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendReceive); // from implementation
             Assert.AreEqual(transceiver1.NegotiatedDirection, null);
@@ -345,14 +345,14 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             suspendOffer1_ = true;
 
             // Create video transceiver on #1. This triggers a renegotiation needed event.
-            string pairingName = "video_feed";
-            var initSettings = new VideoTransceiverInitSettings
+            string pairingName = "audio_feed";
+            var initSettings = new AudioTransceiverInitSettings
             {
                 Name = pairingName,
                 InitialDesiredDirection = Transceiver.Direction.SendOnly,
                 StreamIDs = new List<string> { "id1", "id2" } // dummy
             };
-            var transceiver1 = pc1_.AddVideoTransceiver(initSettings);
+            var transceiver1 = pc1_.AddAudioTransceiver(initSettings);
             Assert.NotNull(transceiver1);
             Assert.AreEqual(pairingName, transceiver1.Name);
             Assert.AreEqual(transceiver1.DesiredDirection, Transceiver.Direction.SendOnly);
@@ -386,28 +386,28 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             Assert.AreEqual(pairingName, transceiver2.Name);
         }
 
-        [Test(Description = "#179 - Ensure AddVideoTransceiver(null) works.")]
-        public void AddVideoTransceiver_Null()
+        [Test(Description = "#179 - Ensure AddAudioTransceiver(null) works.")]
+        public void AddAudioTransceiver_Null()
         {
-            var tr = pc1_.AddVideoTransceiver();
+            var tr = pc1_.AddAudioTransceiver();
             Assert.IsNotNull(tr);
         }
 
-        [Test(Description = "#179 - Ensure AddVideoTransceiver(default) works.")]
-        public void AddVideoTransceiver_Default()
+        [Test(Description = "#179 - Ensure AddAudioTransceiver(default) works.")]
+        public void AddAudioTransceiver_Default()
         {
-            var settings = new VideoTransceiverInitSettings();
-            var tr = pc1_.AddVideoTransceiver(settings);
+            var settings = new AudioTransceiverInitSettings();
+            var tr = pc1_.AddAudioTransceiver(settings);
             Assert.IsNotNull(tr);
         }
 
         [Test]
-        public void AddVideoTransceiver_InvalidName()
+        public void AddAudioTransceiver_InvalidName()
         {
-            var settings = new VideoTransceiverInitSettings();
+            var settings = new AudioTransceiverInitSettings();
             settings.Name = "invalid name";
-            VideoTransceiver tr = null;
-            Assert.Throws<ArgumentException>(() => { tr = pc1_.AddVideoTransceiver(settings); });
+            AudioTransceiver tr = null;
+            Assert.Throws<ArgumentException>(() => { tr = pc1_.AddAudioTransceiver(settings); });
             Assert.IsNull(tr);
         }
     }

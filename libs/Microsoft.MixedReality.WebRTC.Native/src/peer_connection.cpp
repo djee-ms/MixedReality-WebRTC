@@ -738,6 +738,8 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
   std::string name;
   if (!IsStringNullOrEmpty(config.name)) {
     name = config.name;
+  } else {
+    name = rtc::CreateRandomUuid();
   }
   if (!SdpIsValidToken(name)) {
     rtc::StringBuilder str("Invalid video transceiver name: ");
@@ -876,6 +878,8 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
   std::string name;
   if (!IsStringNullOrEmpty(config.name)) {
     name = config.name;
+  } else {
+    name = rtc::CreateRandomUuid();
   }
   if (!SdpIsValidToken(name)) {
     rtc::StringBuilder str("Invalid audio transceiver name: ");
