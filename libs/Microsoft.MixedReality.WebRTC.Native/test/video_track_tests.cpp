@@ -388,6 +388,7 @@ TEST(VideoTrack, Multi) {
             mrsExternalVideoTrackSourceCreateFromI420ACallback(
                 &VideoTestUtils::MakeTestFrame, nullptr, &source_handle1));
   ASSERT_NE(nullptr, source_handle1);
+  mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create local video tracks on the local peer (#1)
   LocalVideoTrackFromExternalSourceInitConfig track_config{};
@@ -521,6 +522,7 @@ TEST(VideoTrack, ExternalI420) {
             mrsExternalVideoTrackSourceCreateFromI420ACallback(
                 &VideoTestUtils::MakeTestFrame, nullptr, &source_handle1));
   ASSERT_NE(nullptr, source_handle1);
+  mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create the local video track (#1)
   LocalVideoTrackHandle track_handle1{};

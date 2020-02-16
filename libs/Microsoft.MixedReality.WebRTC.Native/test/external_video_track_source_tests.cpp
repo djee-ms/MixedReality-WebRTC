@@ -145,6 +145,7 @@ TEST(ExternalVideoTrackSource, Simple) {
             mrsExternalVideoTrackSourceCreateFromArgb32Callback(
                 &GenerateQuadTestFrame, nullptr, &source_handle1));
   ASSERT_NE(nullptr, source_handle1);
+  mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create the local track itself for #1
   LocalVideoTrackHandle track_handle1{};
