@@ -194,7 +194,9 @@ namespace Microsoft.MixedReality.WebRTC
 
         internal void OnStateUpdated(Direction? negotiatedDirection, Direction desiredDirection)
         {
-            Debug.Assert(desiredDirection == _desiredDirection);
+            // Desync generally happens only on first update
+            _desiredDirection = desiredDirection;
+
             if (negotiatedDirection != NegotiatedDirection)
             {
                 bool hadSendBefore = HasSend(NegotiatedDirection);
