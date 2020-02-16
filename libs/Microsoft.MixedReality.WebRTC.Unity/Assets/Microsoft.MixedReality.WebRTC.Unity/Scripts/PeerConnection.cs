@@ -122,7 +122,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <summary>
         /// Flag to initialize the peer connection on <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Start.html">MonoBehaviour.Start()</a>.
         /// </summary>
-        [Header("Behavior settings")]
+        [Header("Behavior")]
         [Tooltip("Automatically initialize the peer connection on Start()")]
         public bool AutoInitializeOnStart = true;
 
@@ -152,7 +152,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <summary>
         /// Set of ICE servers the WebRTC library will use to try to establish a connection.
         /// </summary>
-        [Header("ICE servers")]
         [Tooltip("Optional set of ICE servers (STUN and/or TURN)")]
         public List<ConfigurableIceServer> IceServers = new List<ConfigurableIceServer>()
         {
@@ -183,7 +182,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <summary>
         /// Event fired after the peer connection is initialized and ready for use.
         /// </summary>
-        [Header("Peer Connection Events")]
         [Tooltip("Event fired after the peer connection is initialized and ready for use")]
         public UnityEvent OnInitialized = new UnityEvent();
 

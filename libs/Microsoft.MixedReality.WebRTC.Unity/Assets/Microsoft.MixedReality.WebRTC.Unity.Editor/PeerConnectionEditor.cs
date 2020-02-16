@@ -11,10 +11,17 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
     [CanEditMultipleObjects]
     public class PeerConnectionEditor : UnityEditor.Editor
     {
-        const float kCenterMargin = 12;
-        const float kIconSpacing = 25;
-        const float kVerticalSpacing = 0;
+        /// <summary>
+        /// Height of a single line of controls (e.g. single sender or receiver).
+        /// </summary>
         const float kLineHeight = 22;
+
+        /// <summary>
+        /// Spacing between list items (transceivers), for readability.
+        /// </summary>
+        const float kItemSpacing = 3;
+
+        const float kIconSpacing = 25;
 
         SerializedProperty autoInitOnStart;
         SerializedProperty autoLogErrors;
@@ -29,6 +36,66 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
 
         ReorderableList transceiverList_;
         SerializedProperty transceivers_;
+
+        enum IconType
+        {
+            Audio,
+            Video,
+            SendRecv,
+            RecvOnly,
+            SendOnly,
+            Inactive
+        }
+        Sprite[] sprites_ = new Sprite[6];
+
+        void DrawSpriteIcon(IconType type, Rect rect)
+        {
+            var sprite = sprites_[(int)type];
+            var texture = sprite.texture;
+            Rect texCoords = sprite.textureRect;
+            Vector2 texelSize = texture.texelSize;
+            texCoords.x *= texelSize.x;
+            texCoords.y *= texelSize.y;
+            texCoords.width *= texelSize.x;
+            texCoords.height *= texelSize.y;
+            GUI.DrawTextureWithTexCoords(rect, texture, texCoords);
+        }
+
+        private void Awake()
+        {
+            // Load sprites for transceiver list control
+            var objects = AssetDatabase.LoadAllAssetsAtPath("Assets/Microsoft.MixedReality.WebRTC.Unity.Editor/editor_icons.png");
+            foreach (var obj in objects)
+            {
+                if (obj is Sprite sprite)
+                {
+                    if (sprite.name == "icon_audio")
+                    {
+                        sprites_[(int)IconType.Audio] = sprite;
+                    }
+                    else if (sprite.name == "icon_video")
+                    {
+                        sprites_[(int)IconType.Video] = sprite;
+                    }
+                    else if (sprite.name == "icon_sendrecv")
+                    {
+                        sprites_[(int)IconType.SendRecv] = sprite;
+                    }
+                    else if (sprite.name == "icon_recvonly")
+                    {
+                        sprites_[(int)IconType.RecvOnly] = sprite;
+                    }
+                    else if (sprite.name == "icon_sendonly")
+                    {
+                        sprites_[(int)IconType.SendOnly] = sprite;
+                    }
+                    else if (sprite.name == "icon_inactive")
+                    {
+                        sprites_[(int)IconType.Inactive] = sprite;
+                    }
+                }
+            }
+        }
 
         void OnEnable()
         {
@@ -45,52 +112,46 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
 
             transceivers_ = serializedObject.FindProperty("_transceivers");
             transceiverList_ = new ReorderableList(serializedObject, transceivers_, true, true, true, true);
-            transceiverList_.elementHeight = 2 * kLineHeight + kVerticalSpacing;
-            transceiverList_.drawHeaderCallback = DrawHeader;
+            transceiverList_.elementHeight = 2 * kLineHeight + kItemSpacing;
+            transceiverList_.drawHeaderCallback = (Rect rect) => EditorGUI.LabelField(rect, "Transceivers");
             transceiverList_.drawElementCallback =
                 (Rect rect, int index, bool isActive, bool isFocused) =>
                 {
                     var element = transceiverList_.serializedProperty.GetArrayElementAtIndex(index);
 
-                    float h = kLineHeight;
+                    float x0 = rect.x;
+                    float x1 = x0 + 16;
                     float y0 = rect.y + 2;
-                    float y1 = y0 + h + kVerticalSpacing;
+                    float y1 = y0 + kLineHeight;
 
-                    //EditorGUI.PropertyField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), element.FindPropertyRelative("Type"), GUIContent.none);
-                    //EditorGUI.DrawTextureTransparent(new Rect(rect.x, rect.y, 16, 16), EditorGUIUtility.IconContent(""));
+                    // MID value
+                    EditorGUI.LabelField(new Rect(x0, y0, 20, 20), $"{index}");
+
+                    // Audio or video icon for transceiver kind
                     MediaKind kind = (MediaKind)element.FindPropertyRelative("Kind").intValue;
                     System.Type senderType, receiverType;
                     if (kind == MediaKind.Audio)
                     {
                         senderType = typeof(AudioSender);
                         receiverType = typeof(AudioReceiver);
-                        EditorGUI.LabelField(new Rect(rect.x, rect.y, 22, 22), EditorGUIUtility.IconContent("AudioSource Icon")); // AudioSource Icon")); // "Profiler.Video"
+                        DrawSpriteIcon(IconType.Audio, new Rect(x1, rect.y, 20, 20));
                     }
                     else
                     {
                         senderType = typeof(VideoSender);
                         receiverType = typeof(VideoReceiver);
-                        EditorGUI.LabelField(new Rect(rect.x, rect.y, 22, 22), EditorGUIUtility.IconContent("Profiler.Video")); // AudioSource Icon")); // "Profiler.Video"
+                        DrawSpriteIcon(IconType.Video, new Rect(x1, rect.y, 20, 20));
                     }
-                    EditorGUI.LabelField(new Rect(rect.x, y1, 22, 22), $"{index}");
 
                     rect.x += kIconSpacing;
                     rect.width -= kIconSpacing;
-                    //EditorGUI.PropertyField(rect, element.FindPropertyRelative("Type"), GUIContent.none);
-                    //EditorGUI.PropertyField(
-                    //    new Rect(rect.x, rect.y, (rect.width - kCenterMargin) / 2, EditorGUIUtility.singleLineHeight),
-                    //    element.FindPropertyRelative("Sender"), GUIContent.none);
-                    //EditorGUI.PropertyField(
-                    //    new Rect(rect.x + (rect.width - kCenterMargin) / 2 + kCenterMargin, rect.y, (rect.width - kCenterMargin) / 2, EditorGUIUtility.singleLineHeight),
-                    //    element.FindPropertyRelative("Receiver"), GUIContent.none);
 
-                    EditorGUI.LabelField(new Rect(rect.x, y0, 22, 22), EditorGUIUtility.IconContent("tab_next"));
-                    EditorGUI.LabelField(new Rect(rect.x, y1, 22, 22), EditorGUIUtility.IconContent("tab_prev"));
+                    rect.x += 18;
+                    rect.width -= 18;
 
-                    rect.x += 22;
-                    rect.width -= 22;
-
-                    float fieldWidth = rect.width; // (rect.width - kCenterMargin) / 2;
+                    float fieldWidth = rect.width;
+                    bool hasSender = false;
+                    bool hasReceiver = false;
                     {
 
                         var p = element.FindPropertyRelative("Sender");
@@ -98,6 +159,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
                         obj = EditorGUI.ObjectField(
                             new Rect(rect.x, y0, fieldWidth, EditorGUIUtility.singleLineHeight),
                             obj, senderType, true);
+                        hasSender = (obj != null);
                         p.objectReferenceValue = obj;
                     }
                     {
@@ -106,8 +168,27 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
                         obj = EditorGUI.ObjectField(
                             new Rect(rect.x, y1, fieldWidth, EditorGUIUtility.singleLineHeight),
                             obj, receiverType, true);
+                        hasReceiver = (obj != null);
                         p.objectReferenceValue = obj;
                     }
+
+                    IconType iconType = IconType.Inactive;
+                    if (hasSender)
+                    {
+                        if (hasReceiver)
+                        {
+                            iconType = IconType.SendRecv;
+                        }
+                        else
+                        {
+                            iconType = IconType.SendOnly;
+                        }
+                    }
+                    else if (hasReceiver)
+                    {
+                        iconType = IconType.RecvOnly;
+                    }
+                    DrawSpriteIcon(iconType, new Rect(x0 + 8, y1, 16, 16));
                 };
             transceiverList_.drawNoneElementCallback = (Rect rect) =>
             {
@@ -116,60 +197,44 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
                 EditorGUI.LabelField(rect, "(empty)", style);
             };
             transceiverList_.displayAdd = false;
-            //transceiverList_.drawFooterCallback = (Rect rect) =>
-            //{
-            //    ReorderableList.defaultBehaviours.DrawFooter(rect, transceiverList_);
-            //};
-            //transceiverList_.onChangedCallback = (ReorderableList list) =>
-            //{
-
-            //};
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            EditorGUILayout.LabelField("Behavior", EditorStyles.boldLabel);
-            autoInitOnStart.boolValue = EditorGUILayout.ToggleLeft(autoInitOnStart.displayName, autoInitOnStart.boolValue);
-            autoLogErrors.boolValue = EditorGUILayout.ToggleLeft(autoLogErrors.displayName, autoLogErrors.boolValue);
+            EditorGUILayout.Space();
 
+            autoInitOnStart.boolValue = EditorGUILayout.ToggleLeft("Auto-initialize on component Start", autoInitOnStart.boolValue);
+            autoLogErrors.boolValue = EditorGUILayout.ToggleLeft("Log errors to Unity console", autoLogErrors.boolValue);
             EditorGUILayout.PropertyField(iceServers, true);
             EditorGUILayout.PropertyField(iceUsername);
             EditorGUILayout.PropertyField(iceCredential);
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Transceivers", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Media", EditorStyles.boldLabel);
             transceiverList_.DoLayoutList();
             using (var _ = new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("+ Audio"))
+                if (GUILayout.Button("+ Audio", EditorStyles.miniButton))
                 {
                     ((PeerConnection)serializedObject.targetObject).AddTransceiver(MediaKind.Audio);
                 }
-                if (GUILayout.Button("+ Video"))
+                if (GUILayout.Button("+ Video", EditorStyles.miniButton))
                 {
                     ((PeerConnection)serializedObject.targetObject).AddTransceiver(MediaKind.Video);
                 }
             }
 
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(onInitialized);
             EditorGUILayout.PropertyField(onShutdown);
             EditorGUILayout.PropertyField(onError);
 
             serializedObject.ApplyModifiedProperties();
-        }
-
-        private void DrawHeader(Rect rect)
-        {
-            const float kLeftMargin = 12 + kIconSpacing;
-            rect.width -= kLeftMargin;
-            rect.x += kLeftMargin;
-            rect.width = (rect.width - kCenterMargin) / 2;
-            EditorGUI.LabelField(rect, "Sender");
-            rect.x += rect.width + kCenterMargin;
-            EditorGUI.LabelField(rect, "Receiver");
         }
     }
 
