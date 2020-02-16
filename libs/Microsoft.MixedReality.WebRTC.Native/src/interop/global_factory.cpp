@@ -101,7 +101,13 @@ std::unique_ptr<GlobalFactory>& GlobalFactory::MutableInstance(
   std::scoped_lock lock(g_mutex);
   if (createIfNotExist && !g_factory) {
     g_factory = std::make_unique<GlobalFactory>();
-    g_factory->InitializeImplNoLock();
+    mrsResult result = g_factory->InitializeImplNoLock();
+    if (result != Result::kSuccess) {
+      RTC_LOG(LS_ERROR) << "Failed to initialize global MixedReality-WebRTC "
+                           "factory: error code #"
+                        << (int)result;
+      g_factory = nullptr;
+    }
   }
   return g_factory;
 }
