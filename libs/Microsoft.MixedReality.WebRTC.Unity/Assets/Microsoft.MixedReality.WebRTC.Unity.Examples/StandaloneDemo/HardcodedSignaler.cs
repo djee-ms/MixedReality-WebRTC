@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using UnityEngine;
@@ -42,6 +42,22 @@ public class HardcodedSignaler : MonoBehaviour
         Peer1.CreateOffer();
         _remoteApplied1.Wait();
         _remoteApplied2.Wait();
+    }
+
+    public bool Connect(int millisecondsTimeout)
+    {
+        _remoteApplied1.Reset();
+        _remoteApplied2.Reset();
+        Peer1.CreateOffer();
+        if (!_remoteApplied1.Wait(millisecondsTimeout))
+        {
+            return false;
+        }
+        if (!_remoteApplied2.Wait(millisecondsTimeout))
+        {
+            return false;
+        }
+        return true;
     }
 
     private void Start()

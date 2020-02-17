@@ -35,7 +35,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
         SerializedProperty onError;
 
         ReorderableList transceiverList_;
-        SerializedProperty transceivers_;
+        SerializedProperty mediaLines_;
 
         enum IconType
         {
@@ -114,8 +114,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
             onShutdown = serializedObject.FindProperty("OnShutdown");
             onError = serializedObject.FindProperty("OnError");
 
-            transceivers_ = serializedObject.FindProperty("_transceivers");
-            transceiverList_ = new ReorderableList(serializedObject, transceivers_, true, true, true, true);
+            mediaLines_ = serializedObject.FindProperty("_mediaLines");
+            transceiverList_ = new ReorderableList(serializedObject, mediaLines_, true, true, true, true);
             transceiverList_.elementHeight = 2 * kLineHeight + kItemSpacing;
             transceiverList_.drawHeaderCallback = (Rect rect) => EditorGUI.LabelField(rect, "Transceivers");
             transceiverList_.drawElementCallback =

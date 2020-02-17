@@ -218,12 +218,12 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             audioTrackAddedEvent2_.Set();
         }
 
-        private void OnAudioTrackRemoved1(RemoteAudioTrack track)
+        private void OnAudioTrackRemoved1(AudioTransceiver transceiver, RemoteAudioTrack track)
         {
             audioTrackRemovedEvent1_.Set();
         }
 
-        private void OnAudioTrackRemoved2(RemoteAudioTrack track)
+        private void OnAudioTrackRemoved2(AudioTransceiver transceiver, RemoteAudioTrack track)
         {
             audioTrackRemovedEvent2_.Set();
         }
@@ -238,12 +238,12 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             videoTrackAddedEvent2_.Set();
         }
 
-        private void OnVideoTrackRemoved1(RemoteVideoTrack track)
+        private void OnVideoTrackRemoved1(VideoTransceiver transceiver, RemoteVideoTrack track)
         {
             videoTrackRemovedEvent1_.Set();
         }
 
-        private void OnVideoTrackRemoved2(RemoteVideoTrack track)
+        private void OnVideoTrackRemoved2(VideoTransceiver transceiver, RemoteVideoTrack track)
         {
             videoTrackRemovedEvent2_.Set();
         }

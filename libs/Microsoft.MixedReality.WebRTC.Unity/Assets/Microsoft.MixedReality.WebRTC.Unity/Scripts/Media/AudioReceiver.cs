@@ -68,7 +68,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         internal void AttachToTransceiver(AudioTransceiver audioTransceiver)
         {
-            Debug.Assert(Transceiver == null);
+            Debug.Assert((Transceiver == null) || (Transceiver == audioTransceiver));
             Transceiver = audioTransceiver;
         }
 

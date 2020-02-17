@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
@@ -42,12 +43,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public bool AutoPlayOnEnabled = true;
 
         /// <summary>
-        /// Mute the media. For audio, this turns the source to silence. For video, this
+        /// Mute or unmute the media. For audio, muting turns the source to silence. For video, this
         /// produces black frames.
         /// </summary>
-        public void Mute()
+        public void Mute(bool mute = true)
         {
-            MuteImpl(true);
+            MuteImpl(mute);
         }
 
         /// <summary>
@@ -58,8 +59,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             MuteImpl(false);
         }
 
-        protected void OnEnable()
+        protected async Task OnEnable()
         {
+            // Ensure the local sender track is created, in case it was not yet.
+            // Do *not* do that earlier than this callback (e.g. Start() or Awake())
+            // to ensure the track source does *not* start playback before this component
+            // is enabled, to maintain the Unity semantic of an enabled component.
+            await CreateTrackAsync();
+
+            // If need, start media playback
             if (AutoPlayOnEnabled)
             {
                 _ = PlayAsync();
@@ -70,6 +78,22 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             Stop();
         }
+
+        protected void OnDestroy()
+        {
+            DestroyTrack();
+        }
+
+        /// <summary>
+        /// Derived classes implement the track creation if needed, and myst support this
+        /// call being made multiple times (and being no-op after the first one).
+        /// </summary>
+        protected abstract Task CreateTrackAsync();
+
+        /// <summary>
+        /// Derived classes implement the track destruction.
+        /// </summary>
+        protected abstract void DestroyTrack();
 
         /// <summary>
         /// Derived classes implement the mute/unmute action on the track.

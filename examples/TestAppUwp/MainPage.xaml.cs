@@ -1221,9 +1221,9 @@ namespace TestAppUwp
         /// Callback on remote media (audio or video) track removed.
         /// </summary>
         /// <param name="track">The audio track removed.</param>
-        private void Peer_RemoteAudioTrackRemoved(RemoteAudioTrack track)
+        private void Peer_RemoteAudioTrackRemoved(AudioTransceiver transceiver, RemoteAudioTrack track)
         {
-            LogMessage($"Removed remote audio track {track.Name}.");
+            LogMessage($"Removed remote audio track {track.Name} from transceiver {transceiver.Name}.");
 
             // Just double-check that the remote audio track is indeed playing
             // before scheduling a task to stop it. Currently the remote audio
@@ -1259,9 +1259,9 @@ namespace TestAppUwp
         /// Callback on remote media (audio or video) track removed.
         /// </summary>
         /// <param name="track">The video track removed.</param>
-        private void Peer_RemoteVideoTrackRemoved(RemoteVideoTrack track)
+        private void Peer_RemoteVideoTrackRemoved(VideoTransceiver transceiver, RemoteVideoTrack track)
         {
-            LogMessage($"Removed remote video track {track.Name}.");
+            LogMessage($"Removed remote video track {track.Name} from transceiver {transceiver.Name}.");
 
             // Just double-check that the remote video track is indeed playing
             // before scheduling a task to stop it. Currently the remote video

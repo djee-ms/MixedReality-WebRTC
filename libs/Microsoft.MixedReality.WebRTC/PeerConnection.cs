@@ -344,7 +344,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// Delegate for <see cref="AudioTrackRemoved"/> event.
         /// </summary>
         /// <param name="track">The audio track just removed.</param>
-        public delegate void AudioTrackRemovedDelegate(RemoteAudioTrack track);
+        public delegate void AudioTrackRemovedDelegate(AudioTransceiver transceiver, RemoteAudioTrack track);
 
         /// <summary>
         /// Delegate for <see cref="VideoTrackAdded"/> event.
@@ -356,7 +356,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// Delegate for <see cref="VideoTrackRemoved"/> event.
         /// </summary>
         /// <param name="track">The video track just removed.</param>
-        public delegate void VideoTrackRemovedDelegate(RemoteVideoTrack track);
+        public delegate void VideoTrackRemovedDelegate(VideoTransceiver transceiver, RemoteVideoTrack track);
 
         /// <summary>
         /// Delegate for <see cref="DataChannelAdded"/> event.
@@ -1667,8 +1667,9 @@ namespace Microsoft.MixedReality.WebRTC
         internal void OnAudioTrackRemoved(RemoteAudioTrack track)
         {
             MainEventSource.Log.AudioTrackRemoved(track.Name);
+            AudioTransceiver transceiver = track.Transceiver; // cache before removed
             track.OnTrackRemoved(this);
-            AudioTrackRemoved?.Invoke(track);
+            AudioTrackRemoved?.Invoke(transceiver, track);
 
             // PeerConnection is owning the remote track, and all internal states have been
             // updated and events fired, so dispose of the track now.
@@ -1703,8 +1704,9 @@ namespace Microsoft.MixedReality.WebRTC
         internal void OnVideoTrackRemoved(RemoteVideoTrack track)
         {
             MainEventSource.Log.VideoTrackRemoved(track.Name);
+            VideoTransceiver transceiver = track.Transceiver; // cache before removed
             track.OnTrackRemoved(this);
-            VideoTrackRemoved?.Invoke(track);
+            VideoTrackRemoved?.Invoke(transceiver, track);
 
             // PeerConnection is owning the remote track, and all internal states have been
             // updated and events fired, so dispose of the track now.

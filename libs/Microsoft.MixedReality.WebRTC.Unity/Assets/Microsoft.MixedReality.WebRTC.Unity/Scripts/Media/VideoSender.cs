@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Threading.Tasks;
@@ -91,7 +91,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public async Task CreateTrackAsync()
+        protected override async Task CreateTrackAsync()
         {
             if (Track == null)
             {
@@ -104,9 +104,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        public void RemoveTrack()
+        protected override void DestroyTrack()
         {
             DoRemoveTrackAction();
+            Debug.Assert(Track == null, "Implementation did not destroy the existing Track property yet did not throw any exception.", this);
         }
 
         protected override Task DoStartMediaPlaybackAsync()
@@ -116,22 +117,42 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         protected override void DoStopMediaPlayback()
         {
-            RemoveTrack();
+            DestroyTrack();
         }
 
-        internal async Task InitAndAttachTrackAsync(VideoTransceiver videoTransceiver)
+        /// <summary>
+        /// Internal callback invoked when the video sender is attached to a transceiver created
+        /// just before the peer connection creates an SDP offer.
+        /// </summary>
+        /// <param name="videoTransceiver">The video transceiver this sender is attached with.</param>
+        internal void AttachToTransceiver(VideoTransceiver videoTransceiver)
         {
-            Debug.Assert(Transceiver == null);
+            Debug.Assert((Transceiver == null) || (Transceiver == videoTransceiver));
             Transceiver = videoTransceiver;
+        }
 
-            // Create the local track
-            await CreateTrackAsync();
+        internal async Task AttachTrackAsync()
+        {
+            Debug.Assert(Transceiver != null);
+
+            // Ensure the local sender track exists
+            if (Track == null)
+            {
+                await CreateTrackAsync();
+            }
 
             // Attach the local track to the transceiver
             if (Track != null)
             {
                 Transceiver.LocalTrack = Track;
             }
+        }
+
+        internal void DetachTrack()
+        {
+            Debug.Assert(Transceiver != null);
+            Debug.Assert(Transceiver.LocalTrack == Track);
+            Transceiver.LocalTrack = null;
         }
 
         /// <inheritdoc/>

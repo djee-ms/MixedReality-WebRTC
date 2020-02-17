@@ -122,7 +122,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         internal void AttachToTransceiver(VideoTransceiver videoTransceiver)
         {
-            Debug.Assert(Transceiver == null);
+            Debug.Assert((Transceiver == null) || (Transceiver == videoTransceiver));
             Transceiver = videoTransceiver;
         }
 

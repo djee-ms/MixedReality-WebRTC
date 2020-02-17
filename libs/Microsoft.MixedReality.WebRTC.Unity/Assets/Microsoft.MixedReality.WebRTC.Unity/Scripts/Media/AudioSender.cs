@@ -105,17 +105,26 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         }
 
         /// <summary>
+        /// Internal callback invoked when the audio sender is attached to a transceiver created
+        /// just before the peer connection creates an SDP offer.
+        /// </summary>
+        /// <param name="audioTransceiver">The audio transceiver this sender is attached with.</param>
+        internal void AttachToTransceiver(AudioTransceiver audioTransceiver)
+        {
+            Debug.Assert((Transceiver == null) || (Transceiver == audioTransceiver));
+            Transceiver = audioTransceiver;
+        }
+
+        /// <summary>
         /// Internal callback invoked when a peer connection is about to create an offer,
         /// and needs to create the audio transceivers and senders. The audio sender must
         /// create a local audio track and attach it to the given transceiver.
         /// </summary>
-        /// <param name="audioTransceiver">The audio transceiver to attach a local track to.</param>
         /// <returns>Once the asynchronous operation is completed, the <see cref="Track"/> property
         /// must reference it.</returns>
-        internal async Task InitAndAttachTrackAsync(AudioTransceiver audioTransceiver)
+        internal async Task AttachTrackAsync()
         {
-            Debug.Assert(Transceiver == null);
-            Transceiver = audioTransceiver;
+            Debug.Assert(Transceiver != null);
 
             // Force again PreferredAudioCodec right before starting the local capture,
             // so that modifications to the property done after OnPeerInitialized() are
@@ -123,13 +132,58 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             //< FIXME - Multi-track override!!!
             Transceiver.PeerConnection.PreferredAudioCodec = PreferredAudioCodec;
 
-            // Create the track if needed
-            await DoStartMediaPlaybackAsync();
+            // Ensure the local sender track exists
+            if (Track == null)
+            {
+                await DoStartMediaPlaybackAsync();
+            }
 
             // Attach the local track to the transceiver
             if (Track != null)
             {
                 Transceiver.LocalTrack = Track;
+            }
+        }
+
+        internal void DetachTrack()
+        {
+            Debug.Assert(Transceiver != null);
+            Debug.Assert(Transceiver.LocalTrack == Track);
+            Transceiver.LocalTrack = null;
+        }
+
+        protected override async Task CreateTrackAsync()
+        {
+            if (Track == null)
+            {
+                // Ensure the track has a valid name
+                string trackName = TrackName;
+                if (trackName.Length == 0)
+                {
+                    trackName = Guid.NewGuid().ToString();
+                    TrackName = trackName;
+                }
+                SdpTokenAttribute.Validate(trackName, allowEmpty: false);
+
+                // Create the local track
+                var trackSettings = new LocalAudioTrackSettings
+                {
+                    trackName = trackName
+                };
+                Track = await LocalAudioTrack.CreateFromDeviceAsync(trackSettings);
+
+                AudioStreamStarted.Invoke();
+            }
+        }
+
+        protected override void DestroyTrack()
+        {
+            if (Track != null)
+            {
+                AudioStreamStopped.Invoke();
+                Debug.Assert(Track.Transceiver == null);
+                Track.Dispose();
+                Track = null;
             }
         }
 
@@ -141,101 +195,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 Track.Enabled = mute;
             }
         }
-
-        //protected void OnEnable()
-        //{
-        //    var nativePeer = PeerConnection?.Peer;
-        //    if ((nativePeer != null) && nativePeer.Initialized)
-        //    {
-        //        DoStartAction();
-        //    }
-        //}
-
-        //protected void OnDisable()
-        //{
-        //    var nativePeer = PeerConnection.Peer;
-        //    if ((Track != null) && (nativePeer != null) && nativePeer.Initialized)
-        //    {
-        //        AudioStreamStopped.Invoke();
-        //        //Track.AudioFrameReady -= AudioFrameReady;
-        //        Track.Transceiver.LocalTrack = null; //nativePeer.RemoveLocalAudioTrack(Track);
-        //        Track.Dispose();
-        //        Track = null;
-        //        //_frameQueue.Clear();
-        //    }
-        //}
-
-        //protected override async void OnMediaInitialized()
-        //{
-        //    PeerConnection.Peer.PreferredAudioCodec = PreferredAudioCodec;
-
-        //    if (AutoStartCapture)
-        //    {
-        //        //nativePeer.LocalAudioFrameReady += LocalAudioFrameReady;
-
-        //        // TODO - Currently AddLocalAudioTrackAsync() both open the capture device AND add an audio track
-        //    }
-
-        //    if (AutoAddTrack)
-        //    {
-        //        var nativePeer = PeerConnection.Peer;
-        //        Debug.Assert(nativePeer.Initialized);
-
-        //        // Force again PreferredAudioCodec right before starting the local capture,
-        //        // so that modifications to the property done after OnPeerInitialized() are
-        //        // accounted for.
-        //        nativePeer.PreferredAudioCodec = PreferredAudioCodec;
-
-        //        // Ensure the track has a valid name
-        //        string trackName = TrackName;
-        //        if (trackName.Length == 0)
-        //        {
-        //            trackName = Guid.NewGuid().ToString();
-        //            TrackName = trackName;
-        //        }
-        //        SdpTokenAttribute.Validate(trackName, allowEmpty: false);
-
-        //        var transceiverSettings = new AudioTransceiverInitSettings
-        //        {
-        //            InitialDesiredDirection = Transceiver.Direction.SendReceive,
-        //            // Use the same name for the track and the transceiver
-        //            Name = trackName
-        //        };
-        //        var transceiver = nativePeer.AddAudioTransceiver(transceiverSettings);
-
-        //        var trackSettings = new LocalAudioTrackSettings
-        //        {
-        //            trackName = trackName
-        //        };
-        //        Track = await LocalAudioTrack.CreateFromDeviceAsync(trackSettings);
-
-        //        // Set the track on the transceiver to start streaming media to the remote peer
-        //        if (Track != null)
-        //        {
-        //            transceiver.LocalTrack = Track;
-        //            AudioStreamStarted.Invoke();
-        //        }
-        //    }
-        //}
-
-        //protected override void OnMediaShutdown()
-        //{
-        //    if (Track != null)
-        //    {
-        //        AudioStreamStopped.Invoke();
-
-        //        // Track may not be added to any transceiver (e.g. no connection)
-        //        if (Track.Transceiver != null)
-        //        {
-        //            Track.Transceiver.LocalTrack = null;
-        //        }
-
-        //        // Local tracks are disposable objects
-        //        Track.Dispose();
-        //        Track = null;
-        //    }
-        //    //_frameQueue.Clear();
-        //}
 
         //private void AudioFrameReady(AudioFrame frame)
         //{

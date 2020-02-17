@@ -9,7 +9,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Concurrent;
 using System.Text;
-using System.ComponentModel;
 
 #if UNITY_WSA && !UNITY_EDITOR
 using Windows.UI.Core;
@@ -90,15 +89,289 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     {
     }
 
+    /// <summary>
+    /// Media line abstraction for a peer connection. This container binds together a sender component
+    /// (<see cref="MediaSender"/>) and/or a receiver component (<see cref="MediaReceiver"/>) to a media
+    /// line, and therefore once a negotiation was completed to the transceiver attached to that media line.
+    /// 
+    /// Assigning Unity components to the <see cref="Sender"/> and <see cref="Receiver"/> fields serves
+    /// as an indication of the user intent to send and/or receive media through the transceiver, and is
+    /// used during negotiation to derive the <see cref="Transceiver.Direction"/> to negotiate. After the
+    /// negotiation is completed, the <see cref="Transceiver"/> property refers to the transceiver associated
+    /// with this media line, and which the sender and receiver will use.
+    /// </summary>
     [Serializable]
-    public class TransceiverInfo
+    public class MediaLine
     {
-        public MediaKind Kind;
+        /// <summary>
+        /// Kind of media of the media line and its attached transceiver.
+        /// This is assiged when the media line is created with <see cref="PeerConnection.AddTransceiver(MediaKind)"/>
+        /// and is immutable for the lifetime of the peer connection.
+        /// </summary>
+        public MediaKind Kind { get; }
+
+        /// <summary>
+        /// Media sender producing the media to send through the transceiver attached to this media line.
+        /// This must be an instance of a class derived from <see cref="AudioSender"/> or <see cref="VideoSender"/>
+        /// depending on <see cref="Kind"/>.
+        /// If this is non-<c>null</c> then the peer connection will negotiate sending some media, otherwise
+        /// it will signal the remote peer that it does not wish to send (receive-only or inactive).
+        /// </summary>
         public MediaSender Sender;
+
+        /// <summary>
+        /// Media receiver consuming the media received through the transceiver attached to this media line.
+        /// This must be an instance of a class derived from <see cref="AudioReceiver"/> or <see cref="VideoReceiver"/>
+        /// depending on <see cref="Kind"/>.
+        /// If this is non-<c>null</c> then the peer connection will negotiate receiving some media, otherwise
+        /// it will signal the remote peer that it does not wish to receive (send-only or inactive).
+        /// </summary>
         public MediaReceiver Receiver;
 
+        /// <summary>
+        /// Transceiver attached with this media line.
+        /// On the offering peer this changes during <see cref="PeerConnection.CreateOffer"/>, while this is updated by
+        /// <see cref="PeerConnection.SetRemoteDescriptionAsync(string, string)"/> when receiving an offer on the answering peer.
+        /// </summary>
+        public Transceiver Transceiver { get; private set; }
+
+        /// <summary>
+        /// Sender actually attached during <see cref="PeerConnection.SetRemoteDescriptionAsync(string, string)"/>.
+        /// This is different from <see cref="Sender"/> until a negotiation is achieved.
+        /// </summary>
         [NonSerialized]
-        public Transceiver Transceiver;
+        private MediaSender _attachedSender;
+
+        /// <summary>
+        /// Receiver actually paired during <see cref="PeerConnection.SetRemoteDescriptionAsync(string, string)"/>.
+        /// This is different from <see cref="Receiver"/> until a negotiation is achieved.
+        /// </summary>
+        [NonSerialized]
+        private MediaReceiver _pairedReceiver;
+
+        public MediaLine(MediaKind kind)
+        {
+            Kind = kind;
+        }
+
+        internal async Task AttachTrackAsync()
+        {
+            Debug.Assert(Transceiver != null);
+            Debug.Assert(Sender != null);
+            Debug.Assert(_attachedSender == null);
+            if (Kind == MediaKind.Audio)
+            {
+                var audioSender = (AudioSender)Sender;
+                await audioSender.AttachTrackAsync();
+            }
+            else if (Kind == MediaKind.Video)
+            {
+                var videoSender = (VideoSender)Sender;
+                await videoSender.AttachTrackAsync();
+            }
+            _attachedSender = Sender;
+        }
+
+        internal void DetachTrack()
+        {
+            Debug.Assert(Transceiver != null);
+            Debug.Assert(Sender == null);
+            Debug.Assert(_attachedSender != null);
+            if (Kind == MediaKind.Audio)
+            {
+                var audioSender = (AudioSender)_attachedSender;
+                audioSender.DetachTrack();
+            }
+            else if (Kind == MediaKind.Video)
+            {
+                var videoSender = (VideoSender)_attachedSender;
+                videoSender.DetachTrack();
+            }
+            _attachedSender = null;
+        }
+
+        internal void UpdateReceiver()
+        {
+            Debug.Assert(Transceiver != null);
+            bool wantsRecv = (Receiver != null);
+            bool wasReceiving = (_pairedReceiver != null);
+            if (Kind == MediaKind.Audio)
+            {
+                var audioTransceiver = (AudioTransceiver)Transceiver;
+                bool isReceiving = (audioTransceiver.RemoteTrack != null);
+                // Note the extra "isReceiving" check, which ensures that when the remote track was
+                // just removed by OnUnpaired(RemoteTrack) from the TrackRemoved event then it is not
+                // immediately re-added by mistake. 
+                if (wantsRecv && isReceiving && !wasReceiving)
+                {
+                    // Transceiver started receiving, and user actually wants to receive
+                    var audioReceiver = (AudioReceiver)Receiver;
+                    audioReceiver.OnPaired(audioTransceiver.RemoteTrack);
+                    _pairedReceiver = Receiver;
+                }
+                else if (!isReceiving && wasReceiving)
+                {
+                    // Transceiver stopped receiving (user intent does not matter here)
+                    var audioReceiver = (AudioReceiver)_pairedReceiver;
+                    audioReceiver.OnUnpaired(audioTransceiver.RemoteTrack);
+                    _pairedReceiver = null;
+                }
+            }
+            else if (Kind == MediaKind.Video)
+            {
+                var videoTransceiver = (VideoTransceiver)Transceiver;
+                bool isReceiving = (videoTransceiver.RemoteTrack != null);
+                // Note the extra "isReceiving" check, which ensures that when the remote track was
+                // just removed by OnUnpaired(RemoteTrack) from the TrackRemoved event then it is not
+                // immediately re-added by mistake. 
+                if (wantsRecv && isReceiving && !wasReceiving)
+                {
+                    // Transceiver started receiving, and user actually wants to receive
+                    var videoReceiver = (VideoReceiver)Receiver;
+                    videoReceiver.OnPaired(videoTransceiver.RemoteTrack);
+                    _pairedReceiver = Receiver;
+                }
+                else if (!isReceiving && wasReceiving)
+                {
+                    // Transceiver stopped receiving (user intent does not matter here)
+                    var videoReceiver = (VideoReceiver)_pairedReceiver;
+                    videoReceiver.OnUnpaired(videoTransceiver.RemoteTrack);
+                    _pairedReceiver = null;
+                }
+            }
+        }
+
+        internal void OnUnpaired(RemoteAudioTrack track)
+        {
+            Debug.Assert(track != null);
+            Debug.Assert(Kind == MediaKind.Audio);
+            Debug.Assert(Transceiver != null);
+            Debug.Assert(((AudioTransceiver)Transceiver).RemoteTrack == null); // already removed
+            // This is called by the TrackRemoved event, which can be fired sometimes even
+            // though we did not have any opportunity yet to pair. So only unpair if we did.
+            // In details, the case is the answering peer being in sendonly mode, yet created
+            // automatically by the implementation during SetRemoteDescription() in recvonly
+            // mode (per the WebRTC spec). So the SetDirection(sendonly) triggers the TrackRemoved
+            // event, but the pairing was never done because SetDirection() is called before
+            // the received is updated.
+            if (_pairedReceiver != null)
+            {
+                var audioReceiver = (AudioReceiver)_pairedReceiver;
+                audioReceiver.OnUnpaired(track);
+                _pairedReceiver = null;
+            }
+        }
+
+        internal void OnUnpaired(RemoteVideoTrack track)
+        {
+            Debug.Assert(track != null);
+            Debug.Assert(Kind == MediaKind.Video);
+            Debug.Assert(Transceiver != null);
+            Debug.Assert(((VideoTransceiver)Transceiver).RemoteTrack == null); // already removed
+            // This is called by the TrackRemoved event, which can be fired sometimes even
+            // though we did not have any opportunity yet to pair. So only unpair if we did.
+            // In details, the case is the answering peer being in sendonly mode, yet created
+            // automatically by the implementation during SetRemoteDescription() in recvonly
+            // mode (per the WebRTC spec). So the SetDirection(sendonly) triggers the TrackRemoved
+            // event, but the pairing was never done because SetDirection() is called before
+            // the received is updated.
+            if (_pairedReceiver != null)
+            {
+                var videoReceiver = (VideoReceiver)_pairedReceiver;
+                videoReceiver.OnUnpaired(track);
+                _pairedReceiver = null;
+            }
+        }
+
+        internal void PairTransceiverOnFirstOffer(Transceiver tr)
+        {
+            Debug.Assert(tr != null);
+            Debug.Assert((Transceiver == null) || (Transceiver == tr));
+            Transceiver = tr;
+
+            // Always do this even after first offer, because the sender and receiver
+            // components can be assigned to the media line later, and therefore will
+            // need to be updated on the next offer even if that is not the first one.
+            bool wantsSend = (Sender != null);
+            bool wantsRecv = (Receiver != null);
+            if (Kind == MediaKind.Audio)
+            {
+                var audioTransceiver = (AudioTransceiver)Transceiver;
+                if (wantsSend)
+                {
+                    var audioSender = (AudioSender)Sender;
+                    audioSender.AttachToTransceiver(audioTransceiver);
+                }
+                if (wantsRecv)
+                {
+                    var audioReceiver = (AudioReceiver)Receiver;
+                    audioReceiver.AttachToTransceiver(audioTransceiver);
+                }
+            }
+            else if (Kind == MediaKind.Video)
+            {
+                var videoTransceiver = (VideoTransceiver)Transceiver;
+                if (wantsSend)
+                {
+                    var videoSender = (VideoSender)Sender;
+                    videoSender.AttachToTransceiver(videoTransceiver);
+                }
+                if (wantsRecv)
+                {
+                    var videoReceiver = (VideoReceiver)Receiver;
+                    videoReceiver.AttachToTransceiver(videoTransceiver);
+                }
+            }
+        }
+
+        internal async Task UpdateForCreateOfferAsync(Transceiver tr)
+        {
+            Debug.Assert(tr != null);
+
+            PairTransceiverOnFirstOffer(tr);
+
+            // Create the local sender track and attach it to the transceiver
+            bool wantsSend = (Sender != null);
+            bool wasSending = (_attachedSender != null);
+            if (wantsSend && !wasSending)
+            {
+                await AttachTrackAsync();
+            }
+            else if (!wantsSend && wasSending)
+            {
+                DetachTrack();
+            }
+
+            // The remote track is only created when applying a description, so only attach
+            // the transceiver for now (above) but do not try to pair remote tracks.
+        }
+
+        internal async Task UpdateOnReceiveOfferAsync(Transceiver tr)
+        {
+            Debug.Assert(tr != null);
+
+            PairTransceiverOnFirstOffer(tr);
+
+            bool wantsSend = (Sender != null);
+            bool wasSending = (_attachedSender != null);
+            if (wantsSend && !wasSending)
+            {
+                // If the offer doesn't allow to send then this will generate a renegotiation needed event,
+                // which will be temporarily delayed since we are in the middle of a negotiation already.
+                await AttachTrackAsync();
+            }
+            else if (!wantsSend && wasSending)
+            {
+                DetachTrack();
+            }
+
+            UpdateReceiver();
+        }
+
+        internal void UpdateOnReceiveAnswer()
+        {
+            UpdateReceiver();
+        }
     }
 
     /// <summary>
@@ -120,11 +393,29 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         #region Behavior settings
 
         /// <summary>
-        /// Flag to initialize the peer connection on <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Start.html">MonoBehaviour.Start()</a>.
+        /// Initialize the peer connection on <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Start.html">MonoBehaviour.Start()</a>.
+        /// If this field is <c>false</c> then the user needs to call <see cref="InitializeAsync(CancellationToken)"/>
+        /// to manually initialize the peer connection before it can be used for any purpose.
         /// </summary>
         [Header("Behavior")]
         [Tooltip("Automatically initialize the peer connection on Start()")]
         public bool AutoInitializeOnStart = true;
+
+        /// <summary>
+        /// Automatically create a new offer whenever a renegotiation needed event is received.
+        /// </summary>
+        /// <remarks>
+        /// Note that the renegotiation needed event may be dispatched asynchronously, so it is
+        /// discourages to toggle this field ON and OFF. Instead, the user should choose an
+        /// approach (manual or automatic) and stick to it.
+        /// 
+        /// In particular, temporarily setting this to <c>false</c> during a batch of changes and
+        /// setting it back to <c>true</c> right after the last change may or may not produce an
+        /// automatic offer, depending on whether the negotiated event was dispatched while the
+        /// property was still <c>false</c> or not.
+        /// </remarks>
+        [Tooltip("Automatically create a new offer when receiving a renegotiation needed event")]
+        public bool AutoCreateOfferOnRenegotiationNeeded = true;
 
         /// <summary>
         /// Flag to log all errors to the Unity console automatically.
@@ -203,7 +494,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         #region Private variables
 
         /// <summary>
-        /// Internal queue used to marshal work back to the main Unity thread.
+        /// Internal queue used to marshal work back to the main Unity app thread where access
+        /// to Unity objects is allowed. This is generally used to defer events/callbacks, which
+        /// are free-threaded in the low-level implementation.
         /// </summary>
         private ConcurrentQueue<Action> _mainThreadWorkQueue = new ConcurrentQueue<Action>();
 
@@ -217,12 +510,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private WebRTC.PeerConnection _nativePeer;
 
         /// <summary>
-        /// List of transceivers and their associated media sender/receiver components.
+        /// List of transceiver media lines and their associated media sender/receiver components.
         /// </summary>
         [SerializeField]
-        private List<TransceiverInfo> _transceivers = new List<TransceiverInfo>();
-
-        private bool _suspendOffers = false;
+        private List<MediaLine> _mediaLines = new List<MediaLine>();
 
         #endregion
 
@@ -239,10 +530,26 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         }
 
         /// <summary>
-        /// Initialize the underlying WebRTC libraries
+        /// Initialize the underlying WebRTC peer connection.
         /// </summary>
         /// <remarks>
-        /// This function is asynchronous, to monitor it's status bind a handler to OnInitialized and OnError
+        /// This method must be called once before using the peer connection. If <see cref="AutoInitializeOnStart"/>
+        /// is <c>true</c> then it is automatically called during <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Start.html">MonoBehaviour.Start()</a>.
+        /// 
+        /// This method is asynchronous and completes its task when the initializing completed.
+        /// On successful completion, it also trigger the <see cref="OnInitialized"/> event.
+        /// Note however that this completion is free-threaded and complete immediately when the
+        /// underlying peer connection is initialized, whereas any <see cref="OnInitialized"/>
+        /// event handler is invoked when control returns to the main Unity app thread. The former
+        /// is faster, but does not allow accessing the underlying peer connection because it
+        /// returns before <see cref="OnPostInitialize"/> executed. Therefore it is generally
+        /// recommended to listen to the <see cref="OnInitialized"/> event, and ignore the returned
+        /// <see xref="System.Threading.Tasks.Task"/> object.
+        /// 
+        /// If the peer connection is already initialized, this method returns immediately with
+        /// a <see xref="System.Threading.Tasks.Task.CompletedTask"/> object. The caller can check
+        /// that the <see cref="Peer"/> property is non-<c>null</c> to confirmat that the connection
+        /// is in fact initialized.
         /// </remarks>
         public Task InitializeAsync(CancellationToken token = default(CancellationToken))
         {
@@ -302,11 +609,23 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 #endif
         }
 
-        public TransceiverInfo AddTransceiver(MediaKind kind)
+        /// <summary>
+        /// Add a new transceiver of the given kind to the peer connection.
+        /// This creates a media line, which expresses an intent from the user to get a transceiver.
+        /// The actual <see cref="WebRTC.Transceiver"/> object creation is delayed until a session
+        /// negotiation is completed.
+        /// The user can then assign the <see cref="MediaLine.Sender"/> and <see cref="MediaLine.Receiver"/>
+        /// fields to express their intent to send and/or receive some media through the transceiver.
+        /// This information is used in subsequent negotiations to derive a <see cref="Transceiver.Direction"/>
+        /// to negotiate.
+        /// </summary>
+        /// <param name="kind">The kind of media (audio or video) for the transceiver.</param>
+        /// <returns>A newly created media line for the future transceiver.</returns>
+        public MediaLine AddTransceiver(MediaKind kind)
         {
-            var tr = new TransceiverInfo { Kind = kind };
-            _transceivers.Add(tr);
-            return tr;
+            var ml = new MediaLine(kind);
+            _mediaLines.Add(ml);
+            return ml;
         }
 
         /// <summary>
@@ -321,7 +640,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
 
             // Batch all changes into a single offer
-            _suspendOffers = true;
+            AutoCreateOfferOnRenegotiationNeeded = false;
 
             // Add all new transceivers for local tracks. Since transceivers are only paired by negotiated mid,
             // we need to know which peer sends the offer before adding the transceivers on the offering side only,
@@ -334,11 +653,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 // In case this is not the first offer, some transceivers might already exist
                 var transceivers = _nativePeer.Transceivers;
-                int numNativeTransceivers = transceivers.Count;
+                int numTransceivers = transceivers.Count;
 
-                for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
+                for (int mlineIndex = 0; mlineIndex < _mediaLines.Count; ++mlineIndex)
                 {
-                    var transceiverInfo = _transceivers[mlineIndex];
+                    var mediaLine = _mediaLines[mlineIndex];
 
                     // Compute the transceiver desired direction based on what the local peer expects, both in terms
                     // of sending and in terms of receiving. Note that this means the remote peer will not be able to
@@ -347,112 +666,73 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     // and the remote track is generally not added yet at the beginning of the negotiation, but only when
                     // the remote description is applied (so for the offering side, at the end of the exchange when the
                     // answer is received).
-                    bool wantsSend = (transceiverInfo.Sender != null);
-                    bool wantsRecv = (transceiverInfo.Receiver != null);
+                    bool wantsSend = (mediaLine.Sender != null);
+                    bool wantsRecv = (mediaLine.Receiver != null);
                     var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.SendOnly)
                         : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
 
-                    // Create a new transceiver if none exists
-                    if (transceiverInfo.Transceiver == null)
+                    // Ensure the media line has a transceiver, and update its desired direction
+                    Transceiver tr = null;
+                    if (mlineIndex < transceivers.Count)
                     {
-                        if (mlineIndex < transceivers.Count)
-                        {
-                            // If kind mismatch, likely the transceiver order was changed, which is not allows.
-                            // Transceivers are immutably mapped to a unique mid when created.
-                            //< FIXME - What about stopped transceivers, is mlineIndex reused?
-                            Debug.Assert(transceiverInfo.Kind == transceivers[mlineIndex].MediaKind);
+                        tr = transceivers[mlineIndex];
 
-                            // Use an existing transceiver created during a previous negotiation
-                            transceiverInfo.Transceiver = transceivers[mlineIndex];
-                            transceiverInfo.Transceiver.DesiredDirection = wantsDir;
-                        }
-                        else
-                        {
-                            // Create a new transceiver if none exists
-                            if (transceiverInfo.Kind == MediaKind.Audio)
-                            {
-                                var settings = new AudioTransceiverInitSettings
-                                {
-                                    Name = $"mrsw#{mlineIndex}",
-                                    InitialDesiredDirection = wantsDir
-                                };
-                                transceiverInfo.Transceiver = _nativePeer.AddAudioTransceiver(settings);
-                                Debug.Assert(transceiverInfo.Transceiver.MlineIndex == mlineIndex);
-                            }
-                            else if (transceiverInfo.Kind == MediaKind.Video)
-                            {
-                                var settings = new VideoTransceiverInitSettings
-                                {
-                                    Name = $"mrsw#{mlineIndex}",
-                                    InitialDesiredDirection = wantsDir
-                                };
-                                transceiverInfo.Transceiver = _nativePeer.AddVideoTransceiver(settings);
-                                Debug.Assert(transceiverInfo.Transceiver.MlineIndex == mlineIndex);
-                            }
-                            else
-                            {
-                                throw new InvalidEnumArgumentException("Unknown media kind for transceiver");
-                            }
-                        }
+                        // If kind mismatch, likely the transceiver order was changed, which is not allowed.
+                        // Transceivers are immutably mapped to a unique mid when negotiated for the first time.
+                        // The only possible way to change this is stopping a tranceiver and recycling the m= line,
+                        // which is not supported by the C# library, so we ignore this case.
+                        Debug.Assert(mediaLine.Kind == tr.MediaKind);
+
+                        // Use an existing transceiver created during a previous negotiation
+                        tr.DesiredDirection = wantsDir;
                     }
                     else
                     {
-                        // Update the existing transceiver direction
-                        transceiverInfo.Transceiver.DesiredDirection = wantsDir;
+                        // Create a new transceiver if none exists
+                        if (mediaLine.Kind == MediaKind.Audio)
+                        {
+                            var settings = new AudioTransceiverInitSettings
+                            {
+                                Name = $"mrsw#{mlineIndex}",
+                                InitialDesiredDirection = wantsDir
+                            };
+                            tr = _nativePeer.AddAudioTransceiver(settings);
+                        }
+                        else if (mediaLine.Kind == MediaKind.Video)
+                        {
+                            var settings = new VideoTransceiverInitSettings
+                            {
+                                Name = $"mrsw#{mlineIndex}",
+                                InitialDesiredDirection = wantsDir
+                            };
+                            tr = _nativePeer.AddVideoTransceiver(settings);
+                        }
                     }
+                    Debug.Assert(tr != null);
+                    Debug.Assert(tr.MlineIndex == mlineIndex);
 
-                    // Create the local sender track and attach it to the transceiver
-                    if (wantsSend)
-                    {
-                        if (transceiverInfo.Kind == MediaKind.Audio)
-                        {
-                            var audioTransceiver = (AudioTransceiver)transceiverInfo.Transceiver;
-                            var audioSender = (AudioSender)transceiverInfo.Sender;
-                            //< FIXME - CreateOfferAsync()
-                            //await audioSender.InitAndAttachTrackAsync(audioTransceiver);
-                            audioSender.InitAndAttachTrackAsync(audioTransceiver).Wait();
-                        }
-                        else if (transceiverInfo.Kind == MediaKind.Video)
-                        {
-                            var videoTransceiver = (VideoTransceiver)transceiverInfo.Transceiver;
-                            var videoSender = (VideoSender)transceiverInfo.Sender;
-                            //< FIXME - CreateOfferAsync()
-                            //await videoSender.InitAndAttachTrackAsync(videoTransceiver);
-                            videoSender.InitAndAttachTrackAsync(videoTransceiver).Wait();
-                        }
-                    }
-
-                    // The remote track is only created when applying a description, so only attach
-                    // the transceiver for now.
-                    if (wantsRecv)
-                    {
-                        if (transceiverInfo.Kind == MediaKind.Audio)
-                        {
-                            var audioTransceiver = (AudioTransceiver)transceiverInfo.Transceiver;
-                            var audioReceiver = (AudioReceiver)transceiverInfo.Receiver;
-                            audioReceiver.AttachToTransceiver(audioTransceiver);
-                        }
-                        else if (transceiverInfo.Kind == MediaKind.Video)
-                        {
-                            var videoTransceiver = (VideoTransceiver)transceiverInfo.Transceiver;
-                            var videoReceiver = (VideoReceiver)transceiverInfo.Receiver;
-                            videoReceiver.AttachToTransceiver(videoTransceiver);
-                        }
-                    }
+                    // Update tracks
+                    //< FIXME - CreateOfferAsync() to use await instead of Wait()
+                    mediaLine.UpdateForCreateOfferAsync(tr).Wait();
                 }
 
                 // Ignore extra transceivers without a registered component to attach
-                for (int i = _transceivers.Count; i < numNativeTransceivers; ++i)
+                int numComponents = _mediaLines.Count;
+                if (numComponents < numTransceivers)
                 {
+                    string peerName = name;
                     _mainThreadWorkQueue.Enqueue(() =>
                     {
-                        Debug.LogWarning($"Peer connection {name} has transceiver #{i} but no sender/receiver component to process it. The transceiver will be ignored.");
+                        for (int i = numComponents; i < numTransceivers; ++i)
+                        {
+                            Debug.LogWarning($"Peer connection {peerName} has transceiver #{i} but no sender/receiver component to process it. The transceiver will be ignored.");
+                        }
                     });
                 }
             }
 
             // Create the offer
-            _suspendOffers = false;
+            AutoCreateOfferOnRenegotiationNeeded = true;
             return _nativePeer.CreateOffer();
         }
 
@@ -491,100 +771,59 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     // ones missing, while updating the transceiver info for existing ones, so that the answer that this
                     // peer will then send matches the reality of the existing Unity components.
                     var transceivers = _nativePeer.Transceivers;
-                    int numNativeTransceivers = transceivers.Count;
-                    int numExisting = Math.Min(numNativeTransceivers, _transceivers.Count);
+                    int numTransceivers = transceivers.Count;
+                    int numExisting = Math.Min(numTransceivers, _mediaLines.Count);
 
                     // Associate registered media senders/receivers with existing transceivers
-                    for (int i = 0; i < numExisting; ++i)
+                    for (int mlineIndex = 0; mlineIndex < numExisting; ++mlineIndex)
                     {
-                        var transceiverInfo = _transceivers[i];
-                        Transceiver tr = transceivers[i];
-                        transceiverInfo.Transceiver = tr;
+                        var mediaLine = _mediaLines[mlineIndex];
+                        Transceiver tr = transceivers[mlineIndex];
 
                         // If sending, fix up transceiver direction. Because the remote description was already applied before
                         // any sending transceiver was added (remember, the answering peer didn't add its media senders yet),
                         // all transceivers automatically added are in ReceiveOnly or Inactive state, since the implementation
                         // couldn't associate them with existing senders (none were added yet). This ensures that a TrackAdded
                         // event is fired on the remote peer when it receives the answer.
-                        bool wantsSend = (transceiverInfo.Sender != null);
-                        if (wantsSend)
+                        bool wantsSend = (mediaLine.Sender != null);
+                        bool wantsRecv = (mediaLine.Receiver != null);
                         {
-                            var desDir = tr.DesiredDirection;
-                            if (desDir == Transceiver.Direction.ReceiveOnly)
-                            {
-                                tr.DesiredDirection = Transceiver.Direction.SendReceive;
-                            }
-                            else if (desDir == Transceiver.Direction.Inactive)
-                            {
-                                tr.DesiredDirection = Transceiver.Direction.SendOnly;
-                            }
-
-                            // If the offer doesn't allow to send (2 cases above) then this below will generate a renegotiation
-                            // needed event, which will be temporarily delayed since we are in the middle of a negotiation already.
-                            if (transceiverInfo.Kind == MediaKind.Audio)
-                            {
-                                var audioTransceiver = (AudioTransceiver)tr;
-                                var audioSender = (AudioSender)transceiverInfo.Sender;
-                                await audioSender.InitAndAttachTrackAsync(audioTransceiver);
-                            }
-                            else if (transceiverInfo.Kind == MediaKind.Video)
-                            {
-                                var videoTransceiver = (VideoTransceiver)tr;
-                                var videoSender = (VideoSender)transceiverInfo.Sender;
-                                await videoSender.InitAndAttachTrackAsync(videoTransceiver);
-                            }
+                            var wantsDir = (wantsSend ? (wantsRecv ? Transceiver.Direction.SendReceive : Transceiver.Direction.SendOnly)
+                                : (wantsRecv ? Transceiver.Direction.ReceiveOnly : Transceiver.Direction.Inactive));
+                            tr.DesiredDirection = wantsDir;
                         }
 
-                        // If receiving, pair remote tracks just created by the offer description with the media receivers
-                        bool wantsRecv = (transceiverInfo.Receiver != null);
-                        if (wantsRecv)
+                        await mediaLine.UpdateOnReceiveOfferAsync(tr);
+
+                        // Check if the remote peer was planning to send something to this peer, but cannot.
+                        if (!wantsRecv)
                         {
-                            if (transceiverInfo.Kind == MediaKind.Audio)
-                            {
-                                var audioTransceiver = (AudioTransceiver)tr;
-                                if (audioTransceiver.RemoteTrack != null)
-                                {
-                                    var audioReceiver = (AudioReceiver)transceiverInfo.Receiver;
-                                    audioReceiver.OnPaired(audioTransceiver.RemoteTrack);
-                                }
-                            }
-                            else if (transceiverInfo.Kind == MediaKind.Video)
-                            {
-                                var videoTransceiver = (VideoTransceiver)tr;
-                                if (videoTransceiver.RemoteTrack != null)
-                                {
-                                    var videoReceiver = (VideoReceiver)transceiverInfo.Receiver;
-                                    videoReceiver.OnPaired(videoTransceiver.RemoteTrack);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Check if the remote peer was planning to send something to this peer
                             var desDir = tr.DesiredDirection;
                             if ((desDir == Transceiver.Direction.ReceiveOnly) || (desDir == Transceiver.Direction.SendReceive))
                             {
-                                int mlineIndex = i;
+                                string peerName = name;
+                                int idx = mlineIndex;
                                 _mainThreadWorkQueue.Enqueue(() =>
                                 {
-                                    Debug.LogWarning($"The remote peer of peer connection {name} offered to send through transceiver #{mlineIndex},"
-                                        + $" but peer connection {name} has no receiver component to process this media. The remote peer's media will not be negotiated."
-                                        + $" Ensure that peer connection {name} has a receiver component associated with its transceiver #{mlineIndex}.");
+                                    Debug.LogWarning($"The remote peer of peer connection {peerName} offered to send through transceiver #{idx},"
+                                        + $" but peer connection {peerName} has no receiver component to process this media. The remote peer's media will not be negotiated."
+                                        + $" Ensure that peer connection {peerName} has a receiver component associated with its transceiver #{idx}.");
                                 });
                             }
                         }
                     }
 
                     // Ignore extra transceivers without a registered component to attach
-                    if (numExisting < numNativeTransceivers)
+                    if (numExisting < numTransceivers)
                     {
+                        string peerName = name;
                         _mainThreadWorkQueue.Enqueue(() =>
                         {
-                            for (int mlineIndex = numExisting; mlineIndex < numNativeTransceivers; ++mlineIndex)
+                            for (int mlineIndex = numExisting; mlineIndex < numTransceivers; ++mlineIndex)
                             {
-                                Debug.LogWarning($"The remote peer of peer connection {name} has transceiver #{mlineIndex}, but the peer connection"
+                                Debug.LogWarning($"The remote peer of peer connection {peerName} has transceiver #{mlineIndex}, but the peer connection"
                                     + " doesn't have a local transceiver to pair with it. The remote peer's media for this transceiver will not be negotiated."
-                                    + $" Ensure that peer connection {name} has transceiver #{mlineIndex} and a receiver component associated with it.");
+                                    + $" Ensure that peer connection {peerName} has transceiver #{mlineIndex} and a receiver component associated with it.");
                             }
                         });
                     }
@@ -594,49 +833,27 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     // Much simpler, just pair the newly created remote tracks
                     var transceivers = _nativePeer.Transceivers;
                     int numNativeTransceivers = transceivers.Count;
-                    int numExisting = Math.Min(numNativeTransceivers, _transceivers.Count);
+                    int numExisting = Math.Min(numNativeTransceivers, _mediaLines.Count);
 
                     // Associate registered media senders/receivers with existing transceivers
                     for (int i = 0; i < numExisting; ++i)
                     {
-                        var transceiverInfo = _transceivers[i];
-                        Transceiver tr = transceivers[i];
-                        transceiverInfo.Transceiver = tr;
-
-                        bool wantsRecv = (transceiverInfo.Receiver != null);
-                        if (wantsRecv)
-                        {
-                            if (transceiverInfo.Kind == MediaKind.Audio)
-                            {
-                                var audioTransceiver = (AudioTransceiver)tr;
-                                if (audioTransceiver.RemoteTrack != null)
-                                {
-                                    var audioReceiver = (AudioReceiver)transceiverInfo.Receiver;
-                                    audioReceiver.OnPaired(audioTransceiver.RemoteTrack);
-                                }
-                            }
-                            else if (transceiverInfo.Kind == MediaKind.Video)
-                            {
-                                var videoTransceiver = (VideoTransceiver)tr;
-                                if (videoTransceiver.RemoteTrack != null)
-                                {
-                                    var videoReceiver = (VideoReceiver)transceiverInfo.Receiver;
-                                    videoReceiver.OnPaired(videoTransceiver.RemoteTrack);
-                                }
-                            }
-                        }
+                        var mediaLine = _mediaLines[i];
+                        Debug.Assert(mediaLine.Transceiver == transceivers[i]);
+                        mediaLine.UpdateOnReceiveAnswer();
                     }
 
                     // Ignore extra transceivers without a registered component to attach
                     if (numExisting < numNativeTransceivers)
                     {
+                        string peerName = name;
                         _mainThreadWorkQueue.Enqueue(() =>
                         {
                             for (int mlineIndex = numExisting; mlineIndex < numNativeTransceivers; ++mlineIndex)
                             {
-                                Debug.LogWarning($"The remote peer of peer connection {name} has transceiver #{mlineIndex}, but the peer connection"
+                                Debug.LogWarning($"The remote peer of peer connection {peerName} has transceiver #{mlineIndex}, but the peer connection"
                                     + " doesn't have a local transceiver to pair with it. The remote peer's media for this transceiver will not be negotiated."
-                                    + $" Ensure that peer connection {name} has transceiver #{mlineIndex} and a receiver component associated with it.");
+                                    + $" Ensure that peer connection {peerName} has transceiver #{mlineIndex} and a receiver component associated with it.");
                             }
                         });
                     }
@@ -798,9 +1015,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 }
                 else
                 {
+                    var ex = prevTask.Exception;
                     _mainThreadWorkQueue.Enqueue(() =>
                     {
-                        OnError.Invoke($"Audio/Video access failure: {prevTask.Exception.Message}.");
+                        OnError.Invoke($"Audio/Video access failure: {ex.Message}.");
                     });
                 }
             }, token);
@@ -829,13 +1047,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 token.ThrowIfCancellationRequested();
 
-                if (initTask.Exception != null)
+                Exception ex = initTask.Exception;
+                if (ex != null)
                 {
                     _mainThreadWorkQueue.Enqueue(() =>
                     {
                         var errorMessage = new StringBuilder();
                         errorMessage.Append("WebRTC plugin initializing failed. See full log for exception details.\n");
-                        Exception ex = initTask.Exception;
                         while (ex is AggregateException ae)
                         {
                             errorMessage.Append($"AggregationException: {ae.Message}\n");
@@ -858,7 +1076,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             Debug.Log("WebRTC plugin initialized successfully.");
 
-            _nativePeer.RenegotiationNeeded += Peer_RenegotiationNeeded;
+            if (AutoCreateOfferOnRenegotiationNeeded)
+            {
+                _nativePeer.RenegotiationNeeded += Peer_RenegotiationNeeded;
+            }
 
             // Once the peer is initialized, it becomes publicly accessible.
             // This prevent scripts from accessing it before it is initialized,
@@ -897,20 +1118,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             //}
         }
 
-        private void Peer_AudioTrackRemoved(RemoteAudioTrack track)
+        private void Peer_AudioTrackRemoved(AudioTransceiver transceiver, RemoteAudioTrack track)
         {
-            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
-            {
-                var transceiverInfo = _transceivers[mlineIndex];
-                if (transceiverInfo.Transceiver == track.Transceiver)
-                {
-                    Debug.Assert(transceiverInfo.Kind == MediaKind.Audio);
-                    if (transceiverInfo.Receiver != null)
-                    {
-                        (transceiverInfo.Receiver as AudioReceiver).OnUnpaired(track);
-                    }
-                }
-            }
+            Debug.Assert(track.Transceiver == null); // already removed
+            MediaLine mediaLine = _mediaLines.Find((MediaLine ml) => ml.Transceiver == transceiver);
+            Debug.Assert(mediaLine != null);
+            Debug.Assert(mediaLine.Kind == MediaKind.Audio);
+            mediaLine.OnUnpaired(track);
         }
 
         private void Peer_VideoTrackAdded(RemoteVideoTrack track)
@@ -934,20 +1148,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             //}
         }
 
-        private void Peer_VideoTrackRemoved(RemoteVideoTrack track)
+        private void Peer_VideoTrackRemoved(VideoTransceiver transceiver, RemoteVideoTrack track)
         {
-            for (int mlineIndex = 0; mlineIndex < _transceivers.Count; ++mlineIndex)
-            {
-                var transceiverInfo = _transceivers[mlineIndex];
-                if (transceiverInfo.Transceiver == track.Transceiver)
-                {
-                    Debug.Assert(transceiverInfo.Kind == MediaKind.Video);
-                    if (transceiverInfo.Receiver != null)
-                    {
-                        (transceiverInfo.Receiver as VideoReceiver).OnUnpaired(track);
-                    }
-                }
-            }
+            Debug.Assert(track.Transceiver == null); // already removed
+            MediaLine mediaLine = _mediaLines.Find((MediaLine ml) => ml.Transceiver == transceiver);
+            Debug.Assert(mediaLine != null);
+            Debug.Assert(mediaLine.Kind == MediaKind.Video);
+            mediaLine.OnUnpaired(track);
         }
 
         private void Signaler_LocalSdpReadyToSend(string type, string sdp)
@@ -975,26 +1182,26 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             switch (message.MessageType)
             {
-            case Signaler.Message.WireMessageType.Offer:
-                await SetRemoteDescriptionAsync("offer", message.Data);
-                // If we get an offer, we immediately send an answer back
-                _nativePeer.CreateAnswer();
-                break;
+                case Signaler.Message.WireMessageType.Offer:
+                    await SetRemoteDescriptionAsync("offer", message.Data);
+                    // If we get an offer, we immediately send an answer back
+                    _nativePeer.CreateAnswer();
+                    break;
 
-            case Signaler.Message.WireMessageType.Answer:
-                await SetRemoteDescriptionAsync("answer", message.Data);
-                break;
+                case Signaler.Message.WireMessageType.Answer:
+                    await SetRemoteDescriptionAsync("answer", message.Data);
+                    break;
 
-            case Signaler.Message.WireMessageType.Ice:
-                // TODO - This is NodeDSS-specific
-                // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
-                var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
-                // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
-                _nativePeer.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
-                break;
+                case Signaler.Message.WireMessageType.Ice:
+                    // TODO - This is NodeDSS-specific
+                    // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
+                    var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
+                    // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
+                    _nativePeer.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
+                    break;
 
-            default:
-                throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
+                default:
+                    throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
             }
         }
 
@@ -1002,9 +1209,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             // If already connected, update the connection on the fly.
             // If not, wait for user action and don't automatically connect.
-            if (_nativePeer.IsConnected && !_suspendOffers)
+            if (AutoCreateOfferOnRenegotiationNeeded && _nativePeer.IsConnected)
             {
-                CreateOffer();
+                // Defer to the main app thread, because this implementation likely will
+                // again trigger the renegotiation needed event, which is not re-entrant.
+                // This also allows accessing Unity objects, and makes it safer in general
+                // for other objects.
+                _mainThreadWorkQueue.Enqueue(() => CreateOffer());
             }
         }
 
