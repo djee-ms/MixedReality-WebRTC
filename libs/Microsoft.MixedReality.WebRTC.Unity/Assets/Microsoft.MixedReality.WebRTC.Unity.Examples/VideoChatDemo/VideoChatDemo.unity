@@ -298,9 +298,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec319cd4e697a04191b92210be8c03b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PeerConnection: {fileID: 1932579002}
   TrackName: 
   AutoAddTrack: 1
+  AutoPlayOnEnabled: 1
   AutoStartCapture: 1
   PreferredVideoCodec: 
   VideoStreamStarted:
@@ -714,12 +714,12 @@ PrefabInstance:
         type: 3}
       propertyPath: _transceivers.Array.data[2].Sender
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932579006}
     - target: {fileID: 114452439610826054, guid: 94759df28537c86408a84858950de05a,
         type: 3}
       propertyPath: _transceivers.Array.data[2].Receiver
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932579005}
     - target: {fileID: 114452439610826054, guid: 94759df28537c86408a84858950de05a,
         type: 3}
       propertyPath: _transceivers.Array.data[3].Type
@@ -729,6 +729,21 @@ PrefabInstance:
         type: 3}
       propertyPath: _transceivers.Array.data[2].Type
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114452439610826054, guid: 94759df28537c86408a84858950de05a,
+        type: 3}
+      propertyPath: _transceivers.Array.data[2].Kind
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114452439610826054, guid: 94759df28537c86408a84858950de05a,
+        type: 3}
+      propertyPath: _transceivers.Array.data[1].Kind
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114452439610826054, guid: 94759df28537c86408a84858950de05a,
+        type: 3}
+      propertyPath: _transceivers.Array.data[0].Kind
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 224130425995034712, guid: 94759df28537c86408a84858950de05a,
         type: 3}
@@ -857,18 +872,6 @@ PrefabInstance:
       objectReference: {fileID: 1932579005}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 94759df28537c86408a84858950de05a, type: 3}
---- !u!114 &1932579002 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114452439610826054, guid: 94759df28537c86408a84858950de05a,
-    type: 3}
-  m_PrefabInstance: {fileID: 1932579001}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64dff3d25ffa2ee4f907d396ed9c1ab0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1932579003 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2247456597125045658, guid: 94759df28537c86408a84858950de05a,
