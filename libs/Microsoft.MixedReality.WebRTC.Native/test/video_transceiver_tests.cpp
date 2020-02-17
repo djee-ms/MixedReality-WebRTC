@@ -62,6 +62,17 @@ using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
 
 }  // namespace
 
+TEST(VideoTransceiver, InvalidName) {
+  LocalPeerPairRaii pair;
+  VideoTransceiverHandle transceiver_handle1{};
+  VideoTransceiverInitConfig transceiver_config{};
+  transceiver_config.name = "invalid name with space";
+  ASSERT_EQ(Result::kInvalidParameter,
+            mrsPeerConnectionAddVideoTransceiver(
+                pair.pc1(), &transceiver_config, &transceiver_handle1));
+  ASSERT_EQ(nullptr, transceiver_handle1);
+}
+
 TEST(VideoTransceiver, SetDirection) {
   LocalPeerPairRaii pair;
   FakeInteropRaii interop({pair.pc1(), pair.pc2()});
@@ -204,6 +215,12 @@ TEST(VideoTransceiver, SetDirection) {
 
   // Clean-up
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
+}
+
+TEST(VideoTransceiver, SetDirection_InvalidHandle) {
+  ASSERT_EQ(Result::kInvalidNativeHandle,
+            mrsVideoTransceiverSetDirection(
+                nullptr, mrsTransceiverDirection::kRecvOnly));
 }
 
 TEST(VideoTransceiver, SetLocalTrackSendRecv) {
@@ -586,13 +603,8 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(VideoTransceiver, InvalidName) {
-  LocalPeerPairRaii pair;
-  VideoTransceiverHandle transceiver_handle1{};
-  VideoTransceiverInitConfig transceiver_config{};
-  transceiver_config.name = "invalid name with space";
-  ASSERT_EQ(Result::kInvalidParameter,
-            mrsPeerConnectionAddVideoTransceiver(
-                pair.pc1(), &transceiver_config, &transceiver_handle1));
-  ASSERT_EQ(nullptr, transceiver_handle1);
+TEST(VideoTransceiver, SetLocalTrack_InvalidHandle) {
+  LocalVideoTrackHandle dummy = (void*)0x1;  // looks legit
+  ASSERT_EQ(Result::kInvalidNativeHandle,
+            mrsVideoTransceiverSetLocalTrack(nullptr, dummy));
 }

@@ -41,6 +41,17 @@ using I420AudioFrameCallback = InteropCallback<const AudioFrame&>;
 
 }  // namespace
 
+TEST(AudioTransceiver, InvalidName) {
+  LocalPeerPairRaii pair;
+  AudioTransceiverHandle transceiver_handle1{};
+  AudioTransceiverInitConfig transceiver_config{};
+  transceiver_config.name = "invalid name with space";
+  ASSERT_EQ(Result::kInvalidParameter,
+            mrsPeerConnectionAddAudioTransceiver(
+                pair.pc1(), &transceiver_config, &transceiver_handle1));
+  ASSERT_EQ(nullptr, transceiver_handle1);
+}
+
 TEST(AudioTransceiver, SetDirection) {
   LocalPeerPairRaii pair;
 
@@ -193,13 +204,14 @@ TEST(AudioTransceiver, SetDirection) {
   mrsAudioTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(AudioTransceiver, InvalidName) {
-  LocalPeerPairRaii pair;
-  AudioTransceiverHandle transceiver_handle1{};
-  AudioTransceiverInitConfig transceiver_config{};
-  transceiver_config.name = "invalid name with space";
-  ASSERT_EQ(Result::kInvalidParameter,
-            mrsPeerConnectionAddAudioTransceiver(
-                pair.pc1(), &transceiver_config, &transceiver_handle1));
-  ASSERT_EQ(nullptr, transceiver_handle1);
+TEST(AudioTransceiver, SetDirection_InvalidHandle) {
+  ASSERT_EQ(Result::kInvalidNativeHandle,
+            mrsAudioTransceiverSetDirection(
+                nullptr, mrsTransceiverDirection::kRecvOnly));
+}
+
+TEST(AudioTransceiver, SetLocalTrack_InvalidHandle) {
+  LocalAudioTrackHandle dummy = (void*)0x1;  // looks legit
+  ASSERT_EQ(Result::kInvalidNativeHandle,
+            mrsAudioTransceiverSetLocalTrack(nullptr, dummy));
 }
