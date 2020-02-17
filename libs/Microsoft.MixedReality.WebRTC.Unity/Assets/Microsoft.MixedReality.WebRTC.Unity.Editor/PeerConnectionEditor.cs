@@ -58,6 +58,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
             texCoords.y *= texelSize.y;
             texCoords.width *= texelSize.x;
             texCoords.height *= texelSize.y;
+            if (EditorGUIUtility.isProSkin)
+            {
+                texCoords.x += 0.5f;
+            }
             GUI.DrawTextureWithTexCoords(rect, texture, texCoords);
         }
 
