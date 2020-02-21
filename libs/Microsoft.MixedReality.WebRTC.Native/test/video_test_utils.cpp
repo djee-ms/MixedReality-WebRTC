@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "../src/interop/external_video_track_source_interop.h"
+#include "../include/external_video_track_source_interop.h"
 
 #include "video_test_utils.h"
 

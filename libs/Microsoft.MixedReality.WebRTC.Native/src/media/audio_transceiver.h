@@ -4,7 +4,7 @@
 #pragma once
 
 #include "callback.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 #include "media/local_audio_track.h"
 #include "media/remote_audio_track.h"
 #include "media/transceiver.h"

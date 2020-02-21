@@ -4,7 +4,7 @@
 #pragma once
 
 #include "callback.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 #include "tracked_object.h"
 
 namespace rtc {

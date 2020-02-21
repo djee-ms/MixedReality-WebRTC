@@ -4,7 +4,7 @@
 #include "pch.h"
 
 #include "interop/audio_transceiver_interop.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 #include "interop/local_audio_track_interop.h"
 #include "interop/remote_audio_track_interop.h"
 

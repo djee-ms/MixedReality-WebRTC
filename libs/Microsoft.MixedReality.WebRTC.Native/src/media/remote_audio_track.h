@@ -5,7 +5,7 @@
 
 #include "audio_frame_observer.h"
 #include "callback.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 #include "media_track.h"
 #include "refptr.h"
 #include "tracked_object.h"
