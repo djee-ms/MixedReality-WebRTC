@@ -67,6 +67,8 @@ class ExternalVideoTrackSourceImpl : public ExternalVideoTrackSource,
 
   void FinishCreation() override;
 
+  void FinishCreation() override;
+
   /// Start the video capture. This will begin to produce video frames and start
   /// calling the video frame callback.
   void StartCapture();

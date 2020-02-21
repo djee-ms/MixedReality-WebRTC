@@ -57,7 +57,7 @@ namespace Microsoft.MixedReality.WebRTC.Interop
     {
         #region Unmanaged delegates
 
-        // Note - none of those method arguments can be SafeHandle; use IntPtr instead.
+        // Note - Those methods cannot use SafeHandle with reverse P/Invoke; use IntPtr instead.
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public unsafe delegate void RequestExternalI420AVideoFrameCallback(IntPtr userData,
@@ -67,10 +67,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public unsafe delegate void RequestExternalArgb32VideoFrameCallback(IntPtr userData,
             /*ExternalVideoTrackSourceHandle*/IntPtr sourceHandle, uint requestId, long timestampMs);
 
-        #endregion
-
-
-        // Note: Unity IL2CPP doesn't support reverse-P/Invoke of SafeHandle
         [MonoPInvokeCallback(typeof(RequestExternalI420AVideoFrameCallback))]
         public static void RequestI420AVideoFrameFromExternalSourceCallback(IntPtr userData,
             /*ExternalVideoTrackSourceHandle*/IntPtr sourceHandle, uint requestId, long timestampMs)
@@ -85,7 +81,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             args.FrameRequestCallback.Invoke(in request);
         }
 
-        // Note: Unity IL2CPP doesn't support reverse-P/Invoke of SafeHandle
         [MonoPInvokeCallback(typeof(RequestExternalArgb32VideoFrameCallback))]
         public static void RequestArgb32VideoFrameFromExternalSourceCallback(IntPtr userData,
             /*ExternalVideoTrackSourceHandle*/IntPtr sourceHandle, uint requestId, long timestampMs)
@@ -99,6 +94,8 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             };
             args.FrameRequestCallback.Invoke(in request);
         }
+
+        #endregion
 
 
         public class VideoFrameRequestCallbackArgs
