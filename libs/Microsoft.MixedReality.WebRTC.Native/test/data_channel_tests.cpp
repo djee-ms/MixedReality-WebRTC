@@ -3,8 +3,7 @@
 
 #include "pch.h"
 
-#include "data_channel.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 
 namespace {
 
@@ -22,6 +21,11 @@ FakeIterop_DataChannelCreate(mrsPeerConnectionInteropHandle /*parent*/,
 // OnDataChannelAdded
 using DataAddedCallback =
     InteropCallback<mrsDataChannelInteropHandle, DataChannelHandle>;
+
+void MRS_CALL SetEventOnCompleted(void* user_data) {
+  Event* ev = (Event*)user_data;
+  ev->Set();
+}
 
 void MRS_CALL StaticMessageCallback(void* user_data,
                                     const void* data,
@@ -71,18 +75,22 @@ TEST(DataChannel, InBand) {
   // Setup signaling
   SdpCallback sdp1_cb(pc1.handle(), [&pc2](const char* type,
                                            const char* sdp_data) {
+    Event ev;
     ASSERT_EQ(Result::kSuccess,
               mrsPeerConnectionSetRemoteDescriptionAsync(
-                  pc2.handle(), type, sdp_data, nullptr, nullptr));
+                  pc2.handle(), type, sdp_data, &SetEventOnCompleted, &ev));
+    ev.Wait();
     if (kOfferString == type) {
       ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateAnswer(pc2.handle()));
     }
   });
   SdpCallback sdp2_cb(pc2.handle(), [&pc1](const char* type,
                                            const char* sdp_data) {
+    Event ev;
     ASSERT_EQ(Result::kSuccess,
               mrsPeerConnectionSetRemoteDescriptionAsync(
-                  pc1.handle(), type, sdp_data, nullptr, nullptr));
+                  pc1.handle(), type, sdp_data, &SetEventOnCompleted, &ev));
+    ev.Wait();
     if (kOfferString == type) {
       ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateAnswer(pc1.handle()));
     }
@@ -141,10 +149,11 @@ TEST(DataChannel, InBand) {
           mrsDataChannelInteropHandle data_channel_wrapper,
           DataChannelHandle data_channel) {
         ASSERT_EQ(kFakeInteropDataChannelHandle, data_channel_wrapper);
-        auto data2 =
-            (Microsoft::MixedReality::WebRTC::DataChannel*)data_channel;
-        ASSERT_NE(nullptr, data2);
-        ASSERT_EQ(channel_label, data2->label());
+        ASSERT_NE(nullptr, data_channel);
+
+        // TODO expose label
+        // ASSERT_EQ(channel_label, data2->label());
+
         data2_ev.Set();
       };
   mrsPeerConnectionRegisterDataChannelAddedCallback(pc2.handle(),
@@ -164,8 +173,10 @@ TEST(DataChannel, InBand) {
                                     pc1.handle(), interopHandle, data_config,
                                     callbacks, &data1_handle));
     ASSERT_NE(nullptr, data1_handle);
-    auto data1 = (Microsoft::MixedReality::WebRTC::DataChannel*)data1_handle;
-    ASSERT_EQ(channel_label, data1->label());
+
+    // TODO expose label
+    // ASSERT_EQ(channel_label, data1->label());
+
     ASSERT_EQ(true, data2_ev.WaitFor(30s));
 
     // Clean-up

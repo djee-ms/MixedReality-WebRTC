@@ -3,24 +3,15 @@
 
 #pragma once
 
-#if defined(WINUWP)
-// Non-API helper. Returned object can be deleted at any time in theory.
-// In practice because it's provided by a global object it's safe.
-//< TODO - Remove that, clean-up API, this is bad (c).
-rtc::Thread* UnsafeGetWorkerThread();
-#endif
-
 #include "audio_frame.h"
 #include "export.h"
-#include "mrs_errors.h"
+#include "result.h"
 #include "video_frame.h"
 
 extern "C" {
 
 /// 32-bit boolean for interop API.
 enum class mrsBool : int32_t { kTrue = -1, kFalse = 0 };
-
-using mrsResult = Microsoft::MixedReality::WebRTC::Result;
 
 //
 // Generic utilities
@@ -881,10 +872,13 @@ mrsPeerConnectionSetBitrate(PeerConnectionHandle peer_handle,
                             int start_bitrate_bps,
                             int max_bitrate_bps) noexcept;
 
+/// Parameter-less callback.
 using ActionCallback = void(MRS_CALL*)(void* user_data);
 
 /// Set a remote description received from a remote peer via the signaling
-/// service.
+/// service. Once the remote description is applied, the action callback is
+/// invoked to signal the caller it is safe to continue the negotiation, and in
+/// particular it is safe to call |CreateAnswer()|.
 MRS_API mrsResult MRS_CALL
 mrsPeerConnectionSetRemoteDescriptionAsync(PeerConnectionHandle peerHandle,
                                            const char* type,
@@ -960,6 +954,10 @@ MRS_API mrsBool MRS_CALL mrsSdpIsValidToken(const char* token) noexcept;
 /// Must be the same as PeerConnection::FrameHeightRoundMode.
 enum class FrameHeightRoundMode : int32_t { kNone = 0, kCrop = 1, kPad = 2 };
 
+/// Check if the given SDP token is valid according to the RFC 4566 standard.
+/// See https://tools.ietf.org/html/rfc4566#page-43 for details.
+MRS_API mrsBool MRS_CALL mrsSdpIsValidToken(const char* token) noexcept;
+
 /// See PeerConnection::SetFrameHeightRoundMode.
 MRS_API void MRS_CALL mrsSetFrameHeightRoundMode(FrameHeightRoundMode value);
 
@@ -981,6 +979,124 @@ MRS_API void MRS_CALL mrsMemCpyStride(void* dst,
                                       int32_t src_stride,
                                       int32_t elem_size,
                                       int32_t elem_count) noexcept;
+
+//
+// Stats extraction.
+//
+
+/// Subset of RTCDataChannelStats. See
+/// https://www.w3.org/TR/webrtc-stats/#dcstats-dict*
+struct mrsDataChannelStats {
+  int64_t timestamp_us;
+  int64_t data_channel_identifier;
+  uint32_t messages_sent;
+  uint64_t bytes_sent;
+  uint32_t messages_received;
+  uint64_t bytes_received;
+};
+
+/// Subset of RTCMediaStreamTrack (audio sender) and RTCOutboundRTPStreamStats.
+/// See https://www.w3.org/TR/webrtc-stats/#raststats-dict* and
+/// https://www.w3.org/TR/webrtc-stats/#sentrtpstats-dict*
+struct mrsAudioSenderStats {
+  int64_t track_stats_timestamp_us;
+  const char* track_identifier;
+  double audio_level;
+  double total_audio_energy;
+  double total_samples_duration;
+
+  int64_t rtp_stats_timestamp_us;
+  uint32_t packets_sent;
+  uint64_t bytes_sent;
+};
+
+/// Subset of RTCMediaStreamTrack (audio receiver) and RTCInboundRTPStreamStats.
+/// See https://www.w3.org/TR/webrtc-stats/#aststats-dict* and
+/// https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*
+struct mrsAudioReceiverStats {
+  int64_t track_stats_timestamp_us;
+  const char* track_identifier;
+  double audio_level;
+  double total_audio_energy;
+  uint64_t total_samples_received;
+  double total_samples_duration;
+
+  int64_t rtp_stats_timestamp_us;
+  uint32_t packets_received;
+  uint64_t bytes_received;
+};
+
+/// Subset of RTCMediaStreamTrack (video sender) and RTCOutboundRTPStreamStats.
+/// See https://www.w3.org/TR/webrtc-stats/#vsstats-dict* and
+/// https://www.w3.org/TR/webrtc-stats/#sentrtpstats-dict*
+struct mrsVideoSenderStats {
+  int64_t track_stats_timestamp_us;
+  const char* track_identifier;
+  uint32_t frames_sent;
+  uint32_t huge_frames_sent;
+
+  int64_t rtp_stats_timestamp_us;
+  uint32_t packets_sent;
+  uint64_t bytes_sent;
+  uint32_t frames_encoded;
+};
+
+/// Subset of RTCMediaStreamTrack (video receiver) + RTCInboundRTPStreamStats.
+/// See https://www.w3.org/TR/webrtc-stats/#rvststats-dict* and
+/// https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*
+struct mrsVideoReceiverStats {
+  int64_t track_stats_timestamp_us;
+  const char* track_identifier;
+  uint32_t frames_received;
+  uint32_t frames_dropped;
+
+  int64_t rtp_stats_timestamp_us;
+  uint32_t packets_received;
+  uint64_t bytes_received;
+  uint32_t frames_decoded;
+};
+
+/// Subset of RTCTransportStats. See
+/// https://www.w3.org/TR/webrtc-stats/#transportstats-dict*
+struct mrsTransportStats {
+  int64_t timestamp_us;
+  uint64_t bytes_sent;
+  uint64_t bytes_received;
+};
+
+/// Handle to a WebRTC stats report.
+using mrsStatsReportHandle = const void*;
+
+/// Called by mrsPeerConnectionGetSimpleStats when a stats report is ready.
+using PeerConnectionGetSimpleStatsCallback =
+    void(MRS_CALL*)(void* user_data, mrsStatsReportHandle stats_report);
+
+/// Called by mrsStatsReportGetObjects for every instance of the requested stats
+/// type.
+using mrsStatsReportGetObjectCallback =
+    void(MRS_CALL*)(void* user_data, const void* stats_object);
+
+/// Get a stats report for the connection.
+/// The report passed to the callback must be released when finished through
+/// mrsStatsReportRemoveRef.
+MRS_API mrsResult MRS_CALL
+mrsPeerConnectionGetSimpleStats(PeerConnectionHandle peer_handle,
+                                PeerConnectionGetSimpleStatsCallback callback,
+                                void* user_data);
+
+/// Get all the instances of the requested stats type.
+/// The type must be one of "DataChannelStats", "AudioSenderStats",
+/// "AudioReceiverStats", "VideoSenderStats", "VideoReceiverStats",
+/// "TransportStats".
+MRS_API mrsResult MRS_CALL
+mrsStatsReportGetObjects(mrsStatsReportHandle report_handle,
+                         const char* stats_type,
+                         mrsStatsReportGetObjectCallback callback,
+                         void* user_data);
+
+/// Release a stats report.
+MRS_API mrsResult MRS_CALL
+mrsStatsReportRemoveRef(mrsStatsReportHandle stats_report);
 
 }  // extern "C"
 
@@ -1005,3 +1121,4 @@ inline bool operator==(mrsShutdownOptions a, uint32_t b) noexcept {
 inline bool operator!=(mrsShutdownOptions a, uint32_t b) noexcept {
   return ((uint32_t)a != b);
 }
+

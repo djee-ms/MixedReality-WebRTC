@@ -318,10 +318,12 @@ namespace TestAppUwp
             localSettings.Values["LocalPeerID"] = localPeerUidTextBox.Text;
             localSettings.Values["RemotePeerID"] = remotePeerUidTextBox.Text;
             localSettings.Values["PreferredAudioCodec"] = PreferredAudioCodec;
-            localSettings.Values["PreferredAudioCodecExtraParams"] = PreferredAudioCodecExtraParamsTextBox.Text;
+            localSettings.Values["PreferredAudioCodecExtraParamsLocal"] = PreferredAudioCodecExtraParamsLocalTextBox.Text;
+            localSettings.Values["PreferredAudioCodecExtraParamsRemote"] = PreferredAudioCodecExtraParamsRemoteTextBox.Text;
             localSettings.Values["PreferredAudioCodec_Custom"] = PreferredAudioCodec_Custom.IsChecked.GetValueOrDefault() ? CustomPreferredAudioCodec.Text : "";
             localSettings.Values["PreferredVideoCodec"] = PreferredVideoCodec;
-            localSettings.Values["PreferredVideoCodecExtraParams"] = PreferredVideoCodecExtraParamsTextBox.Text;
+            localSettings.Values["PreferredVideoCodecExtraParamsLocal"] = PreferredVideoCodecExtraParamsLocalTextBox.Text;
+            localSettings.Values["PreferredVideoCodecExtraParamsRemote"] = PreferredVideoCodecExtraParamsRemoteTextBox.Text;
             localSettings.Values["PreferredVideoCodec_Custom"] = PreferredVideoCodec_Custom.IsChecked.GetValueOrDefault() ? CustomPreferredVideoCodec.Text : "";
         }
 
@@ -415,14 +417,21 @@ namespace TestAppUwp
                     }
                 }
             }
-
-            if (localSettings.Values.TryGetValue("PreferredAudioCodecExtraParams", out object preferredAudioExtraObj))
+            if (localSettings.Values.TryGetValue("PreferredAudioCodecExtraParamsLocal", out object preferredAudioParamsLocalObj))
             {
-                if (preferredAudioExtraObj is string str)
+                if (preferredAudioParamsLocalObj is string str)
                 {
-                    PreferredAudioCodecExtraParamsTextBox.Text = str;
+                    PreferredAudioCodecExtraParamsLocalTextBox.Text = str;
                 }
             }
+            if (localSettings.Values.TryGetValue("PreferredAudioCodecExtraParamsRemote", out object preferredAudioParamsRemoteObj))
+            {
+                if (preferredAudioParamsRemoteObj is string str)
+                {
+                    PreferredAudioCodecExtraParamsRemoteTextBox.Text = str;
+                }
+            }
+
             if (localSettings.Values.TryGetValue("PreferredVideoCodec", out object preferredVideoObj))
             {
                 if (preferredVideoObj is string str)
@@ -453,12 +462,18 @@ namespace TestAppUwp
                     }
                 }
             }
-
-            if (localSettings.Values.TryGetValue("PreferredVideoCodecExtraParams", out object preferredVideoExtraObj))
+            if (localSettings.Values.TryGetValue("PreferredVideoCodecExtraParamsLocal", out object preferredVideoParamsLocalObj))
             {
-                if (preferredVideoExtraObj is string str)
+                if (preferredVideoParamsLocalObj is string str)
                 {
-                    PreferredVideoCodecExtraParamsTextBox.Text = str;
+                    PreferredVideoCodecExtraParamsLocalTextBox.Text = str;
+                }
+            }
+            if (localSettings.Values.TryGetValue("PreferredVideoCodecExtraParamsRemote", out object preferredVideoParamsRemoteObj))
+            {
+                if (preferredVideoParamsRemoteObj is string str)
+                {
+                    PreferredVideoCodecExtraParamsRemoteTextBox.Text = str;
                 }
             }
         }
@@ -546,7 +561,7 @@ namespace TestAppUwp
             // (first library call) which needs to be done on a background thread.
             await Task.Run(() => Library.SetShutdownOptions(Library.ShutdownOptions.FailOnLiveObjects | Library.ShutdownOptions.LogLiveObjects));
 
-            // Populate the combo box with the PeerConnection.VideoProfileKind enum
+            // Populate the combo box with the VideoProfileKind enum
             {
                 var values = Enum.GetValues(typeof(VideoProfileKind));
                 KnownVideoProfileKindComboBox.ItemsSource = values.Cast<VideoProfileKind>();
@@ -856,31 +871,38 @@ namespace TestAppUwp
             });
         }
 
-        private async void DssSignaler_OnMessage(NodeDssSignaler.Message message)
+        private void DssSignaler_OnMessage(NodeDssSignaler.Message message)
         {
-            switch (message.MessageType)
+            Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-            case NodeDssSignaler.Message.WireMessageType.Offer:
-                await _peerConnection.SetRemoteDescriptionAsync("offer", message.Data);
-                // If we get an offer, we immediately send an answer back once the offer is applied
-                _peerConnection.CreateAnswer();
-                break;
+                // Ensure that the filtering values are up to date before passing the message on.
+                UpdateCodecFilters();
+            }).AsTask().ContinueWith(async _ =>
+            {
+                switch (message.MessageType)
+                {
+                    case NodeDssSignaler.Message.WireMessageType.Offer:
+                        await _peerConnection.SetRemoteDescriptionAsync("offer", message.Data);
+                        // If we get an offer, we immediately send an answer back once the offer is applied
+                        _peerConnection.CreateAnswer();
+                        break;
 
-            case NodeDssSignaler.Message.WireMessageType.Answer:
-                _ = _peerConnection.SetRemoteDescriptionAsync("answer", message.Data);
-                break;
+                    case NodeDssSignaler.Message.WireMessageType.Answer:
+                        _ = _peerConnection.SetRemoteDescriptionAsync("answer", message.Data);
+                        break;
 
-            case NodeDssSignaler.Message.WireMessageType.Ice:
-                // TODO - This is NodeDSS-specific
-                // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
-                var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
-                // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
-                _peerConnection.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
-                break;
+                    case NodeDssSignaler.Message.WireMessageType.Ice:
+                        // TODO - This is NodeDSS-specific
+                        // this "parts" protocol is defined above, in OnIceCandiateReadyToSend listener
+                        var parts = message.Data.Split(new string[] { message.IceDataSeparator }, StringSplitOptions.RemoveEmptyEntries);
+                        // Note the inverted arguments; candidate is last here, but first in OnIceCandiateReadyToSend
+                        _peerConnection.AddIceCandidate(parts[2], int.Parse(parts[1]), parts[0]);
+                        break;
 
-            default:
-                throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
-            }
+                    default:
+                        throw new InvalidOperationException($"Unhandled signaler message type '{message.MessageType}'");
+                }
+            }, TaskScheduler.Default);
         }
 
         private void DssSignaler_OnFailure(Exception e)
@@ -1509,12 +1531,15 @@ namespace TestAppUwp
                 // and is in kStable state, and it will get discarded so remote video will not start).
                 _renegotiationOfferEnabled = false;
 
+                // Ensure that the filtering values are up to date before creating new tracks.
+                UpdateCodecFilters();
+
+                // The default start bitrate is quite low (300 kbps); use a higher value to get
+                // better quality on local network.
+                _peerConnection.SetBitrate(startBitrateBps: (uint)(width * height * framerate / 20));
+
                 try
                 {
-                    // The default start bitrate is quite low (300 kbps); use a higher value to get
-                    // better quality on local network.
-                    _peerConnection.SetBitrate(startBitrateBps: (uint)(width * height * framerate / 20));
-
                     // Create the local audio track captured from the local microphone
                     _localAudioTrack = await LocalAudioTrack.CreateFromDeviceAsync();
                     _localAudioTrack.AudioFrameReady += LocalAudioTrack_FrameReady;
@@ -1588,6 +1613,16 @@ namespace TestAppUwp
             //remoteLateText.Text = $"Late: {remoteVideoBridge.LateFrame:F2}";
         }
 
+        void UpdateCodecFilters()
+        {
+            _peerConnection.PreferredAudioCodec = PreferredAudioCodec;
+            _peerConnection.PreferredAudioCodecExtraParamsRemote = PreferredAudioCodecExtraParamsRemoteTextBox.Text;
+            _peerConnection.PreferredAudioCodecExtraParamsLocal = PreferredAudioCodecExtraParamsLocalTextBox.Text;
+            _peerConnection.PreferredVideoCodec = PreferredVideoCodec;
+            _peerConnection.PreferredVideoCodecExtraParamsRemote = PreferredVideoCodecExtraParamsRemoteTextBox.Text;
+            _peerConnection.PreferredVideoCodecExtraParamsLocal = PreferredVideoCodecExtraParamsLocalTextBox.Text;
+        }
+
         private void CreateOfferButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!PluginInitialized)
@@ -1598,10 +1633,8 @@ namespace TestAppUwp
             createOfferButton.IsEnabled = false;
             createOfferButton.Content = "Joining...";
 
-            _peerConnection.PreferredAudioCodec = PreferredAudioCodec;
-            _peerConnection.PreferredAudioCodecExtraParams = PreferredAudioCodecExtraParamsTextBox.Text;
-            _peerConnection.PreferredVideoCodec = PreferredVideoCodec;
-            _peerConnection.PreferredVideoCodecExtraParams = PreferredVideoCodecExtraParamsTextBox.Text;
+            // Ensure that the filtering values are up to date before starting to create messages.
+            UpdateCodecFilters();
             _peerConnection.CreateOffer();
         }
 

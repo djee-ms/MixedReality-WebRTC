@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#include "../include/mrs_errors.h"
-#include "../src/interop/interop_api.h"
-#include "../src/interop/peer_connection_interop.h"
+#include "../include/interop_api.h"
+#include "../include/peer_connection_interop.h"
 
 using namespace Microsoft::MixedReality::WebRTC;
 
@@ -326,7 +325,7 @@ class LocalPeerPairRaii {
     }
   }
 
-  static void SetEventOnCompleted(void* user_data) {
+  static void MRS_CALL SetEventOnCompleted(void* user_data) {
     Event* ev = (Event*)user_data;
     ev->Set();
   }

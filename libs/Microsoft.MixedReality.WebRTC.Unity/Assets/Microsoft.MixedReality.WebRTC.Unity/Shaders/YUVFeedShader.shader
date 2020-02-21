@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// Simple shader mapping a YUV video feed using a Standard lit model.
 Shader "Video/YUVFeedShader (standard lit)"
 {
     Properties

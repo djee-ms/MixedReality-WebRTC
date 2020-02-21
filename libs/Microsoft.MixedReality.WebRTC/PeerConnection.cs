@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -713,10 +714,10 @@ namespace Microsoft.MixedReality.WebRTC
 
         /// <summary>
         /// Initialize the current peer connection object asynchronously.
-        /// 
+        ///
         /// Most other methods will fail unless this call completes successfully, as it initializes the
         /// underlying native implementation object required to create and manipulate the peer connection.
-        /// 
+        ///
         /// Once this call asynchronously completed, the <see cref="Initialized"/> property becomes <c>true</c>.
         /// </summary>
         /// <param name="config">Configuration for initializing the peer connection.</param>
@@ -1118,7 +1119,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="reliable">Indicates whether data channel messages are reliably delivered
         /// (see <see cref="DataChannel.Reliable"/>).</param>
         /// <returns>Returns a task which completes once the data channel is created.</returns>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         /// <exception cref="SctpNotNegotiatedException">SCTP not negotiated. Call <see cref="CreateOffer()"/> first.</exception>
         /// <exception xref="ArgumentOutOfRangeException">Invalid data channel ID, must be in [0:65535].</exception>
         /// <remarks>
@@ -1157,7 +1158,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="reliable">Indicates whether data channel messages are reliably delivered
         /// (see <see cref="DataChannel.Reliable"/>).</param>
         /// <returns>Returns a task which completes once the data channel is created.</returns>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         /// <exception cref="SctpNotNegotiatedException">SCTP not negotiated. Call <see cref="CreateOffer()"/> first.</exception>
         /// <exception xref="ArgumentOutOfRangeException">Invalid data channel ID, must be in [0:65535].</exception>
         /// <remarks>
@@ -1178,7 +1179,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="reliable">Indicates whether data channel messages are reliably delivered
         /// (see <see cref="DataChannel.Reliable"/>).</param>
         /// <returns>Returns a task which completes once the data channel is created.</returns>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         /// <exception xref="InvalidOperationException">SCTP not negotiated.</exception>
         /// <exception xref="ArgumentOutOfRangeException">Invalid data channel ID, must be in [0:65535].</exception>
         private async Task<DataChannel> AddDataChannelAsyncImpl(int id, string label, bool ordered, bool reliable)
@@ -1240,7 +1241,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="sdpMid"></param>
         /// <param name="sdpMlineindex"></param>
         /// <param name="candidate"></param>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         public void AddIceCandidate(string sdpMid, int sdpMlineindex, string candidate)
         {
             MainEventSource.Log.AddIceCandidate(sdpMid, sdpMlineindex, candidate);
@@ -1254,7 +1255,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// to allow the user to send that message to the remote peer via its selected signaling solution.
         /// </summary>
         /// <returns><c>true</c> if the offer creation task was successfully submitted.</returns>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         /// <remarks>
         /// The SDP offer message is not successfully created until the <see cref="LocalSdpReadytoSend"/>
         /// event is triggered, and may still fail even if this method returns <c>true</c>, for example if
@@ -1275,7 +1276,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// successfully completed and applied the remote offer.
         /// </summary>
         /// <returns><c>true</c> if the answer creation task was successfully submitted.</returns>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         /// <remarks>
         /// The SDP answer message is not successfully created until the <see cref="LocalSdpReadytoSend"/>
         /// event is triggered, and may still fail even if this method returns <c>true</c>, for example if
@@ -1317,7 +1318,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <param name="sdp">The content of the SDP message</param>
         /// <returns>Returns a task which completes once the remote description has been applied and transceivers
         /// have been updated.</returns>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         public Task SetRemoteDescriptionAsync(string type, string sdp)
         {
             ThrowIfConnectionNotOpen();
@@ -1326,12 +1327,383 @@ namespace Microsoft.MixedReality.WebRTC
 
         #endregion
 
+        /// <summary>
+        /// Subset of RTCDataChannelStats. See <see href="https://www.w3.org/TR/webrtc-stats/#dcstats-dict*"/>
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct DataChannelStats
+        {
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the statistics. For remote statistics, this is
+            /// the time at which the information reached the local endpoint.
+            /// </summary>
+            public long TimestampUs;
+
+            /// <summary>
+            /// <see cref="DataChannel.ID"/> of the data channel associated with these statistics.
+            /// </summary>
+            public long DataChannelIdentifier;
+
+            /// <summary>
+            /// Total number of API message event sent.
+            /// </summary>
+            public uint MessagesSent;
+
+            /// <summary>
+            /// Total number of payload bytes sent, excluding headers and paddings.
+            /// </summary>
+            public ulong BytesSent;
+
+            /// <summary>
+            /// Total number of API message events received.
+            /// </summary>
+            public uint MessagesReceived;
+
+            /// <summary>
+            /// Total number of payload bytes received, excluding headers and paddings.
+            /// </summary>
+            public ulong BytesReceived;
+        }
+
+        /// <summary>
+        /// Subset of RTCMediaStreamTrack (audio sender) and RTCOutboundRTPStreamStats.
+        /// See <see href="https://www.w3.org/TR/webrtc-stats/#raststats-dict*"/>
+        /// and <see href="https://www.w3.org/TR/webrtc-stats/#sentrtpstats-dict*"/>.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public unsafe struct AudioSenderStats
+        {
+            #region Track statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the audio statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long TrackStatsTimestampUs;
+
+            /// <summary>
+            /// Track identifier.
+            /// </summary>
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string TrackIdentifier;
+
+            /// <summary>
+            /// Linear audio level of the media source, in [0:1] range, averaged over a small interval.
+            /// </summary>
+            public double AudioLevel;
+
+            /// <summary>
+            /// Total audio energy of the media source. For multi-channel sources (stereo, etc.) this is
+            /// the highest energy of any of the channels for each sample.
+            /// </summary>
+            public double TotalAudioEnergy;
+
+            /// <summary>
+            /// Total duration in seconds of all the samples produced by the media source for the lifetime
+            /// of the underlying internal statistics object. Like <see cref="TotalAudioEnergy"/> this is not
+            /// affected by the number of channels per sample.
+            /// </summary>
+            public double TotalSamplesDuration;
+
+            #endregion
+
+
+            #region RTP statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the RTP statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long RtpStatsTimestampUs;
+
+            /// <summary>
+            /// Total number of RTP packets sent for this SSRC.
+            /// </summary>
+            public uint PacketsSent;
+
+            /// <summary>
+            /// Total number of bytes sent for this SSRC.
+            /// </summary>
+            public ulong BytesSent;
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Subset of RTCMediaStreamTrack (audio receiver) and RTCInboundRTPStreamStats.
+        /// See <see href="https://www.w3.org/TR/webrtc-stats/#aststats-dict*"/>
+        /// and <see href="https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*"/>.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct AudioReceiverStats
+        {
+            #region Track statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the statistics. For remote statistics, this is
+            /// the time at which the information reached the local endpoint.
+            /// </summary>
+            public long TrackStatsTimestampUs;
+
+            /// <summary>
+            /// Track identifier.
+            /// </summary>
+            public string TrackIdentifier;
+
+            /// <summary>
+            /// Linear audio level of the receiving track, in [0:1] range, averaged over a small interval.
+            /// </summary>
+            public double AudioLevel;
+
+            /// <summary>
+            /// Total audio energy of the received track. For multi-channel sources (stereo, etc.) this is
+            /// the highest energy of any of the channels for each sample.
+            /// </summary>
+            public double TotalAudioEnergy;
+
+            /// <summary>
+            /// Total number of RTP samples received for this audio stream.
+            /// Like <see cref="TotalAudioEnergy"/> this is not affected by the number of channels per sample.
+            /// </summary>
+            public double TotalSamplesReceived;
+
+            /// <summary>
+            /// Total duration in seconds of all the samples received (and thus counted by <see cref="TotalSamplesReceived"/>).
+            /// Like <see cref="TotalAudioEnergy"/> this is not affected by the number of channels per sample.
+            /// </summary>
+            public double TotalSamplesDuration;
+
+            #endregion
+
+
+            #region RTP statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the RTP statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long RtpStatsTimestampUs;
+
+            /// <summary>
+            /// Total number of RTP packets received for this SSRC.
+            /// </summary>
+            public uint PacketsReceived;
+
+            /// <summary>
+            /// Total number of bytes received for this SSRC.
+            /// </summary>
+            public ulong BytesReceived;
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Subset of RTCMediaStreamTrack (video sender) and RTCOutboundRTPStreamStats.
+        /// See <see href="https://www.w3.org/TR/webrtc-stats/#vsstats-dict*"/>
+        /// and <see href="https://www.w3.org/TR/webrtc-stats/#sentrtpstats-dict*"/>.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct VideoSenderStats
+        {
+            #region Track statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the track statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long TrackStatsTimestampUs;
+
+            /// <summary>
+            /// Track identifier.
+            /// </summary>
+            public string TrackIdentifier;
+
+            /// <summary>
+            /// Total number of frames sent on this RTP stream.
+            /// </summary>
+            public uint FramesSent;
+
+            /// <summary>
+            /// Total number of huge frames sent by this RTP stream. Huge frames are frames that have
+            /// an encoded size at least 2.5 times the average size of the frames.
+            /// </summary>
+            public uint HugeFramesSent;
+
+            #endregion
+
+
+            #region RTP statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the RTP statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long RtpStatsTimestampUs;
+
+            /// <summary>
+            /// Total number of RTP packets sent for this SSRC.
+            /// </summary>
+            public uint PacketsSent;
+
+            /// <summary>
+            /// Total number of bytes sent for this SSRC.
+            /// </summary>
+            public ulong BytesSent;
+
+            /// <summary>
+            /// Total number of frames successfully encoded for this RTP media stream.
+            /// </summary>
+            public uint FramesEncoded;
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Subset of RTCMediaStreamTrack (video receiver) + RTCInboundRTPStreamStats.
+        /// See <see href="https://www.w3.org/TR/webrtc-stats/#rvststats-dict*"/>
+        /// and <see href="https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*"/>
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct VideoReceiverStats
+        {
+            #region Track statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the track statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long TrackStatsTimestampUs;
+
+            /// <summary>
+            /// Track identifier.
+            /// </summary>
+            public string TrackIdentifier;
+
+            /// <summary>
+            /// Total number of complete frames received on this RTP stream.
+            /// </summary>
+            public uint FramesReceived;
+
+            /// <summary>
+            /// Total number since the receiver was created of frames dropped prior to decode or
+            /// dropped because the frame missed its display deadline for this receiver's track.
+            /// </summary>
+            public uint FramesDropped;
+
+            #endregion
+
+
+            #region RTP statistics
+
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the RTP statistics. For remote statistics,
+            /// this is the time at which the information reached the local endpoint.
+            /// </summary>
+            public long RtpStatsTimestampUs;
+
+            /// <summary>
+            /// Total number of RTP packets received for this SSRC.
+            /// </summary>
+            public uint PacketsReceived;
+
+            /// <summary>
+            /// Total number of bytes received for this SSRC.
+            /// </summary>
+            public ulong BytesReceived;
+
+            /// <summary>
+            /// Total number of frames correctly decoded for this RTP stream, that would be displayed
+            /// if no frames are dropped.
+            /// </summary>
+            public uint FramesDecoded;
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Subset of RTCTransportStats.
+        /// See <see href="https://www.w3.org/TR/webrtc-stats/#transportstats-dict*"/>.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct TransportStats
+        {
+            /// <summary>
+            /// Unix timestamp (time since Epoch) of the statistics. For remote statistics, this is
+            /// the time at which the information reached the local endpoint.
+            /// </summary>
+            public long TimestampUs;
+
+            /// <summary>
+            /// Total number of payload bytes sent on this <see cref="PeerConnection"/>, excluding
+            /// headers and paddings.
+            /// </summary>
+            public ulong BytesSent;
+
+            /// <summary>
+            /// Total number of payload bytes received on this <see cref="PeerConnection"/>, excluding
+            /// headers and paddings.
+            /// </summary>
+            public ulong BytesReceived;
+        }
+
+        /// <summary>
+        /// Snapshot of the statistics relative to a peer connection/track.
+        /// The various stats objects can be read through <see cref="GetStats{T}"/>.
+        /// </summary>
+        public class StatsReport : IDisposable
+        {
+            internal class Handle : SafeHandle
+            {
+                internal Handle(IntPtr h) : base(IntPtr.Zero, true) { handle = h; }
+                public override bool IsInvalid => handle == IntPtr.Zero;
+                protected override bool ReleaseHandle()
+                {
+                    PeerConnectionInterop.StatsReport_RemoveRef(handle);
+                    return true;
+                }
+            }
+
+            private Handle _handle;
+
+            internal StatsReport(IntPtr h) { _handle = new Handle(h); }
+
+            /// <summary>
+            /// Get all the instances of a specific stats type in the report.
+            /// </summary>
+            /// <typeparam name="T">
+            /// Must be one of <see cref="DataChannelStats"/>, <see cref="AudioSenderStats"/>,
+            /// <see cref="AudioReceiverStats"/>, <see cref="VideoSenderStats"/>, <see cref="VideoReceiverStats"/>,
+            /// <see cref="TransportStats"/>.
+            /// </typeparam>
+            public IEnumerable<T> GetStats<T>()
+            {
+                return PeerConnectionInterop.GetStatsObject<T>(_handle);
+            }
+
+            /// <summary>
+            /// Dispose of the report.
+            /// </summary>
+            public void Dispose()
+            {
+                ((IDisposable)_handle).Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Get a snapshot of the statistics relative to the peer connection.
+        /// </summary>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
+        public Task<StatsReport> GetSimpleStatsAsync()
+        {
+            ThrowIfConnectionNotOpen();
+            return PeerConnectionInterop.GetSimpleStatsAsync(_nativePeerhandle);
+        }
 
         /// <summary>
         /// Utility to throw an exception if a method is called before the underlying
         /// native peer connection has been initialized.
         /// </summary>
-        /// <exception xref="InvalidOperationException">The peer connection is not intialized.</exception>
+        /// <exception xref="InvalidOperationException">The peer connection is not initialized.</exception>
         private void ThrowIfConnectionNotOpen()
         {
             lock (_openCloseLock)
@@ -1496,13 +1868,13 @@ namespace Microsoft.MixedReality.WebRTC
         /// [HoloLens 1 only]
         /// Use this function to select whether resolutions where height is not multiple of 16 pixels
         /// should be cropped, padded, or left unchanged.
-        /// 
+        ///
         /// Default is <see cref="FrameHeightRoundMode.Crop"/> to avoid severe artifacts produced by
         /// the H.264 hardware encoder on HoloLens 1 due to a bug with the encoder. This is the
         /// recommended value, and should be used unless cropping discards valuable data in the top and
         /// bottom rows for a given usage, in which case <see cref="FrameHeightRoundMode.Pad"/> can
         /// be used as a replacement but may still produce some mild artifacts.
-        /// 
+        ///
         /// This has no effect on other platforms.
         /// </summary>
         /// <param name="value">The rounding mode for video frames.</param>
@@ -1530,6 +1902,42 @@ namespace Microsoft.MixedReality.WebRTC
             DataChannelRemoved?.Invoke(dataChannel);
         }
 
+        private static string ForceSdpCodecs(string sdp, string audio, string audioParams, string video, string videoParams)
+        {
+            if ((audio.Length > 0) || (video.Length > 0))
+            {
+                // +1 for space/semicolon before params.
+                var initialLength = sdp.Length +
+                    audioParams.Length + 1 +
+                    videoParams.Length + 1;
+                var builder = new StringBuilder(initialLength);
+                ulong lengthInOut = (ulong)builder.Capacity + 1; // includes null terminator
+                var audioFilter = new Utils.SdpFilter
+                {
+                    CodecName = audio,
+                    ExtraParams = audioParams
+                };
+                var videoFilter = new Utils.SdpFilter
+                {
+                    CodecName = video,
+                    ExtraParams = videoParams
+                };
+
+                uint res = Utils.SdpForceCodecs(sdp, audioFilter, videoFilter, builder, ref lengthInOut);
+                if (res == Utils.MRS_E_INVALID_PARAMETER && lengthInOut > (ulong)builder.Capacity + 1)
+                {
+                    // New string is longer than the estimate (there might be multiple tracks).
+                    // Increase the capacity and retry.
+                    builder.Capacity = (int)lengthInOut - 1;
+                    res = Utils.SdpForceCodecs(sdp, audioFilter, videoFilter, builder, ref lengthInOut);
+                }
+                Utils.ThrowOnErrorCode(res);
+                builder.Length = (int)lengthInOut - 1; // discard the null terminator
+                return builder.ToString();
+            }
+            return sdp;
+        }
+
         /// <summary>
         /// Callback invoked by the internal WebRTC implementation when it needs a SDP message
         /// to be dispatched to the remote peer.
@@ -1542,35 +1950,17 @@ namespace Microsoft.MixedReality.WebRTC
 
             // If the user specified a preferred audio or video codec, manipulate the SDP message
             // to exclude other codecs if the preferred one is supported.
-            if ((PreferredAudioCodec.Length > 0) || (PreferredVideoCodec.Length > 0))
-            {
-                // Only filter offers, so that both peers think it's each other's fault
-                // for only supporting a single codec.
-                // Filtering an answer will not work because the internal implementation
-                // already decided what codec to use before this callback is called, so
-                // that will only confuse the other peer.
-                if (type == "offer")
-                {
-                    var builder = new StringBuilder(sdp.Length);
-                    ulong lengthInOut = (ulong)builder.Capacity + 1; // includes null terminator
-                    var audioFilter = new Utils.SdpFilter
-                    {
-                        CodecName = PreferredAudioCodec,
-                        ExtraParams = PreferredAudioCodecExtraParams
-                    };
-                    var videoFilter = new Utils.SdpFilter
-                    {
-                        CodecName = PreferredVideoCodec,
-                        ExtraParams = PreferredVideoCodecExtraParams
-                    };
-                    uint res = Utils.SdpForceCodecs(sdp, audioFilter, videoFilter, builder, ref lengthInOut);
-                    Utils.ThrowOnErrorCode(res);
-                    builder.Length = (int)lengthInOut - 1; // discard the null terminator
-                    sdp = builder.ToString();
-                }
-            }
+            // Outgoing answers are filtered for the only purpose of adding the extra params to them.
+            // The codec itself will have already been selected when filtering the incoming offer that prompted
+            // the answer. Note that filtering the codec in the answer without doing it in
+            // the offer first will leave the connection in an inconsistent state.
+            string newSdp = ForceSdpCodecs(sdp: sdp,
+                audio: PreferredAudioCodec,
+                audioParams: PreferredAudioCodecExtraParamsRemote,
+                video: PreferredVideoCodec,
+                videoParams: PreferredVideoCodecExtraParamsRemote);
 
-            LocalSdpReadytoSend?.Invoke(type, sdp);
+            LocalSdpReadytoSend?.Invoke(type, newSdp);
         }
 
         internal void OnIceCandidateReadytoSend(string candidate, int sdpMlineindex, string sdpMid)

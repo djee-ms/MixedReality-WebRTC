@@ -7,7 +7,7 @@
 
 #include "audio_frame_observer.h"
 #include "data_channel.h"
-#include "local_video_track.h"
+#include "media/local_video_track.h"
 #include "media/local_audio_track.h"
 #include "media/remote_audio_track.h"
 #include "media/remote_video_track.h"
@@ -17,7 +17,7 @@
 
 // Internal
 #include "interop/global_factory.h"
-#include "interop/interop_api.h"
+#include "interop_api.h"
 
 #include <functional>
 
@@ -396,11 +396,11 @@ class PeerConnectionImpl : public PeerConnection,
   void OnLocalTrackRemovedFromVideoTransceiver(VideoTransceiver& transceiver,
                                                LocalVideoTrack& track) override;
 
- protected:
   /// The underlying PC object from the core implementation. This is NULL
   /// after |Close()| is called.
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_;
 
+ protected:
   /// Peer connection name assigned by the user. This has no meaning for the
   /// implementation.
   std::string name_;
@@ -2314,6 +2314,10 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   }
   peer->SetPeerImpl(std::move(impl));
   return RefPtr<PeerConnection>(peer);
+}
+
+void PeerConnection::GetStats(webrtc::RTCStatsCollectorCallback* callback) {
+  ((PeerConnectionImpl*)this)->peer_->GetStats(callback);
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// Simple shader mapping a YUV video feed without any lighting model.
 Shader "Video/YUVFeedShader (unlit)"
 {
     Properties

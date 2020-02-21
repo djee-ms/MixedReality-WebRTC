@@ -507,7 +507,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// Unlike the public <see cref="Peer"/> property, this is never <c>NULL</c>,
         /// but can be an uninitialized peer.
         /// </remarks>
-        private WebRTC.PeerConnection _nativePeer;
+        private WebRTC.PeerConnection _nativePeer = null;
 
         /// <summary>
         /// List of transceiver media lines and their associated media sender/receiver components.
@@ -888,6 +888,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
                 // Close the connection and release native resources.
                 _nativePeer.Dispose();
+                _nativePeer = null;
             }
         }
 
@@ -1189,7 +1190,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     break;
 
                 case Signaler.Message.WireMessageType.Answer:
-                    await SetRemoteDescriptionAsync("answer", message.Data);
+                    _ = _nativePeer.SetRemoteDescriptionAsync("answer", message.Data);
                     break;
 
                 case Signaler.Message.WireMessageType.Ice:

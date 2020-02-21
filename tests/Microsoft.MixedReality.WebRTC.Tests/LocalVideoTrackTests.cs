@@ -357,6 +357,27 @@ namespace Microsoft.MixedReality.WebRTC.Tests
 #if !MRSW_EXCLUDE_DEVICE_TESTS
 
         [Test]
+        public async Task AddLocalVideoTrackAsync_Null()
+        {
+            LocalVideoTrack track1 = await pc1_.AddLocalVideoTrackAsync();
+            Assert.NotNull(track1);
+            Assert.AreEqual(pc1_, track1.PeerConnection);
+            pc1_.RemoveLocalVideoTrack(track1);
+            track1.Dispose();
+        }
+
+        [Test]
+        public async Task AddLocalVideoTrackAsync_Default()
+        {
+            var settings = new LocalVideoTrackSettings();
+            LocalVideoTrack track1 = await pc1_.AddLocalVideoTrackAsync(settings);
+            Assert.NotNull(track1);
+            Assert.AreEqual(pc1_, track1.PeerConnection);
+            pc1_.RemoveLocalVideoTrack(track1);
+            track1.Dispose();
+        }
+
+        [Test]
         public async Task BeforeConnect()
         {
             // Create video transceiver on #1

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// Simple shader mapping an ARGB32 video feed using a Standard lit model.
 Shader "Video/ARGBFeedShader (standard lit)"
 {
     Properties
@@ -9,7 +10,6 @@ Shader "Video/ARGBFeedShader (standard lit)"
     }
     SubShader
     {
-
         Tags { "RenderType" = "Opaque" }
 
         CGPROGRAM
@@ -20,6 +20,7 @@ Shader "Video/ARGBFeedShader (standard lit)"
             float2 uv_MainTex;
         };
 
+        // Texture containing the ARGB32 video frames
         sampler2D _MainTex;
 
         void surf(Input IN, inout SurfaceOutput o)
