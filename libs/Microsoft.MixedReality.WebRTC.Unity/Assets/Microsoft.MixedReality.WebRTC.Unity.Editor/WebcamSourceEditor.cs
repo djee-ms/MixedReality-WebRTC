@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -76,7 +76,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
         /// </summary>
         void OnEnable()
         {
-            _peerConnection = serializedObject.FindProperty("PeerConnection");
             _trackName = serializedObject.FindProperty("TrackName");
             _autoStartCapture = serializedObject.FindProperty("AutoStartCapture");
             _preferredVideoCodec = serializedObject.FindProperty("PreferredVideoCodec");
@@ -100,7 +99,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
             serializedObject.Update();
 
             GUILayout.Space(10);
-            EditorGUILayout.PropertyField(_peerConnection);
             EditorGUILayout.PropertyField(_trackName);
             EditorGUILayout.PropertyField(_autoStartCapture);
 
