@@ -950,7 +950,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// </remarks>
         private void OnDestroy()
         {
-            if (Signaler != null)
+            // Check that _nativePeer was not already shut down
+            if ((Signaler != null) && (_nativePeer != null))
             {
                 _nativePeer.IceCandidateReadytoSend -= Signaler_IceCandidateReadytoSend;
                 _nativePeer.LocalSdpReadytoSend -= Signaler_LocalSdpReadyToSend;
