@@ -159,6 +159,7 @@
     <ClInclude Include="..\media\remote_video_track.h" />
     <ClInclude Include="..\media\transceiver.h" />
     <ClInclude Include="..\media\video_transceiver.h" />
+  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

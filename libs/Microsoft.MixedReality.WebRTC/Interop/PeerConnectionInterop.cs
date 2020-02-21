@@ -347,13 +347,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             return res;
         }
 
-        [MonoPInvokeCallback(typeof(ActionDelegate))]
-        public static void RemoteDescriptionApplied(IntPtr args)
-        {
-            var remoteDesc = Utils.ToWrapper<RemoteDescArgs>(args);
-            remoteDesc.completedEvent.Set();
-        }
-
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         internal struct MarshaledInteropCallbacks
         {

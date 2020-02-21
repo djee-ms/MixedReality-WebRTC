@@ -720,7 +720,7 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
   }
 
   // Create the audio track source
-MRS_API void MRS_CALL mrsPeerConnectionRegisterLocalAudioFrameCallback(
+  rtc::scoped_refptr<webrtc::AudioSourceInterface> audio_source =
       pc_factory->CreateAudioSource(cricket::AudioOptions());
   if (!audio_source) {
     RTC_LOG(LS_ERROR) << "Failed to create local audio source.";
@@ -728,7 +728,6 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterLocalAudioFrameCallback(
   }
 
   // Create the audio track
-MRS_API void MRS_CALL mrsPeerConnectionRegisterRemoteAudioFrameCallback(
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track =
       pc_factory->CreateAudioTrack(track_name, audio_source);
   if (!audio_track) {
