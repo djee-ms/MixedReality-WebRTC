@@ -132,7 +132,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
                     EditorGUI.LabelField(new Rect(x0, y0, 20, 20), $"{index}");
 
                     // Audio or video icon for transceiver kind
-                    MediaKind kind = (MediaKind)element.FindPropertyRelative("Kind").intValue;
+                    MediaKind kind = (MediaKind)element.FindPropertyRelative("_kind").intValue;
                     System.Type senderType, receiverType;
                     if (kind == MediaKind.Audio)
                     {

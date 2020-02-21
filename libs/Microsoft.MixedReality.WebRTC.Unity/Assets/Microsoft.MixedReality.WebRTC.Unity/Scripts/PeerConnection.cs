@@ -108,7 +108,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// This is assiged when the media line is created with <see cref="PeerConnection.AddTransceiver(MediaKind)"/>
         /// and is immutable for the lifetime of the peer connection.
         /// </summary>
-        public MediaKind Kind { get; }
+        [SerializeField]
+        private MediaKind _kind;
+        public MediaKind Kind => _kind;
 
         /// <summary>
         /// Media sender producing the media to send through the transceiver attached to this media line.
@@ -151,7 +153,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         public MediaLine(MediaKind kind)
         {
-            Kind = kind;
+            _kind = kind;
         }
 
         internal async Task AttachTrackAsync()
