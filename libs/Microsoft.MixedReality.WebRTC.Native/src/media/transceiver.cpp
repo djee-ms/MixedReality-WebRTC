@@ -5,6 +5,7 @@
 
 #include "peer_connection.h"
 #include "transceiver.h"
+#include "utils.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 

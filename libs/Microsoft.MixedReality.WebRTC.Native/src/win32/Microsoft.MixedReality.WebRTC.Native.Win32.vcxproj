@@ -152,6 +152,7 @@
     <ClInclude Include="..\str.h" />
     <ClInclude Include="..\targetver.h" />
     <ClInclude Include="..\tracked_object.h" />
+    <ClInclude Include="..\utils.h" />
     <ClInclude Include="..\video_frame_observer.h" />
     <ClInclude Include="..\media\local_audio_track.h" />
     <ClInclude Include="..\media\media_track.h" />

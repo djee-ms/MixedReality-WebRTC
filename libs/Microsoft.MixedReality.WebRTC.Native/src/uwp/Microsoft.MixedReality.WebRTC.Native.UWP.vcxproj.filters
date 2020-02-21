@@ -130,6 +130,7 @@
     <ClInclude Include="..\media\video_transceiver.h">
       <Filter>media</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../docs/design.md" />

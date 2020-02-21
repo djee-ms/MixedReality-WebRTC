@@ -140,6 +140,7 @@
     <ClInclude Include="..\interop\remote_video_track_interop.h" />
     <ClInclude Include="..\interop\video_transceiver_interop.h" />
     <ClInclude Include="..\media\audio_transceiver.h" />
+    <ClInclude Include="..\utils.h" />
     <ClInclude Include="..\video_frame_observer.h" />
     <ClInclude Include="..\media\local_audio_track.h" />
     <ClInclude Include="..\media\media_track.h" />

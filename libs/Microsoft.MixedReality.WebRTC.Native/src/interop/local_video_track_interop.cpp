@@ -7,8 +7,9 @@
 
 #include "global_factory.h"
 #include "local_video_track_interop.h"
-#include "media/local_video_track.h"
 #include "media/external_video_track_source_impl.h"
+#include "media/local_video_track.h"
+#include "utils.h"
 
 using namespace Microsoft::MixedReality::WebRTC;
 

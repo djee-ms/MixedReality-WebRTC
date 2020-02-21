@@ -137,6 +137,7 @@
     <ClInclude Include="..\interop\video_transceiver_interop.h">
       <Filter>interop</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="../../docs/design.md" />

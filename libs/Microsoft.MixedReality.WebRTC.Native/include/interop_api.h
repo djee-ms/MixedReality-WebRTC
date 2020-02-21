@@ -1094,26 +1094,3 @@ MRS_API mrsResult MRS_CALL
 mrsStatsReportRemoveRef(mrsStatsReportHandle stats_report);
 
 }  // extern "C"
-
-inline bool IsStringNullOrEmpty(const char* str) noexcept {
-  return ((str == nullptr) || (str[0] == '\0'));
-}
-
-inline mrsShutdownOptions operator|(mrsShutdownOptions a,
-                                    mrsShutdownOptions b) noexcept {
-  return (mrsShutdownOptions)((uint32_t)a | (uint32_t)b);
-}
-
-inline mrsShutdownOptions operator&(mrsShutdownOptions a,
-                                    mrsShutdownOptions b) noexcept {
-  return (mrsShutdownOptions)((uint32_t)a & (uint32_t)b);
-}
-
-inline bool operator==(mrsShutdownOptions a, uint32_t b) noexcept {
-  return ((uint32_t)a == b);
-}
-
-inline bool operator!=(mrsShutdownOptions a, uint32_t b) noexcept {
-  return ((uint32_t)a != b);
-}
-
