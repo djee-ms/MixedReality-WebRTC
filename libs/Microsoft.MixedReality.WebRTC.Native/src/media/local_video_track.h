@@ -53,7 +53,7 @@ class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
   ~LocalVideoTrack() override;
 
   /// Get the name of the local video track.
-  std::string GetName() const noexcept override;
+  std::string GetName() const noexcept override { return track_name_; }
 
   /// Enable or disable the video track. An enabled track streams its content
   /// from its source to the remote peer. A disabled video track only sends
@@ -107,6 +107,9 @@ class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsLocalVideoTrackInteropHandle interop_handle_{};
+
+  /// Cached track name, to avoid dispatching on signaling thread.
+  const std::string track_name_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

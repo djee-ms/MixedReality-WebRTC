@@ -41,7 +41,7 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
   MRS_API ~RemoteAudioTrack() override;
 
   /// Get the name of the remote audio track.
-  MRS_API std::string GetName() const noexcept override;
+  MRS_API std::string GetName() const noexcept override { return track_name_; }
 
   /// Enable or disable the audio track. An enabled track streams its content
   /// from its source to the remote peer. A disabled audio track only sends
@@ -84,6 +84,9 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsRemoteAudioTrackInteropHandle interop_handle_{};
+
+  /// Cached track name, to avoid dispatching on signaling thread.
+  const std::string track_name_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

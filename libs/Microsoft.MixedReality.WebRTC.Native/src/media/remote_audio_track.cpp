@@ -19,7 +19,8 @@ RemoteAudioTrack::RemoteAudioTrack(
       track_(std::move(track)),
       receiver_(std::move(receiver)),
       transceiver_(std::move(transceiver)),
-      interop_handle_(interop_handle) {
+      interop_handle_(interop_handle),
+      track_name_(track_->id()) {
   RTC_CHECK(owner_);
   RTC_CHECK(track_);
   RTC_CHECK(receiver_);
@@ -35,18 +36,6 @@ RemoteAudioTrack::~RemoteAudioTrack() {
   GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kRemoteAudioTrack,
                                              this);
   RTC_CHECK(!owner_);
-}
-
-std::string RemoteAudioTrack::GetName() const noexcept {
-  // Use stream ID #0 as track name for pairing with track on remote peer, as
-  // track names are not guaranteed to be paired with Unified Plan (and were
-  // actually neither with Plan B, but that worked in practice).
-  auto ids = receiver_->stream_ids();
-  if (!ids.empty()) {
-    return ids[0];
-  }
-  // Fallback in case something went wrong, to help diagnose.
-  return track_->id();
 }
 
 webrtc::AudioTrackInterface* RemoteAudioTrack::impl() const {

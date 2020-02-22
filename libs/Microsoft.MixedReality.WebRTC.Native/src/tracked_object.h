@@ -16,6 +16,11 @@ class TrackedObject : public RefCountedBase {
   /// object, and may be user-set or reused from another field of the object,
   /// but will generally allow the user to identify the object instance during
   /// debugging. There is no other meaning to this.
+  /// Note that this may be called while the library is not initialized,
+  /// including during static deinitializing of the process, therefore the
+  /// implementation must not rely on WebRTC objects. Generally the
+  /// implementation should locally cache a string value to comply with this
+  /// limitation.
   virtual std::string GetName() const = 0;
 };
 

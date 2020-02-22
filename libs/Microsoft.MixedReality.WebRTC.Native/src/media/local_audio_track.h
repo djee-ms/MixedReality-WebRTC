@@ -3,12 +3,12 @@
 
 #pragma once
 
+#include "audio_frame_observer.h"
 #include "callback.h"
 #include "interop_api.h"
 #include "media/media_track.h"
 #include "refptr.h"
 #include "tracked_object.h"
-#include "audio_frame_observer.h"
 
 namespace rtc {
 template <typename T>
@@ -53,7 +53,7 @@ class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
   MRS_API ~LocalAudioTrack() override;
 
   /// Get the name of the local audio track.
-  MRS_API std::string GetName() const noexcept override;
+  MRS_API std::string GetName() const noexcept override { return track_name_; }
 
   /// Enable or disable the audio track. An enabled track streams its content
   /// from its source to the remote peer. A disabled audio track only sends
@@ -107,6 +107,9 @@ class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsLocalAudioTrackInteropHandle interop_handle_{};
+
+  /// Cached track name, to avoid dispatching on signaling thread.
+  const std::string track_name_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

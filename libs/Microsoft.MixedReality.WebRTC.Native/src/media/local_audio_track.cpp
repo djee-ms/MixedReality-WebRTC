@@ -12,7 +12,10 @@ namespace Microsoft::MixedReality::WebRTC {
 LocalAudioTrack::LocalAudioTrack(
     rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
     mrsLocalAudioTrackInteropHandle interop_handle) noexcept
-    : MediaTrack(), track_(std::move(track)), interop_handle_(interop_handle) {
+    : MediaTrack(),
+      track_(std::move(track)),
+      interop_handle_(interop_handle),
+      track_name_(track_->id()) {
   RTC_CHECK(track_);
   GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
@@ -29,7 +32,8 @@ LocalAudioTrack::LocalAudioTrack(
       track_(std::move(track)),
       sender_(std::move(sender)),
       transceiver_(std::move(transceiver)),
-      interop_handle_(interop_handle) {
+      interop_handle_(interop_handle),
+      track_name_(track_->id()) {
   RTC_CHECK(owner_);
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
@@ -49,20 +53,6 @@ LocalAudioTrack::~LocalAudioTrack() {
                                              this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
-}
-
-std::string LocalAudioTrack::GetName() const noexcept {
-  // Use stream ID #0 as track name for pairing with track on remote peer, as
-  // track names are not guaranteed to be paired with Unified Plan (and were
-  // actually neither with Plan B, but that worked in practice).
-  if (sender_) {
-    auto ids = sender_->stream_ids();
-    if (!ids.empty()) {
-      return ids[0];
-    }
-  }
-  // Fallback in case something went wrong, to help diagnose.
-  return track_->id();
 }
 
 void LocalAudioTrack::SetEnabled(bool enabled) const noexcept {
