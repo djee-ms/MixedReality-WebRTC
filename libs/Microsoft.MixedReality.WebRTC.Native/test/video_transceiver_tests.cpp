@@ -335,6 +335,7 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
             mrsExternalVideoTrackSourceCreateFromI420ACallback(
                 &VideoTestUtils::MakeTestFrame, nullptr, &source_handle1));
   ASSERT_NE(nullptr, source_handle1);
+  mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create the local video track (#1)
   LocalVideoTrackHandle track_handle1{};
@@ -525,6 +526,7 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
             mrsExternalVideoTrackSourceCreateFromI420ACallback(
                 &VideoTestUtils::MakeTestFrame, nullptr, &source_handle1));
   ASSERT_NE(nullptr, source_handle1);
+  mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create the local video track (#1)
   LocalVideoTrackHandle track_handle1{};
