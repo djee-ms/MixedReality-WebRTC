@@ -41,7 +41,7 @@ class Transceiver : public TrackedObject {
       PeerConnection& owner,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept;
 
-  MRS_API ~Transceiver() override;
+  ~Transceiver() override;
 
   std::string GetName() const override;
 
@@ -49,10 +49,10 @@ class Transceiver : public TrackedObject {
   /// type to static_cast<> a |Transceiver| pointer to. If this is |kAudio| then
   /// the object is an |AudioTransceiver| instance, and if this is |kVideo| then
   /// the object is a |VideoTransceiver| instance.
-  MRS_API MediaKind GetMediaKind() const noexcept { return kind_; }
+  MediaKind GetMediaKind() const noexcept { return kind_; }
 
   /// Get the current transceiver direction.
-  MRS_API OptDirection GetDirection() const noexcept { return direction_; }
+  OptDirection GetDirection() const noexcept { return direction_; }
 
   //
   // Interop callbacks

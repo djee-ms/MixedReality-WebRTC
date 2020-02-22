@@ -28,10 +28,10 @@ class MediaTrack : public TrackedObject {
  public:
   MediaTrack() noexcept;
   MediaTrack(PeerConnection& owner) noexcept;
-  MRS_API ~MediaTrack() override;
+  ~MediaTrack() override;
 
   /// Get the kind of track.
-  MRS_API TrackKind GetKind() const noexcept { return kind_; }
+  TrackKind GetKind() const noexcept { return kind_; }
 
  protected:
   /// Weak reference to the PeerConnection object owning this track.

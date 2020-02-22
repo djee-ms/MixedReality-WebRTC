@@ -31,17 +31,17 @@ class AudioTransceiver : public Transceiver {
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
       mrsAudioTransceiverInteropHandle interop_handle) noexcept;
 
-  MRS_API ~AudioTransceiver() override;
+  ~AudioTransceiver() override;
 
   Result SetDirection(Direction new_direction) noexcept;
 
-  MRS_API Result SetLocalTrack(RefPtr<LocalAudioTrack> local_track) noexcept;
+  Result SetLocalTrack(RefPtr<LocalAudioTrack> local_track) noexcept;
 
-  MRS_API RefPtr<LocalAudioTrack> GetLocalTrack() noexcept {
+  RefPtr<LocalAudioTrack> GetLocalTrack() noexcept {
     return local_track_;
   }
 
-  MRS_API RefPtr<RemoteAudioTrack> GetRemoteTrack() noexcept {
+  RefPtr<RemoteAudioTrack> GetRemoteTrack() noexcept {
     return remote_track_;
   }
 

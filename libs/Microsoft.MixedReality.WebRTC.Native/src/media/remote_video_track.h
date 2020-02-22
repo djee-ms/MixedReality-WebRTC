@@ -38,19 +38,19 @@ class RemoteVideoTrack : public VideoFrameObserver, public MediaTrack {
                    rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
                    mrsRemoteVideoTrackInteropHandle interop_handle) noexcept;
-  MRS_API ~RemoteVideoTrack() override;
+  ~RemoteVideoTrack() override;
 
   /// Get the name of the remote video track.
-  MRS_API std::string GetName() const noexcept override { return track_name_; }
+  std::string GetName() const noexcept override { return track_name_; }
 
   /// Enable or disable the video track. An enabled track streams its content
   /// from its source to the remote peer. A disabled video track only sends
   /// black frames.
-  MRS_API void SetEnabled(bool enabled) const noexcept;
+  void SetEnabled(bool enabled) const noexcept;
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
-  MRS_API [[nodiscard]] bool IsEnabled() const noexcept;
+  [[nodiscard]] bool IsEnabled() const noexcept;
 
   //
   // Advanced use

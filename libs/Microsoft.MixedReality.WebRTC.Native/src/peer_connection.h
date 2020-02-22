@@ -168,10 +168,9 @@ class PeerConnection : public TrackedObject {
   /// remote peer. The parameters correspond to the SDP message data provided by
   /// the |LocalSdpReadytoSendCallback|, after being transmitted to the
   /// other peer.
-  virtual bool
-  SetRemoteDescriptionAsync(const char* type,
-                            const char* sdp,
-                            Callback<> callback) noexcept = 0;
+  virtual bool SetRemoteDescriptionAsync(const char* type,
+                                         const char* sdp,
+                                         Callback<> callback) noexcept = 0;
 
   //
   // Connection
@@ -214,7 +213,7 @@ class PeerConnection : public TrackedObject {
   // Video
   //
 
-  virtual MRS_API ErrorOr<RefPtr<VideoTransceiver>> AddVideoTransceiver(
+  virtual ErrorOr<RefPtr<VideoTransceiver>> AddVideoTransceiver(
       const VideoTransceiverInitConfig& config) noexcept = 0;
 
   /// Add a video track to the peer connection. If no RTP sender/transceiver
@@ -227,8 +226,8 @@ class PeerConnection : public TrackedObject {
 
   /// Remove a local video track from the peer connection.
   /// The underlying RTP sender/transceiver are kept alive but inactive.
-  virtual Result
-  RemoveLocalVideoTrack(LocalVideoTrack& video_track) noexcept = 0;
+  virtual Result RemoveLocalVideoTrack(
+      LocalVideoTrack& video_track) noexcept = 0;
 
   /// Remove all tracks sharing the given video track source.
   /// Note that currently video source sharing is not supported, so this will
@@ -307,8 +306,8 @@ class PeerConnection : public TrackedObject {
 
   /// Remove an existing local audio track from the peer connection.
   /// The underlying RTP sender/transceiver are kept alive but inactive.
-  virtual Result
-  RemoveLocalAudioTrack(LocalAudioTrack& audio_track) noexcept = 0;
+  virtual Result RemoveLocalAudioTrack(
+      LocalAudioTrack& audio_track) noexcept = 0;
 
   /// Callback invoked when a remote audio track is added to the peer
   /// connection.
@@ -373,8 +372,7 @@ class PeerConnection : public TrackedObject {
 
   /// Close a given data channel and remove it from the peer connection.
   /// This invokes the DataChannelRemoved callback.
-  virtual void MRS_API
-  RemoveDataChannel(const DataChannel& data_channel) noexcept = 0;
+  virtual void RemoveDataChannel(const DataChannel& data_channel) noexcept = 0;
 
   /// Close and remove from the peer connection all data channels at once.
   /// This invokes the DataChannelRemoved callback for each data channel.
@@ -383,8 +381,7 @@ class PeerConnection : public TrackedObject {
   /// Notification from a non-negotiated DataChannel that it is open, so that
   /// the PeerConnection can fire a DataChannelAdded event. This is called
   /// automatically by non-negotiated data channels; do not call manually.
-  virtual void MRS_API
-  OnDataChannelAdded(const DataChannel& data_channel) noexcept = 0;
+  virtual void OnDataChannelAdded(const DataChannel& data_channel) noexcept = 0;
 
   /// Internal use.
   void GetStats(webrtc::RTCStatsCollectorCallback* callback);

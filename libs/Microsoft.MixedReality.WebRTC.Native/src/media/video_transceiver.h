@@ -31,17 +31,17 @@ class VideoTransceiver : public Transceiver {
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
       mrsVideoTransceiverInteropHandle interop_handle) noexcept;
 
-  MRS_API ~VideoTransceiver() override;
+  ~VideoTransceiver() override;
 
   Result SetDirection(Direction new_direction) noexcept;
 
-  MRS_API Result SetLocalTrack(RefPtr<LocalVideoTrack> local_track) noexcept;
+  Result SetLocalTrack(RefPtr<LocalVideoTrack> local_track) noexcept;
 
-  MRS_API RefPtr<LocalVideoTrack> GetLocalTrack() noexcept {
+  RefPtr<LocalVideoTrack> GetLocalTrack() noexcept {
     return local_track_;
   }
 
-  MRS_API RefPtr<RemoteVideoTrack> GetRemoteTrack() noexcept {
+  RefPtr<RemoteVideoTrack> GetRemoteTrack() noexcept {
     return remote_track_;
   }
 

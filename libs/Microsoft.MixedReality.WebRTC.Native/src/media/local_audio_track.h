@@ -50,21 +50,21 @@ class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
                   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
                   mrsLocalAudioTrackInteropHandle interop_handle) noexcept;
 
-  MRS_API ~LocalAudioTrack() override;
+  ~LocalAudioTrack() override;
 
   /// Get the name of the local audio track.
-  MRS_API std::string GetName() const noexcept override { return track_name_; }
+  std::string GetName() const noexcept override { return track_name_; }
 
   /// Enable or disable the audio track. An enabled track streams its content
   /// from its source to the remote peer. A disabled audio track only sends
   /// black frames.
-  MRS_API void SetEnabled(bool enabled) const noexcept;
+  void SetEnabled(bool enabled) const noexcept;
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
-  MRS_API [[nodiscard]] bool IsEnabled() const noexcept;
+  [[nodiscard]] bool IsEnabled() const noexcept;
 
-  [[nodiscard]] MRS_API RefPtr<AudioTransceiver> GetTransceiver() const
+  [[nodiscard]] RefPtr<AudioTransceiver> GetTransceiver() const
       noexcept;
 
   //
