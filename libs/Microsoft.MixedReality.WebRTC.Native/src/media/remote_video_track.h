@@ -33,7 +33,8 @@ class VideoTransceiver;
 /// connection. The local peer only has limited control over the track.
 class RemoteVideoTrack : public VideoFrameObserver, public MediaTrack {
  public:
-  RemoteVideoTrack(PeerConnection& owner,
+  RemoteVideoTrack(RefPtr<GlobalFactory> global_factory,
+                   PeerConnection& owner,
                    RefPtr<VideoTransceiver> transceiver,
                    rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,

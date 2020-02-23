@@ -18,13 +18,15 @@ class PeerConnection;
 class AudioTransceiver : public Transceiver {
  public:
   /// Constructor for Plan B.
-  AudioTransceiver(PeerConnection& owner,
+  AudioTransceiver(RefPtr<GlobalFactory> global_factory,
+                   PeerConnection& owner,
                    int mline_index,
                    std::string name,
                    mrsAudioTransceiverInteropHandle interop_handle) noexcept;
 
   /// Constructor for Unified Plan.
   AudioTransceiver(
+      RefPtr<GlobalFactory> global_factory,
       PeerConnection& owner,
       int mline_index,
       std::string name,

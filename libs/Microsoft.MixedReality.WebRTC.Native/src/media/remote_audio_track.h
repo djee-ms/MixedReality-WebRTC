@@ -33,7 +33,8 @@ class AudioTransceiver;
 /// connection. The local peer only has limited control over the track.
 class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
  public:
-  RemoteAudioTrack(PeerConnection& owner,
+  RemoteAudioTrack(RefPtr<GlobalFactory> global_factory,
+                   PeerConnection& owner,
                    RefPtr<AudioTransceiver> transceiver,
                    rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
                    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
@@ -46,15 +47,11 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
   /// Enable or disable the audio track. An enabled track streams its content
   /// from its source to the remote peer. A disabled audio track only sends
   /// empty audio data (silence).
-  void SetEnabled(bool enabled) const noexcept {
-    track_->set_enabled(enabled);
-  }
+  void SetEnabled(bool enabled) const noexcept { track_->set_enabled(enabled); }
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
-  [[nodiscard]] bool IsEnabled() const noexcept {
-    return track_->enabled();
-  }
+  [[nodiscard]] bool IsEnabled() const noexcept { return track_->enabled(); }
 
   //
   // Advanced use

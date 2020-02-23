@@ -26,8 +26,11 @@ class PeerConnection;
 /// Base class for all audio and video tracks.
 class MediaTrack : public TrackedObject {
  public:
-  MediaTrack() noexcept;
-  MediaTrack(PeerConnection& owner) noexcept;
+  MediaTrack(RefPtr<GlobalFactory> global_factory,
+             ObjectType object_type) noexcept;
+  MediaTrack(RefPtr<GlobalFactory> global_factory,
+             ObjectType object_type,
+             PeerConnection& owner) noexcept;
   ~MediaTrack() override;
 
   /// Get the kind of track.

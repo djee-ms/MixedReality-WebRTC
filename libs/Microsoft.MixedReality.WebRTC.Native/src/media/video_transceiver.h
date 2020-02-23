@@ -18,13 +18,15 @@ class PeerConnection;
 class VideoTransceiver : public Transceiver {
  public:
   /// Constructor for Plan B.
-  VideoTransceiver(PeerConnection& owner,
+  VideoTransceiver(RefPtr<GlobalFactory> global_factory,
+                   PeerConnection& owner,
                    int mline_index,
                    std::string name,
                    mrsVideoTransceiverInteropHandle interop_handle) noexcept;
 
   /// Constructor for Unified Plan.
   VideoTransceiver(
+      RefPtr<GlobalFactory> global_factory,
       PeerConnection& owner,
       int mline_index,
       std::string name,
@@ -37,13 +39,9 @@ class VideoTransceiver : public Transceiver {
 
   Result SetLocalTrack(RefPtr<LocalVideoTrack> local_track) noexcept;
 
-  RefPtr<LocalVideoTrack> GetLocalTrack() noexcept {
-    return local_track_;
-  }
+  RefPtr<LocalVideoTrack> GetLocalTrack() noexcept { return local_track_; }
 
-  RefPtr<RemoteVideoTrack> GetRemoteTrack() noexcept {
-    return remote_track_;
-  }
+  RefPtr<RemoteVideoTrack> GetRemoteTrack() noexcept { return remote_track_; }
 
   int GetMlineIndex() const noexcept { return mline_index_; }
 

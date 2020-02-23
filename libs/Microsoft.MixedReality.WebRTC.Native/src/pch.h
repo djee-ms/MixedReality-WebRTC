@@ -10,6 +10,7 @@
 #include <string_view>
 #include <unordered_set>
 #include <mutex>
+#include <shared_mutex>
 
 #if defined(MR_SHARING_WIN)
 

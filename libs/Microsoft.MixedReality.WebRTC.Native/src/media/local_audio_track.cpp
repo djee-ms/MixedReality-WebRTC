@@ -10,25 +10,28 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 LocalAudioTrack::LocalAudioTrack(
+    RefPtr<GlobalFactory> global_factory,
     rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
     mrsLocalAudioTrackInteropHandle interop_handle) noexcept
-    : MediaTrack(),
+    : MediaTrack(std::move(global_factory), ObjectType::kLocalAudioTrack),
       track_(std::move(track)),
       interop_handle_(interop_handle),
       track_name_(track_->id()) {
   RTC_CHECK(track_);
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
   track_->AddSink(this);  //< FIXME - Implementation is no-op
 }
 
 LocalAudioTrack::LocalAudioTrack(
+    RefPtr<GlobalFactory> global_factory,
     PeerConnection& owner,
     RefPtr<AudioTransceiver> transceiver,
     rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
     rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
     mrsLocalAudioTrackInteropHandle interop_handle) noexcept
-    : MediaTrack(owner),
+    : MediaTrack(std::move(global_factory),
+                 ObjectType::kLocalAudioTrack,
+                 owner),
       track_(std::move(track)),
       sender_(std::move(sender)),
       transceiver_(std::move(transceiver)),
@@ -38,7 +41,6 @@ LocalAudioTrack::LocalAudioTrack(
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalAudioTrack, this);
   kind_ = TrackKind::kAudioTrack;
   transceiver_->OnLocalTrackAdded(this);
   track_->AddSink(this);  //< FIXME - Implementation is no-op
@@ -49,8 +51,6 @@ LocalAudioTrack::~LocalAudioTrack() {
   if (owner_) {
     owner_->RemoveLocalAudioTrack(*this);
   }
-  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kLocalAudioTrack,
-                                             this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }

@@ -9,28 +9,31 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 VideoTransceiver::VideoTransceiver(
+    RefPtr<GlobalFactory> global_factory,
     PeerConnection& owner,
     int mline_index,
     std::string name,
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(MediaKind::kVideo, owner),
+    : Transceiver(std::move(global_factory), MediaKind::kVideo, owner),
       mline_index_(mline_index),
       name_(std::move(name)),
       interop_handle_(interop_handle) {
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kVideoTransceiver, this);
 }
 
 VideoTransceiver::VideoTransceiver(
+    RefPtr<GlobalFactory> global_factory,
     PeerConnection& owner,
     int mline_index,
     std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
     mrsVideoTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(MediaKind::kVideo, owner, transceiver),
+    : Transceiver(std::move(global_factory),
+                  MediaKind::kVideo,
+                  owner,
+                  transceiver),
       mline_index_(mline_index),
       name_(std::move(name)),
       interop_handle_(interop_handle) {
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kVideoTransceiver, this);
 }
 
 VideoTransceiver::~VideoTransceiver() {
@@ -38,9 +41,6 @@ VideoTransceiver::~VideoTransceiver() {
   // could lead to the GlobalFactory being destroyed and the WebRTC threads
   // stopped.
   transceiver_ = nullptr;
-
-  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kVideoTransceiver,
-                                             this);
 }
 
 Result VideoTransceiver::SetDirection(Direction new_direction) noexcept {

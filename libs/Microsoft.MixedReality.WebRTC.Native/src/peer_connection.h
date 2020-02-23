@@ -426,6 +426,9 @@ class PeerConnection : public TrackedObject {
   virtual void OnLocalTrackRemovedFromVideoTransceiver(
       VideoTransceiver& transceiver,
       LocalVideoTrack& track) = 0;
+
+ protected:
+  PeerConnection(RefPtr<GlobalFactory> global_factory);
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

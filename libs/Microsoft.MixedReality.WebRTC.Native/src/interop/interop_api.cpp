@@ -98,7 +98,7 @@ mrsResult OpenVideoCaptureDevice(
     std::unique_ptr<cricket::VideoCapturer>& capturer_out) noexcept {
   capturer_out.reset();
 #if defined(WINUWP)
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   WebRtcFactoryPtr uwp_factory;
   {
     mrsResult res = global_factory->GetOrCreateWebRtcFactory(uwp_factory);
@@ -305,7 +305,7 @@ uint32_t FourCCFromVideoType(webrtc::VideoType videoType) {
 }  // namespace
 
 inline rtc::Thread* GetWorkerThread() {
-  return GlobalFactory::InstancePtr()->GetWorkerThread();
+  return GlobalFactory::GetLock()->GetWorkerThread();
 }
 
 uint32_t MRS_CALL mrsReportLiveObjects() noexcept {
@@ -339,7 +339,7 @@ mrsResult MRS_CALL mrsEnumVideoCaptureDevicesAsync(
     return Result::kInvalidParameter;
   }
 #if defined(WINUWP)
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   // The UWP factory needs to be initialized for getDevices() to work.
   if (!global_factory->GetPeerConnectionFactory()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
@@ -404,7 +404,7 @@ mrsResult MRS_CALL mrsEnumVideoCaptureFormatsAsync(
   }
 
 #if defined(WINUWP)
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   // The UWP factory needs to be initialized for getDevices() to work.
   WebRtcFactoryPtr uwp_factory;
   {
@@ -714,7 +714,7 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
@@ -738,7 +738,8 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
 
   // Create the audio track wrapper
   RefPtr<LocalAudioTrack> track =
-      new LocalAudioTrack(std::move(audio_track), config->track_interop_handle);
+      new LocalAudioTrack(std::move(global_factory), std::move(audio_track),
+                          config->track_interop_handle);
   *track_handle_out = track.release();
   return Result::kSuccess;
 }
@@ -761,7 +762,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
@@ -815,7 +816,8 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
 
   // Create the video track wrapper
   RefPtr<LocalVideoTrack> track =
-      new LocalVideoTrack(std::move(video_track), config->track_interop_handle);
+      new LocalVideoTrack(std::move(global_factory), std::move(video_track),
+                          config->track_interop_handle);
   *track_handle_out = track.release();
   return Result::kSuccess;
 }

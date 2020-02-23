@@ -175,16 +175,12 @@ class PeerConnectionImpl : public PeerConnection,
  public:
   mrsPeerConnectionInteropHandle hhh;
 
-  PeerConnectionImpl(mrsPeerConnectionInteropHandle interop_handle)
-      : interop_handle_(interop_handle) {
-    GlobalFactory::InstancePtr()->AddObject(ObjectType::kPeerConnection, this);
-  }
+  PeerConnectionImpl(RefPtr<GlobalFactory> global_factory,
+                     mrsPeerConnectionInteropHandle interop_handle)
+      : PeerConnection(std::move(global_factory)),
+        interop_handle_(interop_handle) {}
 
-  ~PeerConnectionImpl() noexcept {
-    Close();
-    GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kPeerConnection,
-                                               this);
-  }
+  ~PeerConnectionImpl() noexcept { Close(); }
 
   void SetPeerImpl(rtc::scoped_refptr<webrtc::PeerConnectionInterface> impl) {
     peer_ = std::move(impl);
@@ -752,7 +748,8 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
     case webrtc::SdpSemantics::kPlanB: {
       // Plan B doesn't have transceivers; just create a wrapper.
       mline_index = (int)transceivers_.size();  // append
-      wrapper = new VideoTransceiver(*this, mline_index, std::move(name),
+      wrapper = new VideoTransceiver(global_factory_, *this, mline_index,
+                                     std::move(name),
                                      config.transceiver_interop_handle);
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
@@ -783,8 +780,8 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::AddVideoTransceiver(
       }
 
       // Create the transceiver wrapper
-      wrapper = new VideoTransceiver(*this, mline_index, std::move(name),
-                                     std::move(impl),
+      wrapper = new VideoTransceiver(global_factory_, *this, mline_index,
+                                     std::move(name), std::move(impl),
                                      config.transceiver_interop_handle);
     } break;
     default:
@@ -814,9 +811,9 @@ ErrorOr<RefPtr<LocalVideoTrack>> PeerConnectionImpl::AddLocalVideoTrack(
     return ret.MoveError();
   }
   RefPtr<VideoTransceiver> transceiver = ret.MoveValue();
-  RefPtr<LocalVideoTrack> track =
-      new LocalVideoTrack(*this, std::move(transceiver), std::move(video_track),
-                          std::move(sender), track_interop_handle);
+  RefPtr<LocalVideoTrack> track = new LocalVideoTrack(
+      global_factory_, *this, std::move(transceiver), std::move(video_track),
+      std::move(sender), track_interop_handle);
   {
     rtc::CritScope lock(&tracks_mutex_);
     local_video_tracks_.push_back(track);
@@ -892,7 +889,8 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
     case webrtc::SdpSemantics::kPlanB: {
       // Plan B doesn't have transceivers; just create a wrapper.
       mline_index = (int)transceivers_.size();  // append
-      wrapper = new AudioTransceiver(*this, mline_index, std::move(name),
+      wrapper = new AudioTransceiver(global_factory_, *this, mline_index,
+                                     std::move(name),
                                      config.transceiver_interop_handle);
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
@@ -923,8 +921,8 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::AddAudioTransceiver(
       }
 
       // Create the transceiver wrapper
-      wrapper = new AudioTransceiver(*this, mline_index, std::move(name),
-                                     std::move(impl),
+      wrapper = new AudioTransceiver(global_factory_, *this, mline_index,
+                                     std::move(name), std::move(impl),
                                      config.transceiver_interop_handle);
     } break;
     default:
@@ -955,9 +953,9 @@ ErrorOr<RefPtr<LocalAudioTrack>> PeerConnectionImpl::AddLocalAudioTrack(
     return ret.MoveError();
   }
   RefPtr<AudioTransceiver> transceiver = ret.MoveValue();
-  RefPtr<LocalAudioTrack> track =
-      new LocalAudioTrack(*this, std::move(transceiver), std::move(audio_track),
-                          std::move(sender), track_interop_handle);
+  RefPtr<LocalAudioTrack> track = new LocalAudioTrack(
+      global_factory_, *this, std::move(transceiver), std::move(audio_track),
+      std::move(sender), track_interop_handle);
   {
     rtc::CritScope lock(&tracks_mutex_);
     local_audio_tracks_.push_back(track);
@@ -1541,9 +1539,9 @@ void PeerConnectionImpl::OnAddTrack(
         transceiver->GetInteropHandle();
 
     // Create the native object
-    RefPtr<RemoteAudioTrack> remote_audio_track =
-        new RemoteAudioTrack(*this, transceiver, std::move(audio_track),
-                             std::move(receiver), interop_handle);
+    RefPtr<RemoteAudioTrack> remote_audio_track = new RemoteAudioTrack(
+        global_factory_, *this, transceiver, std::move(audio_track),
+        std::move(receiver), interop_handle);
     {
       rtc::CritScope lock(&tracks_mutex_);
       remote_audio_tracks_.emplace_back(remote_audio_track);
@@ -1589,9 +1587,9 @@ void PeerConnectionImpl::OnAddTrack(
         transceiver->GetInteropHandle();
 
     // Create the native object
-    RefPtr<RemoteVideoTrack> remote_video_track =
-        new RemoteVideoTrack(*this, transceiver, std::move(video_track),
-                             std::move(receiver), interop_handle);
+    RefPtr<RemoteVideoTrack> remote_video_track = new RemoteVideoTrack(
+        global_factory_, *this, transceiver, std::move(video_track),
+        std::move(receiver), interop_handle);
     {
       rtc::CritScope lock(&tracks_mutex_);
       remote_video_tracks_.emplace_back(remote_video_track);
@@ -1894,9 +1892,9 @@ PeerConnectionImpl::GetOrCreateAudioTransceiverForSender(
       mline_index = (int)std::distance(transceivers.begin(), it_tr);
 
       // Create the transceiver wrapper
-      wrapper =
-          new AudioTransceiver(*this, mline_index, std::move(name),
-                               std::move(impl), transceiver_interop_handle);
+      wrapper = new AudioTransceiver(global_factory_, *this, mline_index,
+                                     std::move(name), std::move(impl),
+                                     transceiver_interop_handle);
 
       // Note: at this point the native wrapper knows about the interop wrapper,
       // but not the opposite. Normally we'd fire another "created-callback"
@@ -1962,9 +1960,9 @@ PeerConnectionImpl::GetOrCreateVideoTransceiverForSender(
       mline_index = (int)std::distance(transceivers.begin(), it_tr);
 
       // Create the transceiver wrapper
-      wrapper =
-          new VideoTransceiver(*this, mline_index, std::move(name),
-                               std::move(impl), transceiver_interop_handle);
+      wrapper = new VideoTransceiver(global_factory_, *this, mline_index,
+                                     std::move(name), std::move(impl),
+                                     transceiver_interop_handle);
 
       // Note: at this point the native wrapper knows about the interop wrapper,
       // but not the opposite. Normally we'd fire another "created-callback"
@@ -2133,9 +2131,9 @@ ErrorOr<RefPtr<AudioTransceiver>> PeerConnectionImpl::CreateAudioTransceiver(
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
       // Create the transceiver wrapper
-      transceiver =
-          new AudioTransceiver(*this, mline_index, std::move(name),
-                               std::move(rtp_transceiver), interop_handle);
+      transceiver = new AudioTransceiver(
+          global_factory_, *this, mline_index, std::move(name),
+          std::move(rtp_transceiver), interop_handle);
 
       // Synchronize the interop wrapper with the current object.
       if (auto cb = interop_callbacks_.audio_transceiver_finish_create) {
@@ -2178,9 +2176,9 @@ ErrorOr<RefPtr<VideoTransceiver>> PeerConnectionImpl::CreateVideoTransceiver(
     } break;
     case webrtc::SdpSemantics::kUnifiedPlan: {
       // Create the transceiver wrapper
-      transceiver =
-          new VideoTransceiver(*this, mline_index, std::move(name),
-                               std::move(rtp_transceiver), interop_handle);
+      transceiver = new VideoTransceiver(
+          global_factory_, *this, mline_index, std::move(name),
+          std::move(rtp_transceiver), interop_handle);
 
       // Synchronize the interop wrapper with the current object.
       if (auto cb = interop_callbacks_.video_transceiver_finish_create) {
@@ -2284,7 +2282,7 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   SetFrameHeightRoundMode(FrameHeightRoundMode::kCrop);
 
   // Ensure the factory exists
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory =
       global_factory->GetPeerConnectionFactory();
   if (!factory) {
@@ -2304,7 +2302,7 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   rtc_config.sdp_semantics = (config.sdp_semantic == SdpSemantic::kUnifiedPlan
                                   ? webrtc::SdpSemantics::kUnifiedPlan
                                   : webrtc::SdpSemantics::kPlanB);
-  auto peer = new PeerConnectionImpl(interop_handle);
+  auto peer = new PeerConnectionImpl(std::move(global_factory), interop_handle);
   webrtc::PeerConnectionDependencies dependencies(peer);
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> impl =
       factory->CreatePeerConnection(rtc_config, std::move(dependencies));
@@ -2318,5 +2316,8 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
 void PeerConnection::GetStats(webrtc::RTCStatsCollectorCallback* callback) {
   ((PeerConnectionImpl*)this)->peer_->GetStats(callback);
 }
+
+PeerConnection::PeerConnection(RefPtr<GlobalFactory> global_factory)
+    : TrackedObject(std::move(global_factory), ObjectType::kPeerConnection) {}
 
 }  // namespace Microsoft::MixedReality::WebRTC

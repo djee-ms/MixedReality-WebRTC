@@ -10,14 +10,14 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 LocalVideoTrack::LocalVideoTrack(
+    RefPtr<GlobalFactory> global_factory,
     rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
     mrsLocalVideoTrackInteropHandle interop_handle) noexcept
-    : MediaTrack(),
+    : MediaTrack(std::move(global_factory), ObjectType::kLocalVideoTrack),
       track_(std::move(track)),
       interop_handle_(interop_handle),
       track_name_(track_->id()) {
   RTC_CHECK(track_);
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalVideoTrack, this);
   kind_ = TrackKind::kVideoTrack;
   rtc::VideoSinkWants sink_settings{};
   sink_settings.rotation_applied = true;
@@ -25,12 +25,15 @@ LocalVideoTrack::LocalVideoTrack(
 }
 
 LocalVideoTrack::LocalVideoTrack(
+    RefPtr<GlobalFactory> global_factory,
     PeerConnection& owner,
     RefPtr<VideoTransceiver> transceiver,
     rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
     rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
     mrsLocalVideoTrackInteropHandle interop_handle) noexcept
-    : MediaTrack(owner),
+    : MediaTrack(std::move(global_factory),
+                 ObjectType::kLocalVideoTrack,
+                 owner),
       track_(std::move(track)),
       sender_(std::move(sender)),
       transceiver_(std::move(transceiver)),
@@ -40,7 +43,6 @@ LocalVideoTrack::LocalVideoTrack(
   RTC_CHECK(transceiver_);
   RTC_CHECK(track_);
   RTC_CHECK(sender_);
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kLocalVideoTrack, this);
   kind_ = TrackKind::kVideoTrack;
   transceiver_->OnLocalTrackAdded(this);
   rtc::VideoSinkWants sink_settings{};
@@ -53,8 +55,6 @@ LocalVideoTrack::~LocalVideoTrack() {
   if (owner_) {
     owner_->RemoveLocalVideoTrack(*this);
   }
-  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kLocalVideoTrack,
-                                             this);
   RTC_CHECK(!transceiver_);
   RTC_CHECK(!owner_);
 }

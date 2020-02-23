@@ -66,6 +66,7 @@
     <ClCompile Include="..\interop\video_transceiver_interop.cpp">
       <Filter>interop</Filter>
     </ClCompile>
+    <ClCompile Include="..\tracked_object.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../pch.h" />

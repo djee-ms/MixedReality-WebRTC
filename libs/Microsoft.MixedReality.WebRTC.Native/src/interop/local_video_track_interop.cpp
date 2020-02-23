@@ -57,7 +57,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
     track_name_str = "external_track";
   }
 
-  RefPtr<GlobalFactory> global_factory = GlobalFactory::InstancePtr();
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
   auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kUnknownError;
@@ -74,7 +74,8 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
 
   // Create the video track wrapper
   RefPtr<LocalVideoTrack> track =
-      new LocalVideoTrack(std::move(video_track), config->track_interop_handle);
+      new LocalVideoTrack(std::move(global_factory), std::move(video_track),
+                          config->track_interop_handle);
   *track_handle_out = track.release();
   return Result::kSuccess;
 }

@@ -40,11 +40,13 @@ class AudioTransceiver;
 class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
  public:
   /// Constructor for a track not added to any peer connection.
-  LocalAudioTrack(rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
+  LocalAudioTrack(RefPtr<GlobalFactory> global_factory,
+                  rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
                   mrsLocalAudioTrackInteropHandle interop_handle) noexcept;
 
   /// Constructor for a track added to a peer connection.
-  LocalAudioTrack(PeerConnection& owner,
+  LocalAudioTrack(RefPtr<GlobalFactory> global_factory,
+                  PeerConnection& owner,
                   RefPtr<AudioTransceiver> transceiver,
                   rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
                   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
@@ -64,8 +66,7 @@ class LocalAudioTrack : public AudioFrameObserver, public MediaTrack {
   /// See |SetEnabled(bool)|.
   [[nodiscard]] bool IsEnabled() const noexcept;
 
-  [[nodiscard]] RefPtr<AudioTransceiver> GetTransceiver() const
-      noexcept;
+  [[nodiscard]] RefPtr<AudioTransceiver> GetTransceiver() const noexcept;
 
   //
   // Advanced use

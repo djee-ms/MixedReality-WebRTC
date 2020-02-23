@@ -40,11 +40,13 @@ class VideoTransceiver;
 class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
  public:
   /// Constructor for a track not added to any peer connection.
-  LocalVideoTrack(rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
+  LocalVideoTrack(RefPtr<GlobalFactory> global_factory,
+                  rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                   mrsLocalVideoTrackInteropHandle interop_handle) noexcept;
 
   /// Constructor for a track added to a peer connection.
-  LocalVideoTrack(PeerConnection& owner,
+  LocalVideoTrack(RefPtr<GlobalFactory> global_factory,
+                  PeerConnection& owner,
                   RefPtr<VideoTransceiver> transceiver,
                   rtc::scoped_refptr<webrtc::VideoTrackInterface> track,
                   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender,
@@ -58,14 +60,13 @@ class LocalVideoTrack : public VideoFrameObserver, public MediaTrack {
   /// Enable or disable the video track. An enabled track streams its content
   /// from its source to the remote peer. A disabled video track only sends
   /// black frames.
-   void SetEnabled(bool enabled) const noexcept;
+  void SetEnabled(bool enabled) const noexcept;
 
   /// Check if the track is enabled.
   /// See |SetEnabled(bool)|.
   [[nodiscard]] bool IsEnabled() const noexcept;
 
-  [[nodiscard]] RefPtr<VideoTransceiver> GetTransceiver() const
-      noexcept;
+  [[nodiscard]] RefPtr<VideoTransceiver> GetTransceiver() const noexcept;
 
   //
   // Advanced use

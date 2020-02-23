@@ -6,12 +6,32 @@
 #include <string>
 
 #include "ref_counted_base.h"
+#include "refptr.h"
 
 namespace Microsoft::MixedReality::WebRTC {
+
+class GlobalFactory;
+
+enum class ObjectType : int {
+  kPeerConnection,
+  kLocalAudioTrack,
+  kLocalVideoTrack,
+  kExternalVideoTrackSource,
+  kRemoteAudioTrack,
+  kRemoteVideoTrack,
+  kDataChannel,
+  kAudioTransceiver,
+  kVideoTransceiver,
+};
 
 /// Object tracked for interop, exposing helper methods for debugging purpose.
 class TrackedObject : public RefCountedBase {
  public:
+  TrackedObject(RefPtr<GlobalFactory> global_factory, ObjectType object_type);
+  ~TrackedObject() noexcept override;
+
+  constexpr ObjectType GetObjectType() const noexcept { return object_type_; }
+
   /// Retrieve the name of the object. The exact meaning depends on the actual
   /// object, and may be user-set or reused from another field of the object,
   /// but will generally allow the user to identify the object instance during
@@ -22,6 +42,10 @@ class TrackedObject : public RefCountedBase {
   /// implementation should locally cache a string value to comply with this
   /// limitation.
   virtual std::string GetName() const = 0;
+
+ protected:
+  RefPtr<GlobalFactory> global_factory_;
+  const ObjectType object_type_;
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

@@ -3,24 +3,37 @@
 
 #include "pch.h"
 
+#include "interop/global_factory.h"
 #include "peer_connection.h"
 #include "transceiver.h"
 #include "utils.h"
 
 namespace Microsoft::MixedReality::WebRTC {
 
-Transceiver::Transceiver(MediaKind kind, PeerConnection& owner) noexcept
-    : owner_(&owner), kind_(kind) {
+Transceiver::Transceiver(RefPtr<GlobalFactory> global_factory,
+                         MediaKind kind,
+                         PeerConnection& owner) noexcept
+    : TrackedObject(std::move(global_factory),
+                    kind == MediaKind::kAudio ? ObjectType::kAudioTransceiver
+                                              : ObjectType::kVideoTransceiver),
+      owner_(&owner),
+      kind_(kind) {
   RTC_CHECK(owner_);
   //< TODO
   // RTC_CHECK(owner.sdp_semantic == webrtc::SdpSemantics::kPlanB);
 }
 
 Transceiver::Transceiver(
+    RefPtr<GlobalFactory> global_factory,
     MediaKind kind,
     PeerConnection& owner,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept
-    : owner_(&owner), kind_(kind), transceiver_(std::move(transceiver)) {
+    : TrackedObject(std::move(global_factory),
+                    kind == MediaKind::kAudio ? ObjectType::kAudioTransceiver
+                                              : ObjectType::kVideoTransceiver),
+      owner_(&owner),
+      kind_(kind),
+      transceiver_(std::move(transceiver)) {
   RTC_CHECK(owner_);
   //< TODO
   // RTC_CHECK(owner.sdp_semantic == webrtc::SdpSemantics::kUnifiedPlan);

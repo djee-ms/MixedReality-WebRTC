@@ -32,11 +32,14 @@ class Transceiver : public TrackedObject {
   /// Construct a Plan B transceiver abstraction which tries to mimic a
   /// transceiver for Plan B despite the fact that this semantic doesn't have
   /// any concept of transceiver.
-  Transceiver(MediaKind kind, PeerConnection& owner) noexcept;
+  Transceiver(RefPtr<GlobalFactory> global_factory,
+              MediaKind kind,
+              PeerConnection& owner) noexcept;
 
   /// Construct a Unified Plan transceiver wrapper referencing an actual WebRTC
   /// transceiver implementation object as defined in Unified Plan.
   Transceiver(
+      RefPtr<GlobalFactory> global_factory,
       MediaKind kind,
       PeerConnection& owner,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept;

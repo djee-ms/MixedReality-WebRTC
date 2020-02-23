@@ -10,38 +10,36 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 AudioTransceiver::AudioTransceiver(
+    RefPtr<GlobalFactory> global_factory,
     PeerConnection& owner,
     int mline_index,
     std::string name,
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(MediaKind::kAudio, owner),
+    : Transceiver(std::move(global_factory), MediaKind::kAudio, owner),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kAudioTransceiver, this);
-}
+      interop_handle_(interop_handle) {}
 
 AudioTransceiver::AudioTransceiver(
+    RefPtr<GlobalFactory> global_factory,
     PeerConnection& owner,
     int mline_index,
     std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
     mrsAudioTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(MediaKind::kAudio, owner, transceiver),
+    : Transceiver(std::move(global_factory),
+                  MediaKind::kAudio,
+                  owner,
+                  transceiver),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {
-  GlobalFactory::InstancePtr()->AddObject(ObjectType::kAudioTransceiver, this);
-}
+      interop_handle_(interop_handle) {}
 
 AudioTransceiver::~AudioTransceiver() {
   // Be sure to clean-up WebRTC objects before unregistering ourself, which
   // could lead to the GlobalFactory being destroyed and the WebRTC threads
   // stopped.
   transceiver_ = nullptr;
-
-  GlobalFactory::InstancePtr()->RemoveObject(ObjectType::kAudioTransceiver,
-                                             this);
 }
 
 Result AudioTransceiver::SetDirection(Direction new_direction) noexcept {
