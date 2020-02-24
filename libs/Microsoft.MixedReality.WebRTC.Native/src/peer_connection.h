@@ -187,7 +187,7 @@ class PeerConnection : public TrackedObject {
       ConnectedCallback&& callback) noexcept = 0;
 
   /// Set the connection bitrate limits. These settings limit the network
-  /// brandwidth use of the peer connection.
+  /// bandwidth use of the peer connection.
   virtual mrsResult SetBitrate(const BitrateSettings& settings) noexcept = 0;
 
   /// Create an SDP offer to attempt to establish a connection with the remote
@@ -391,7 +391,8 @@ class PeerConnection : public TrackedObject {
   //
 
   /// Register some interop callbacks to allow the native implementation to
-  /// interact with it. This is called automatically; so not call manually.
+  /// interact with the interop layer. This is called automatically; do not call
+  /// manually.
   virtual mrsResult RegisterInteropCallbacks(
       const mrsPeerConnectionInteropCallbacks& callbacks) noexcept = 0;
 

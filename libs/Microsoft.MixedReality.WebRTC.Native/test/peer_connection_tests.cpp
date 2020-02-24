@@ -71,5 +71,11 @@ TEST(PeerConnection, LocalIce) {
     mrsPeerConnectionRegisterConnectedCallback(pair.pc1(), CB(on_connected));
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateOffer(pair.pc1()));
     ASSERT_EQ(true, ev.WaitFor(5s));  // should complete within 5s (usually ~1s)
+
+    // Clean-up, because ICE candidates continue to arrive
+    mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(pair.pc1(),
+                                                             nullptr, nullptr);
+    mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(pair.pc2(),
+                                                             nullptr, nullptr);
   }
 }

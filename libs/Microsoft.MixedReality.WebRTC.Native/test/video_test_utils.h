@@ -5,6 +5,7 @@
 #include "../src/interop/global_factory.h"
 #include "../include/interop_api.h"
 #include "../include/peer_connection_interop.h"
+#include "../src/mrs_errors.h"
 
 using namespace Microsoft::MixedReality::WebRTC;
 

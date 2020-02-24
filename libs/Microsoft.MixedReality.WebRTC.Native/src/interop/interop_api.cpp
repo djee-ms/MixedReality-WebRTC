@@ -29,7 +29,6 @@ struct mrsEnumerator {
 };
 
 namespace {
-
 mrsResult RTCToAPIError(const webrtc::RTCError& error) {
   if (error.ok()) {
     return Result::kSuccess;
@@ -98,7 +97,7 @@ mrsResult OpenVideoCaptureDevice(
     std::unique_ptr<cricket::VideoCapturer>& capturer_out) noexcept {
   capturer_out.reset();
 #if defined(WINUWP)
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
   WebRtcFactoryPtr uwp_factory;
   {
     mrsResult res = global_factory->GetOrCreateWebRtcFactory(uwp_factory);
@@ -305,7 +304,7 @@ uint32_t FourCCFromVideoType(webrtc::VideoType videoType) {
 }  // namespace
 
 inline rtc::Thread* GetWorkerThread() {
-  return GlobalFactory::GetLock()->GetWorkerThread();
+  return GlobalFactory::InstancePtr()->GetWorkerThread();
 }
 
 uint32_t MRS_CALL mrsReportLiveObjects() noexcept {
@@ -339,7 +338,7 @@ mrsResult MRS_CALL mrsEnumVideoCaptureDevicesAsync(
     return Result::kInvalidParameter;
   }
 #if defined(WINUWP)
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
   // The UWP factory needs to be initialized for getDevices() to work.
   if (!global_factory->GetPeerConnectionFactory()) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the UWP factory.";
@@ -404,7 +403,7 @@ mrsResult MRS_CALL mrsEnumVideoCaptureFormatsAsync(
   }
 
 #if defined(WINUWP)
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
   // The UWP factory needs to be initialized for getDevices() to work.
   WebRtcFactoryPtr uwp_factory;
   {
@@ -762,7 +761,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
   auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;

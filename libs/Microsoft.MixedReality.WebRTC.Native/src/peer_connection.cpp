@@ -2282,10 +2282,10 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   SetFrameHeightRoundMode(FrameHeightRoundMode::kCrop);
 
   // Ensure the factory exists
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory =
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory =
       global_factory->GetPeerConnectionFactory();
-  if (!factory) {
+  if (!pc_factory) {
     return Error(Result::kUnknownError);
   }
 
@@ -2305,7 +2305,7 @@ ErrorOr<RefPtr<PeerConnection>> PeerConnection::create(
   auto peer = new PeerConnectionImpl(std::move(global_factory), interop_handle);
   webrtc::PeerConnectionDependencies dependencies(peer);
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> impl =
-      factory->CreatePeerConnection(rtc_config, std::move(dependencies));
+      pc_factory->CreatePeerConnection(rtc_config, std::move(dependencies));
   if (impl.get() == nullptr) {
     return Error(Result::kUnknownError);
   }
