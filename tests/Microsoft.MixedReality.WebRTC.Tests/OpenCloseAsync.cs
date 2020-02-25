@@ -114,8 +114,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             var tasks = new Task[20];
             for (int i = 0; i < 10; ++i)
             {
-                tasks[2*i] = OpenAsync();
-                tasks[2*i+1] = CloseAsync();
+                tasks[2 * i] = OpenAsync();
+                tasks[2 * i + 1] = CloseAsync();
             }
             Task.WaitAll(tasks);
         }
@@ -126,8 +126,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             var tasks = new Task[20];
             for (int i = 0; i < 10; ++i)
             {
-                tasks[2*i] = Task.Run(() => OpenAsync());
-                tasks[2*i+1] = Task.Run(() => CloseAsync());
+                tasks[2 * i] = Task.Run(() => OpenAsync());
+                tasks[2 * i + 1] = Task.Run(() => CloseAsync());
             }
             Task.WaitAll(tasks);
         }

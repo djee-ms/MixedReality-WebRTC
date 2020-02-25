@@ -12,6 +12,11 @@ namespace Microsoft::MixedReality::WebRTC {
 
 class GlobalFactory;
 
+/// Enumeration of all object types that the global factory keeps track of for
+/// the purpose of keeping itself alive. Each value correspond to a type of
+/// wrapper object. Wrapper objects must call |GlobalFactory::AddObject()| and
+/// |GlobalFactory::RemoveObject()| to register themselves with the global
+/// factory while alive.
 enum class ObjectType : int {
   kPeerConnection,
   kLocalAudioTrack,

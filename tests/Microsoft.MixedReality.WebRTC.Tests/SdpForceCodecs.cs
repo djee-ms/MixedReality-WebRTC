@@ -82,7 +82,7 @@ namespace Microsoft.MixedReality.WebRTC.Tests
             "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n" +
             "a=ssrc:3 mslabel:local_stream_1\r\n" +
             "a=ssrc:3 label:video_track_id_1\r\n";
-        
+
         #endregion
 
         [Test]

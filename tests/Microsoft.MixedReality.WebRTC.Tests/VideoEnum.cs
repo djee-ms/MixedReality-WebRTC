@@ -39,7 +39,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
         [Test]
         public void EnumVideoFormats()
         {
-            PeerConnection.GetVideoCaptureDevicesAsync().ContinueWith((enumDeviceTask) => {
+            PeerConnection.GetVideoCaptureDevicesAsync().ContinueWith((enumDeviceTask) =>
+            {
                 Assert.IsNull(enumDeviceTask.Exception);
                 List<VideoCaptureDevice> devices = enumDeviceTask.Result;
                 if (devices.Count == 0)
@@ -49,7 +50,8 @@ namespace Microsoft.MixedReality.WebRTC.Tests
 
                 foreach (var device in devices)
                 {
-                    PeerConnection.GetVideoCaptureFormatsAsync(device.id).ContinueWith((enumFormatTask) => {
+                    PeerConnection.GetVideoCaptureFormatsAsync(device.id).ContinueWith((enumFormatTask) =>
+                    {
                         Assert.IsNull(enumFormatTask.Exception);
                         List<VideoCaptureFormat> formats = enumFormatTask.Result;
                         foreach (var format in formats)

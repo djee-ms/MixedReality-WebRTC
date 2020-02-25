@@ -41,8 +41,8 @@ mrsResult MRS_CALL mrsExternalVideoTrackSourceCreateFromI420ACallback(
   }
   *source_handle_out = nullptr;
   RefPtr<ExternalVideoTrackSource> track_source =
-      detail::ExternalVideoTrackSourceCreateFromI420A(GlobalFactory::GetLock(),
-                                                      callback, user_data);
+      detail::ExternalVideoTrackSourceCreateFromI420A(
+          GlobalFactory::InstancePtr(), callback, user_data);
   if (!track_source) {
     return Result::kUnknownError;
   }
@@ -59,8 +59,8 @@ mrsResult MRS_CALL mrsExternalVideoTrackSourceCreateFromArgb32Callback(
   }
   *source_handle_out = nullptr;
   RefPtr<ExternalVideoTrackSource> track_source =
-      detail::ExternalVideoTrackSourceCreateFromArgb32(GlobalFactory::GetLock(),
-                                                       callback, user_data);
+      detail::ExternalVideoTrackSourceCreateFromArgb32(
+          GlobalFactory::InstancePtr(), callback, user_data);
   if (!track_source) {
     return Result::kUnknownError;
   }

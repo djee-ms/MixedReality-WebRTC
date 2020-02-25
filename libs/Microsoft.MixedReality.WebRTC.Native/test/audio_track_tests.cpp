@@ -5,9 +5,9 @@
 
 #include "audio_frame.h"
 #include "interop/audio_transceiver_interop.h"
-#include "interop_api.h"
 #include "interop/local_audio_track_interop.h"
 #include "interop/remote_audio_track_interop.h"
+#include "interop_api.h"
 
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
 

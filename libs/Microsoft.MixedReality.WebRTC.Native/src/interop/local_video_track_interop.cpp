@@ -57,7 +57,7 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromExternalSource(
     track_name_str = "external_track";
   }
 
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
   auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kUnknownError;

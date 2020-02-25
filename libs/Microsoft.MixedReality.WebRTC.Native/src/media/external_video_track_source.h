@@ -141,6 +141,7 @@ RefPtr<ExternalVideoTrackSource> ExternalVideoTrackSourceCreateFromArgb32(
     RefPtr<GlobalFactory> global_factory,
     mrsRequestExternalArgb32VideoFrameCallback callback,
     void* user_data);
+
 }  // namespace detail
 
 }  // namespace Microsoft::MixedReality::WebRTC

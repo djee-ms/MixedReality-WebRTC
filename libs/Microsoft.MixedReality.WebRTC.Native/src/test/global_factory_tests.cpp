@@ -16,11 +16,11 @@ class GlobalFactoryTest : public ::testing::Test {
  protected:
   void SetUp() override {
     // Ensure global factory is not initialized before the test
-    ASSERT_EQ(GlobalFactory::GetLockIfExist().get(), nullptr);
+    ASSERT_EQ(GlobalFactory::InstancePtrIfExist().get(), nullptr);
   }
   void TearDown() override {
     // Ensure global factory is not intialized after the test
-    ASSERT_EQ(GlobalFactory::GetLockIfExist().get(), nullptr);
+    ASSERT_EQ(GlobalFactory::InstancePtrIfExist().get(), nullptr);
   }
 };
 
@@ -41,7 +41,7 @@ struct BusyWaitSynchronizer {
 
 TEST_F(GlobalFactoryTest, BasicInitShutdown) {
   {
-    RefPtr<GlobalFactory> factory(GlobalFactory::GetLock());
+    RefPtr<GlobalFactory> factory(GlobalFactory::InstancePtr());
     ASSERT_NE(factory.get(), nullptr);
     ASSERT_EQ(0u, factory->ReportLiveObjects());
     ASSERT_EQ(0u, GlobalFactory::StaticReportLiveObjects());
@@ -52,7 +52,7 @@ TEST_F(GlobalFactoryTest, BasicInitShutdown) {
 }
 
 TEST_F(GlobalFactoryTest, BasicNotExist) {
-  RefPtr<GlobalFactory> factory(GlobalFactory::GetLockIfExist());
+  RefPtr<GlobalFactory> factory(GlobalFactory::InstancePtrIfExist());
   ASSERT_EQ(factory.get(), nullptr);
   ASSERT_EQ(0u, GlobalFactory::StaticReportLiveObjects());
   ASSERT_TRUE(GlobalFactory::TryShutdown());
@@ -67,7 +67,7 @@ TEST_F(GlobalFactoryTest, ConcurrentGrab) {
       // Wait for all other threads
       synchronizer.sync();
       // Grab factory
-      RefPtr<GlobalFactory> factory(GlobalFactory::GetLock());
+      RefPtr<GlobalFactory> factory(GlobalFactory::InstancePtr());
       ASSERT_NE(factory.get(), nullptr);
     });
   }
@@ -86,7 +86,7 @@ TEST_F(GlobalFactoryTest, ConcurrentGrabAndRelease) {
     auto& t = threads[i];
     t = new std::thread([&]() {
       // Grab factory
-      RefPtr<GlobalFactory> factory(GlobalFactory::GetLock());
+      RefPtr<GlobalFactory> factory(GlobalFactory::InstancePtr());
       ASSERT_NE(factory.get(), nullptr);
       // Wait for all other threads
       synchronizer.sync();
@@ -101,7 +101,7 @@ TEST_F(GlobalFactoryTest, ConcurrentGrabAndRelease) {
       // Wait for all other threads
       synchronizer.sync();
       // Grab factory
-      RefPtr<GlobalFactory> factory(GlobalFactory::GetLock());
+      RefPtr<GlobalFactory> factory(GlobalFactory::InstancePtr());
       ASSERT_NE(factory.get(), nullptr);
     });
   }

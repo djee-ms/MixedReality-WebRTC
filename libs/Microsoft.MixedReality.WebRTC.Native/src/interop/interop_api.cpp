@@ -29,6 +29,7 @@ struct mrsEnumerator {
 };
 
 namespace {
+
 mrsResult RTCToAPIError(const webrtc::RTCError& error) {
   if (error.ok()) {
     return Result::kSuccess;
@@ -713,7 +714,7 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
   }
   *track_handle_out = nullptr;
 
-  RefPtr<GlobalFactory> global_factory(GlobalFactory::GetLock());
+  RefPtr<GlobalFactory> global_factory(GlobalFactory::InstancePtr());
   auto pc_factory = global_factory->GetPeerConnectionFactory();
   if (!pc_factory) {
     return Result::kInvalidOperation;
