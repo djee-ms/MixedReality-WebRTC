@@ -39,13 +39,9 @@ class AudioTransceiver : public Transceiver {
 
   Result SetLocalTrack(RefPtr<LocalAudioTrack> local_track) noexcept;
 
-  RefPtr<LocalAudioTrack> GetLocalTrack() noexcept {
-    return local_track_;
-  }
+  RefPtr<LocalAudioTrack> GetLocalTrack() noexcept { return local_track_; }
 
-  RefPtr<RemoteAudioTrack> GetRemoteTrack() noexcept {
-    return remote_track_;
-  }
+  RefPtr<RemoteAudioTrack> GetRemoteTrack() noexcept { return remote_track_; }
 
   int GetMlineIndex() const noexcept { return mline_index_; }
 

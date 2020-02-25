@@ -17,8 +17,7 @@ VideoTransceiver::VideoTransceiver(
     : Transceiver(std::move(global_factory), MediaKind::kVideo, owner),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {
-}
+      interop_handle_(interop_handle) {}
 
 VideoTransceiver::VideoTransceiver(
     RefPtr<GlobalFactory> global_factory,
@@ -33,8 +32,7 @@ VideoTransceiver::VideoTransceiver(
                   transceiver),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {
-}
+      interop_handle_(interop_handle) {}
 
 VideoTransceiver::~VideoTransceiver() {
   // Be sure to clean-up WebRTC objects before unregistering ourself, which

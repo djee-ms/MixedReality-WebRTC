@@ -762,7 +762,6 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         #endregion
 
         #region Utilities
-
         class RemoteDescArgs
         {
             public ActionDelegate callback;

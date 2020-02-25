@@ -120,7 +120,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             int height = Constraints.height;
             double framerate = Constraints.framerate;
 #if ENABLE_WINMD_SUPPORT
-            if (Mode == LocalVideoSourceFormatMode.Automatic)
+            if (FormatMode == LocalVideoSourceFormatMode.Automatic)
             {
                 // Do not constrain resolution by default, unless the device calls for it (see below).
                 width = 0; // auto

@@ -113,7 +113,7 @@ using VideoTrackAddedCallback =
                     mrsVideoTransceiverInteropHandle,
                     VideoTransceiverHandle>;
 
-// PeerConnectionArgb32VideoFrameCallback
+// mrsArgb32VideoFrameCallback
 using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
 
 }  // namespace
@@ -150,10 +150,10 @@ TEST(ExternalVideoTrackSource, Simple) {
   // Create the local track itself for #1
   LocalVideoTrackHandle track_handle1{};
   {
-    LocalVideoTrackFromExternalSourceInitConfig config{};
+    LocalVideoTrackFromExternalSourceInitConfig source_config{};
     ASSERT_EQ(mrsResult::kSuccess,
               mrsLocalVideoTrackCreateFromExternalSource(
-                  source_handle1, &config, "gen_track", &track_handle1));
+                  source_handle1, &source_config, "gen_track", &track_handle1));
     ASSERT_NE(nullptr, track_handle1);
     ASSERT_NE(mrsBool::kFalse, mrsLocalVideoTrackIsEnabled(track_handle1));
   }
