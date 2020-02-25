@@ -343,6 +343,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <summary>
         /// Delegate for <see cref="AudioTrackRemoved"/> event.
         /// </summary>
+        /// <param name="transceiver">The audio transceiver the track was removed from.</param>
         /// <param name="track">The audio track just removed.</param>
         public delegate void AudioTrackRemovedDelegate(AudioTransceiver transceiver, RemoteAudioTrack track);
 
@@ -355,6 +356,7 @@ namespace Microsoft.MixedReality.WebRTC
         /// <summary>
         /// Delegate for <see cref="VideoTrackRemoved"/> event.
         /// </summary>
+        /// <param name="transceiver">The video transceiver the track was removed from.</param>
         /// <param name="track">The video track just removed.</param>
         public delegate void VideoTrackRemovedDelegate(VideoTransceiver transceiver, RemoteVideoTrack track);
 

@@ -81,16 +81,14 @@ namespace TestAppUwp
         private MediaSource remoteMediaSource = null;
         private MediaPlayer remoteVideoPlayer = new MediaPlayer();
         private bool _isRemoteVideoPlaying = false;
+        private bool _isRemoteAudioPlaying = false;
         private uint _remoteVideoWidth = 0;
         private uint _remoteVideoHeight = 0;
+        private uint _remoteAudioChannelCount = 0;
+        private uint _remoteAudioSampleRate = 0;
         private object _isRemoteMediaPlayingLock = new object();
         private RemoteAudioTrack _remoteAudioTrack = null;
         private RemoteVideoTrack _remoteVideoTrack = null;
-
-        private uint _remoteAudioChannelCount = 0;
-        private uint _remoteAudioSampleRate = 0;
-        private bool _isRemoteAudioPlaying = false;
-        private object _isRemoteAudioPlayingLock = new object();
 
         /// <summary>
         /// The underlying <see cref="PeerConnection"/> object.
@@ -1391,7 +1389,7 @@ namespace TestAppUwp
         /// <param name="frame">The newly received audio frame.</param>
         private void RemoteAudioTrack_FrameReady(AudioFrame frame)
         {
-            lock (_isRemoteAudioPlayingLock)
+            lock (_isRemoteMediaPlayingLock)
             {
                 uint channelCount = frame.channelCount;
                 uint sampleRate = frame.sampleRate;

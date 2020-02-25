@@ -747,7 +747,6 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
 mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
     const LocalVideoTrackInitConfig* config,
     const char* track_name,
-    VideoDeviceConfiguration config,
     LocalVideoTrackHandle* track_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
     RTC_LOG(LS_ERROR) << "Invalid empty local video track name.";
