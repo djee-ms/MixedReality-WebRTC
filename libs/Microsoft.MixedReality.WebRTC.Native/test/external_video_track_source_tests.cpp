@@ -10,7 +10,15 @@
 #include "interop/remote_video_track_interop.h"
 #include "interop/video_transceiver_interop.h"
 
+#include "test_utils.h"
+
 #include "libyuv.h"
+
+namespace {
+
+class ExternalVideoTrackSourceTests : public TestUtils::TestBase {};
+
+}  // namespace
 
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
 
@@ -118,7 +126,7 @@ using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
 
 }  // namespace
 
-TEST(ExternalVideoTrackSource, Simple) {
+TEST_F(ExternalVideoTrackSourceTests, Simple) {
   LocalPeerPairRaii pair;
 
   // Grab the handle of the remote track from the remote peer (#2) via the

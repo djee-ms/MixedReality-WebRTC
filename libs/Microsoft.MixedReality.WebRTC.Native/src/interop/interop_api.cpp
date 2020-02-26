@@ -312,6 +312,10 @@ uint32_t MRS_CALL mrsReportLiveObjects() noexcept {
   return GlobalFactory::StaticReportLiveObjects();
 }
 
+mrsShutdownOptions MRS_CALL mrsGetShutdownOptions() noexcept {
+  return GlobalFactory::GetShutdownOptions();
+}
+
 void MRS_CALL mrsSetShutdownOptions(mrsShutdownOptions options) noexcept {
   GlobalFactory::SetShutdownOptions(options);
 }

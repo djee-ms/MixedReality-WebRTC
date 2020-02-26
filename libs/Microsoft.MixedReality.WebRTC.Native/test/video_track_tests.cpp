@@ -4,12 +4,13 @@
 #include "pch.h"
 
 #include "external_video_track_source_interop.h"
-#include "interop_api.h"
-#include "local_video_track_interop.h"
 #include "interop/remote_video_track_interop.h"
 #include "interop/video_transceiver_interop.h"
+#include "interop_api.h"
+#include "local_video_track_interop.h"
 
 #include "simple_interop.h"
+#include "test_utils.h"
 #include "video_test_utils.h"
 
 #if !defined(MRSW_EXCLUDE_DEVICE_TESTS)
@@ -40,9 +41,11 @@ using VideoTrackAddedCallback =
 // PeerConnectionI420VideoFrameCallback
 using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
 
+class VideoTrackTests : public TestUtils::TestBase {};
+
 }  // namespace
 
-TEST(VideoTrack, Simple) {
+TEST_F(VideoTrackTests, Simple) {
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
@@ -193,7 +196,7 @@ TEST(VideoTrack, Simple) {
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(VideoTrack, Muted) {
+TEST_F(VideoTrackTests, Muted) {
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the
@@ -308,7 +311,7 @@ void MRS_CALL enumDeviceCallbackCompleted(void* user_data) {
 }
 
 // FIXME - PeerConnection currently doesn't support multiple local video tracks
-// TEST(VideoTrack, DeviceIdAll) {
+// TEST_F(VideoTrackTests, DeviceIdAll) {
 //  LocalPeerPairRaii pair;
 //
 //  Event ev;
@@ -325,7 +328,7 @@ void MRS_CALL enumDeviceCallbackCompleted(void* user_data) {
 //  }
 //}
 
-TEST(VideoTrack, DeviceIdInvalid) {
+TEST_F(VideoTrackTests, DeviceIdInvalid) {
   LocalVideoTrackInitConfig config{};
   LocalVideoTrackHandle track_handle{};
   config.video_device_id = "[[INVALID DEVICE ID]]";
@@ -334,7 +337,7 @@ TEST(VideoTrack, DeviceIdInvalid) {
   ASSERT_EQ(nullptr, track_handle);
 }
 
-TEST(VideoTrack, Multi) {
+TEST_F(VideoTrackTests, Multi) {
   SimpleInterop simple_interop1;
   SimpleInterop simple_interop2;
 
@@ -408,8 +411,8 @@ TEST(VideoTrack, Multi) {
     strstr << "track_1_" << idx;
     str = strstr.str();  // keep alive
     ASSERT_EQ(Result::kSuccess, mrsLocalVideoTrackCreateFromExternalSource(
-                                    source_handle1, &track_config,
-                                    str.c_str(), &track.local_handle));
+                                    source_handle1, &track_config, str.c_str(),
+                                    &track.local_handle));
     ASSERT_NE(nullptr, track.local_handle);
     ASSERT_EQ(Result::kSuccess,
               mrsVideoTransceiverSetLocalTrack(track.local_transceiver_handle,
@@ -478,7 +481,7 @@ TEST(VideoTrack, Multi) {
   simple_interop2.Unregister(pair.pc2());
 }
 
-TEST(VideoTrack, ExternalI420) {
+TEST_F(VideoTrackTests, ExternalI420) {
   LocalPeerPairRaii pair;
 
   // In order to allow creating interop wrappers from native code, register the

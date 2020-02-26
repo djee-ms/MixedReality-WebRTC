@@ -12,7 +12,7 @@ namespace Microsoft.MixedReality.WebRTC
     public static class Library
     {
         /// <summary>
-        /// Report all objects current alive and tracked by the native implementation.
+        /// Report all objects currently alive and tracked by the native implementation.
         /// This is a live report, which generally gets outdated as soon as the function
         /// returned, as new objects are created and others destroyed. Nonetheless this
         /// is may be helpful to diagnose issues with disposing objects.
@@ -24,10 +24,10 @@ namespace Microsoft.MixedReality.WebRTC
         }
 
         /// <summary>
-        /// Options of library shutdown.
+        /// Options for library shutdown.
         /// </summary>
         [Flags]
-        public enum ShutdownOptions : uint
+        public enum ShutdownOptionsFlags : uint
         {
             /// <summary>
             /// Do nothing specific.
@@ -35,26 +35,34 @@ namespace Microsoft.MixedReality.WebRTC
             None = 0,
 
             /// <summary>
-            /// Fail shutdown of some objects are alive.
+            /// Log with <see cref="ReportLiveObjects"/> all objects still alive, to help debugging.
             /// This is recommended to prevent deadlocks during shutdown.
             /// </summary>
-            FailOnLiveObjects = 1,
+            LogLiveObjects = 0x1,
 
             /// <summary>
-            /// Log all objects still alive, to help debugging.
+            /// When forcing shutdown, either because <see cref="ForceShutdown"/> is called or
+            /// because the program terminates, and some objects are still alive, attempt
+            /// to break into the debugger. This is not available for all platforms.
             /// </summary>
-            LogLiveObjects = 2
+            DebugBreakOnForceShutdown = 0x2,
+
+            /// <summary>
+            /// Default options.
+            /// </summary>
+            Default = LogLiveObjects
         }
 
         /// <summary>
-        /// Shutdown the MixedReality-WebRTC library. This must be called once all objects have been
+        /// Options used when shutting down the MixedReality-WebRTC library.
         /// disposed, to shutdown the internal threads and release the global resources, and allow the
         /// library's module to be unloaded.
         /// </summary>
         /// <param name="options">Options for shutdown.</param>
-        public static void SetShutdownOptions(ShutdownOptions options)
+        public static ShutdownOptionsFlags ShutdownOptions
         {
-            Utils.LibrarySetShutdownOptions(options);
+            get { return Utils.LibraryGetShutdownOptions(); }
+            set { Utils.LibrarySetShutdownOptions(value); }
         }
 
         /// <summary>
