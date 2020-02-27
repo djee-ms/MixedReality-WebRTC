@@ -557,7 +557,7 @@ namespace TestAppUwp
 
             // Cannot run in UI thread on UWP because this will initialize the global factory
             // (first library call) which needs to be done on a background thread.
-            await Task.Run(() => Library.SetShutdownOptions(Library.ShutdownOptions.FailOnLiveObjects | Library.ShutdownOptions.LogLiveObjects));
+            await Task.Run(() => Library.ShutdownOptions = Library.ShutdownOptionsFlags.LogLiveObjects);
 
             // Populate the combo box with the VideoProfileKind enum
             {
