@@ -25,7 +25,7 @@ FakeIterop_DataChannelCreate(mrsPeerConnectionInteropHandle /*parent*/,
 
 // OnDataChannelAdded
 using DataAddedCallback =
-    InteropCallback<mrsDataChannelInteropHandle, DataChannelHandle>;
+    InteropCallback<mrsDataChannelInteropHandle, mrsDataChannelHandle>;
 
 void MRS_CALL StaticMessageCallback(void* user_data,
                                     const void* data,
@@ -57,7 +57,7 @@ TEST_P(DataChannelTests, AddChannelBeforeInit) {
   config.flags = mrsDataChannelConfigFlags::kOrdered |
                  mrsDataChannelConfigFlags::kReliable;
   mrsDataChannelCallbacks callbacks{};
-  DataChannelHandle handle;
+  mrsDataChannelHandle handle;
   mrsDataChannelInteropHandle interopHandle = kFakeInteropDataChannelHandle;
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddDataChannel(pc.handle(), interopHandle, config,
@@ -127,7 +127,7 @@ TEST_P(DataChannelTests, InBand) {
     data_config.flags = mrsDataChannelConfigFlags::kOrdered |
                         mrsDataChannelConfigFlags::kReliable;
     mrsDataChannelCallbacks callbacks{};
-    DataChannelHandle handle;
+    mrsDataChannelHandle handle;
     mrsDataChannelInteropHandle interopHandle = kFakeInteropDataChannelHandle;
     ASSERT_EQ(Result::kSuccess,
               mrsPeerConnectionAddDataChannel(pc1.handle(), interopHandle,
@@ -155,7 +155,7 @@ TEST_P(DataChannelTests, InBand) {
   DataAddedCallback data_added_cb =
       [&pc2, &data2_ev, &channel_label](
           mrsDataChannelInteropHandle data_channel_wrapper,
-          DataChannelHandle data_channel) {
+          mrsDataChannelHandle data_channel) {
         ASSERT_EQ(kFakeInteropDataChannelHandle, data_channel_wrapper);
         ASSERT_NE(nullptr, data_channel);
 
@@ -175,7 +175,7 @@ TEST_P(DataChannelTests, InBand) {
     data_config.flags = mrsDataChannelConfigFlags::kOrdered |
                         mrsDataChannelConfigFlags::kReliable;
     mrsDataChannelCallbacks callbacks{};
-    DataChannelHandle data1_handle;
+    mrsDataChannelHandle data1_handle;
     mrsDataChannelInteropHandle interopHandle = kFakeInteropDataChannelHandle;
     ASSERT_EQ(Result::kSuccess, mrsPeerConnectionAddDataChannel(
                                     pc1.handle(), interopHandle, data_config,
@@ -221,7 +221,7 @@ TEST_P(DataChannelTests, MultiThreadCreate) {
     t = std::move(*new std::thread([&ev_start, &pc]() {
       ev_start.Wait();
       mrsDataChannelConfig config{};
-      DataChannelHandle handle;
+      mrsDataChannelHandle handle;
       ASSERT_EQ(Result::kSuccess,
                 mrsPeerConnectionAddDataChannel(
                     pc.handle(), (mrsDataChannelInteropHandle)0x1, config, {},
@@ -274,7 +274,7 @@ TEST_P(DataChannelTests, Send) {
   callbacks1.message_user_data = &message1_cb;
   callbacks1.state_callback = &StaticStateCallback;
   callbacks1.state_user_data = &state1_cb;
-  DataChannelHandle handle1;
+  mrsDataChannelHandle handle1;
   mrsDataChannelInteropHandle interopHandle1 = kFakeInteropDataChannelHandle;
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddDataChannel(pair.pc1(), interopHandle1, config,
@@ -300,7 +300,7 @@ TEST_P(DataChannelTests, Send) {
   callbacks2.message_user_data = &message2_cb;
   callbacks2.state_callback = &StaticStateCallback;
   callbacks2.state_user_data = &state2_cb;
-  DataChannelHandle handle2;
+  mrsDataChannelHandle handle2;
   mrsDataChannelInteropHandle interopHandle2 = kFakeInteropDataChannelHandle;
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddDataChannel(pair.pc2(), interopHandle2, config,
@@ -357,7 +357,7 @@ TEST_F(DataChannelTests, Send_InvalidHandle) {
 //            mrsPeerConnectionRegisterInteropCallbacks(pair.pc2(), &interop));
 //
 //  // Add dummy out-of-band data channel
-//  DataChannelHandle handle1, handle2;
+//  mrsDataChannelHandle handle1, handle2;
 //  uint64_t peak = 0;
 //  {
 //    mrsDataChannelConfig data_config{};

@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "../src/mrs_errors.h"
-#include "../src/interop/global_factory.h"
 #include "../include/interop_api.h"
 #include "../include/peer_connection_interop.h"
+#include "../src/interop/global_factory.h"
+#include "../src/mrs_errors.h"
 
 using namespace Microsoft::MixedReality::WebRTC;
 
@@ -23,8 +23,8 @@ class SimpleInterop {
     uint32_t id_;
   };
 
-  void Register(PeerConnectionHandle pc) noexcept;
-  void Unregister(PeerConnectionHandle pc) noexcept;
+  void Register(mrsPeerConnectionHandle pc) noexcept;
+  void Unregister(mrsPeerConnectionHandle pc) noexcept;
 
   void* CreateObject(ObjectType type) noexcept;
   void DestroyObject(void* obj) noexcept;

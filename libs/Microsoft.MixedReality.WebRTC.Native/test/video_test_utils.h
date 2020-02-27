@@ -13,7 +13,7 @@ using namespace Microsoft::MixedReality::WebRTC;
 namespace VideoTestUtils {
 
 mrsResult MRS_CALL MakeTestFrame(void* /*user_data*/,
-                                 ExternalVideoTrackSourceHandle handle,
+                                 mrsExternalVideoTrackSourceHandle handle,
                                  uint32_t request_id,
                                  int64_t timestamp_ms);
 

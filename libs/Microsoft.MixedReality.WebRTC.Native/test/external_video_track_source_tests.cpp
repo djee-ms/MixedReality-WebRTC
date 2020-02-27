@@ -54,7 +54,7 @@ constexpr uint32_t kYellow = 0xFF00B9FFu;
 /// Generate a 16px by 16px test frame.
 mrsResult MRS_CALL
 GenerateQuadTestFrame(void* /*user_data*/,
-                      ExternalVideoTrackSourceHandle source_handle,
+                      mrsExternalVideoTrackSourceHandle source_handle,
                       uint32_t request_id,
                       int64_t timestamp_ms) {
   memset(FrameBuffer, 0, 256 * 4);
@@ -119,9 +119,9 @@ void ValidateQuadTestFrame(const void* data,
 // PeerConnectionVideoTrackAddedCallback
 using VideoTrackAddedCallback =
     InteropCallback<mrsRemoteVideoTrackInteropHandle,
-                    RemoteVideoTrackHandle,
+                    mrsRemoteVideoTrackHandle,
                     mrsVideoTransceiverInteropHandle,
-                    VideoTransceiverHandle>;
+                    mrsVideoTransceiverHandle>;
 
 // mrsArgb32VideoFrameCallback
 using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
@@ -140,15 +140,15 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
 
   // Grab the handle of the remote track from the remote peer (#2) via the
   // VideoTrackAdded callback.
-  RemoteVideoTrackHandle track_handle2{};
-  VideoTransceiverHandle transceiver_handle2{};
+  mrsRemoteVideoTrackHandle track_handle2{};
+  mrsVideoTransceiverHandle transceiver_handle2{};
   Event track_added2_ev;
   VideoTrackAddedCallback track_added2_cb =
       [&track_handle2, &transceiver_handle2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
-          RemoteVideoTrackHandle track_handle,
+          mrsRemoteVideoTrackHandle track_handle,
           mrsVideoTransceiverInteropHandle /*interop_handle*/,
-          VideoTransceiverHandle transceiver_handle) {
+          mrsVideoTransceiverHandle transceiver_handle) {
         track_handle2 = track_handle;
         transceiver_handle2 = transceiver_handle;
         track_added2_ev.Set();
@@ -157,7 +157,7 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
                                                    CB(track_added2_cb));
 
   // Create the external source for the local video track of the local peer (#1)
-  ExternalVideoTrackSourceHandle source_handle1 = nullptr;
+  mrsExternalVideoTrackSourceHandle source_handle1 = nullptr;
   ASSERT_EQ(mrsResult::kSuccess,
             mrsExternalVideoTrackSourceCreateFromArgb32Callback(
                 &GenerateQuadTestFrame, nullptr, &source_handle1));
@@ -165,7 +165,7 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
   mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create the local track itself for #1
-  LocalVideoTrackHandle track_handle1{};
+  mrsLocalVideoTrackHandle track_handle1{};
   {
     LocalVideoTrackFromExternalSourceInitConfig source_config{};
     ASSERT_EQ(mrsResult::kSuccess,
@@ -176,7 +176,7 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
   }
 
   // Create the video transceiver #1
-  VideoTransceiverHandle transceiver_handle1{};
+  mrsVideoTransceiverHandle transceiver_handle1{};
   {
     VideoTransceiverInitConfig config{};
     config.name = "transceiver_1";
@@ -189,13 +189,13 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
   // Check video transceiver #1 consistency
   {
     // Local track is NULL
-    LocalVideoTrackHandle track_handle_local{};
+    mrsLocalVideoTrackHandle track_handle_local{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
                                     transceiver_handle1, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote track is NULL
-    RemoteVideoTrackHandle track_handle_remote{};
+    mrsRemoteVideoTrackHandle track_handle_remote{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
                                     transceiver_handle1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
@@ -208,14 +208,14 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
   // Check video transceiver #1 consistency
   {
     // Local track is track_handle1
-    LocalVideoTrackHandle track_handle_local{};
+    mrsLocalVideoTrackHandle track_handle_local{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
                                     transceiver_handle1, &track_handle_local));
     ASSERT_EQ(track_handle1, track_handle_local);
     mrsLocalVideoTrackRemoveRef(track_handle_local);
 
     // Remote track is NULL
-    RemoteVideoTrackHandle track_handle_remote{};
+    mrsRemoteVideoTrackHandle track_handle_remote{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
                                     transceiver_handle1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
@@ -232,13 +232,13 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
   // Check video transceiver #2 consistency
   {
     // Local track is NULL
-    LocalVideoTrackHandle track_handle_local{};
+    mrsLocalVideoTrackHandle track_handle_local{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetLocalTrack(
                                     transceiver_handle2, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote track is track_handle2
-    RemoteVideoTrackHandle track_handle_remote{};
+    mrsRemoteVideoTrackHandle track_handle_remote{};
     ASSERT_EQ(Result::kSuccess, mrsVideoTransceiverGetRemoteTrack(
                                     transceiver_handle2, &track_handle_remote));
     ASSERT_EQ(track_handle2, track_handle_remote);

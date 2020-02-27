@@ -34,7 +34,7 @@ mrsRemoteAudioTrackInteropHandle MRS_CALL FakeIterop_RemoteAudioTrackCreate(
 }
 
 struct FakeInteropRaii {
-  FakeInteropRaii(std::initializer_list<PeerConnectionHandle> handles)
+  FakeInteropRaii(std::initializer_list<mrsPeerConnectionHandle> handles)
       : handles_(handles) {
     setup();
   }
@@ -49,15 +49,15 @@ struct FakeInteropRaii {
     }
   }
   void cleanup() {}
-  std::vector<PeerConnectionHandle> handles_;
+  std::vector<mrsPeerConnectionHandle> handles_;
 };
 
 // PeerConnectionAudioTrackAddedCallback
 using AudioTrackAddedCallback =
     InteropCallback<mrsRemoteAudioTrackInteropHandle,
-                    RemoteAudioTrackHandle,
+                    mrsRemoteAudioTrackHandle,
                     mrsAudioTransceiverInteropHandle,
-                    AudioTransceiverHandle>;
+                    mrsAudioTransceiverHandle>;
 
 // PeerConnectionI420AudioFrameCallback
 using I420AudioFrameCallback = InteropCallback<const AudioFrame&>;
@@ -73,7 +73,7 @@ TEST_P(AudioTransceiverTests, InvalidName) {
   PeerConnectionConfiguration pc_config{};
   pc_config.sdp_semantic = GetParam();
   LocalPeerPairRaii pair(pc_config);
-  AudioTransceiverHandle transceiver_handle1{};
+  mrsAudioTransceiverHandle transceiver_handle1{};
   AudioTransceiverInitConfig transceiver_config{};
   transceiver_config.name = "invalid name with space";
   ASSERT_EQ(Result::kInvalidParameter,
@@ -103,7 +103,7 @@ TEST_P(AudioTransceiverTests, SetDirection) {
       pair.pc2(), CB(renegotiation_needed2_cb));
 
   // Add a transceiver to the local peer (#1)
-  AudioTransceiverHandle transceiver_handle1{};
+  mrsAudioTransceiverHandle transceiver_handle1{};
   {
     AudioTransceiverInitConfig transceiver_config{};
     transceiver_config.name = "audio_transceiver_1";
@@ -154,13 +154,13 @@ TEST_P(AudioTransceiverTests, SetDirection) {
     ASSERT_EQ(mrsTransceiverDirection::kInactive, dir_desired1);
 
     // Local audio track is NULL
-    LocalAudioTrackHandle track_handle_local{};
+    mrsLocalAudioTrackHandle track_handle_local{};
     ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
                                     transceiver_handle1, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote audio track is NULL
-    RemoteAudioTrackHandle track_handle_remote{};
+    mrsRemoteAudioTrackHandle track_handle_remote{};
     ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
                                     transceiver_handle1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
@@ -235,7 +235,7 @@ TEST_F(AudioTransceiverTests, SetDirection_InvalidHandle) {
 }
 
 TEST_F(AudioTransceiverTests, SetLocalTrack_InvalidHandle) {
-  LocalAudioTrackHandle dummy = (void*)0x1;  // looks legit
+  mrsLocalAudioTrackHandle dummy = (void*)0x1;  // looks legit
   ASSERT_EQ(Result::kInvalidNativeHandle,
             mrsAudioTransceiverSetLocalTrack(nullptr, dummy));
 }
