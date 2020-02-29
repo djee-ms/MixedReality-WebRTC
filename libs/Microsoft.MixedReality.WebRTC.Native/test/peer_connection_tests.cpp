@@ -7,13 +7,26 @@
 
 #include "test_utils.h"
 
-TEST(PeerConnection, LocalNoIce) {
+namespace {
+
+class PeerConnectionTests : public TestUtils::TestBase,
+                            public testing::WithParamInterface<SdpSemantic> {};
+
+}  // namespace
+
+INSTANTIATE_TEST_CASE_P(PeerConnection,
+                        PeerConnectionTests,
+                        testing::ValuesIn(TestUtils::TestSemantics),
+                        TestUtils::SdpSemanticToString);
+
+TEST_P(PeerConnectionTests, LocalNoIce) {
   for (int i = 0; i < 3; ++i) {
     // Create PC -- do not use PCRaii, which registers ICE callbacks
-    PeerConnectionConfiguration config{};  // local connection only
-    PCRaii pc1(config);
+    PeerConnectionConfiguration pc_config{};  // local connection only
+    pc_config.sdp_semantic = GetParam();
+    PCRaii pc1(pc_config);
     ASSERT_NE(nullptr, pc1.handle());
-    PCRaii pc2(config);
+    PCRaii pc2(pc_config);
     ASSERT_NE(nullptr, pc2.handle());
 
     // Setup signaling
@@ -51,11 +64,12 @@ TEST(PeerConnection, LocalNoIce) {
   }
 }
 
-TEST(PeerConnection, LocalIce) {
+TEST_P(PeerConnectionTests, LocalIce) {
   for (int i = 0; i < 3; ++i) {
     // Create PC
-    PeerConnectionConfiguration config{};  // local connection only
-    LocalPeerPairRaii pair(config);
+    PeerConnectionConfiguration pc_config{};  // local connection only
+    pc_config.sdp_semantic = GetParam();
+    LocalPeerPairRaii pair(pc_config);
     ASSERT_NE(nullptr, pair.pc1());
     ASSERT_NE(nullptr, pair.pc2());
 
