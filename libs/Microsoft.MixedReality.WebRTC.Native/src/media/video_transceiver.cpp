@@ -13,11 +13,14 @@ VideoTransceiver::VideoTransceiver(
     PeerConnection& owner,
     int mline_index,
     std::string name,
-    mrsVideoTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(std::move(global_factory), MediaKind::kVideo, owner),
+    const VideoTransceiverInitConfig& config) noexcept
+    : Transceiver(std::move(global_factory),
+                  MediaKind::kVideo,
+                  owner,
+                  config.desired_direction),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {}
+      interop_handle_(config.transceiver_interop_handle) {}
 
 VideoTransceiver::VideoTransceiver(
     RefPtr<GlobalFactory> global_factory,
@@ -25,14 +28,15 @@ VideoTransceiver::VideoTransceiver(
     int mline_index,
     std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
-    mrsVideoTransceiverInteropHandle interop_handle) noexcept
+    const VideoTransceiverInitConfig& config) noexcept
     : Transceiver(std::move(global_factory),
                   MediaKind::kVideo,
                   owner,
-                  transceiver),
+                  transceiver,
+                  config.desired_direction),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {}
+      interop_handle_(config.transceiver_interop_handle) {}
 
 VideoTransceiver::~VideoTransceiver() {
   // Be sure to clean-up WebRTC objects before unregistering ourself, which
@@ -48,8 +52,7 @@ Result VideoTransceiver::SetDirection(Direction new_direction) noexcept {
     }
     transceiver_->SetDirection(ToRtp(new_direction));
   } else {  // Plan B
-    //< TODO
-    return Result::kUnknownError;
+    // nothing to do
   }
   desired_direction_ = new_direction;
   FireStateUpdatedEvent(mrsTransceiverStateUpdatedReason::kSetDirection);

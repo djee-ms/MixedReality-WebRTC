@@ -4,15 +4,19 @@
 #include "pch.h"
 
 #include "external_video_track_source_interop.h"
-#include "interop_api.h"
-#include "local_video_track_interop.h"
 #include "interop/remote_video_track_interop.h"
 #include "interop/video_transceiver_interop.h"
+#include "interop_api.h"
+#include "local_video_track_interop.h"
 
 #include "simple_interop.h"
 #include "video_test_utils.h"
 
 namespace {
+
+class VideoTransceiverTests : public TestUtils::TestBase,
+                              public testing::WithParamInterface<SdpSemantic> {
+};
 
 const mrsPeerConnectionInteropHandle kFakeInteropPeerConnectionHandle =
     (void*)0x1;
@@ -62,8 +66,15 @@ using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
 
 }  // namespace
 
-TEST(VideoTransceiver, InvalidName) {
-  LocalPeerPairRaii pair;
+INSTANTIATE_TEST_CASE_P(VideoTransceiver,
+                        VideoTransceiverTests,
+                        testing::ValuesIn(TestUtils::TestSemantics),
+                        TestUtils::SdpSemanticToString);
+
+TEST_P(VideoTransceiverTests, InvalidName) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  LocalPeerPairRaii pair(pc_config);
   VideoTransceiverHandle transceiver_handle1{};
   VideoTransceiverInitConfig transceiver_config{};
   transceiver_config.name = "invalid name with space";
@@ -73,8 +84,10 @@ TEST(VideoTransceiver, InvalidName) {
   ASSERT_EQ(nullptr, transceiver_handle1);
 }
 
-TEST(VideoTransceiver, SetDirection) {
-  LocalPeerPairRaii pair;
+TEST_P(VideoTransceiverTests, SetDirection) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  LocalPeerPairRaii pair(pc_config);
   FakeInteropRaii interop({pair.pc1(), pair.pc2()});
 
   // Register event for renegotiation needed
@@ -158,11 +171,10 @@ TEST(VideoTransceiver, SetDirection) {
   // Connect #1 and #2
   pair.ConnectAndWait();
 
-  // Because the state updated event handler is registered after the transceiver
-  // is created, the state is stale, and applying the local description during
-  // |CreateOffer()| will generate some event.
-  ASSERT_TRUE(state_updated1_ev_local.WaitFor(10s));
-  state_updated1_ev_local.Reset();
+  // The transceiver is created in its desired state, and peer #1 creates the
+  // offer, so there is no event for updating the state due to a local
+  // description.
+  ASSERT_FALSE(state_updated1_ev_local.IsSignaled());
 
   // Wait for transceiver to be updated; this happens *after* connect,
   // during SetRemoteDescription().
@@ -186,7 +198,7 @@ TEST(VideoTransceiver, SetDirection) {
 
   // Check video transceiver #1 consistency
   {
-    // Desired state is Receive, negotiated is still Send+Receive
+    // Desired state is Receive, negotiated is still Send only
     ASSERT_EQ(mrsTransceiverOptDirection::kSendOnly,
               dir_negotiated1);  // no change
     ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);

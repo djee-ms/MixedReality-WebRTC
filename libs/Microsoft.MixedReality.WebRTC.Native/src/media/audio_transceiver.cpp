@@ -14,11 +14,14 @@ AudioTransceiver::AudioTransceiver(
     PeerConnection& owner,
     int mline_index,
     std::string name,
-    mrsAudioTransceiverInteropHandle interop_handle) noexcept
-    : Transceiver(std::move(global_factory), MediaKind::kAudio, owner),
+    const AudioTransceiverInitConfig& config) noexcept
+    : Transceiver(std::move(global_factory),
+                  MediaKind::kAudio,
+                  owner,
+                  config.desired_direction),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {}
+      interop_handle_(config.transceiver_interop_handle) {}
 
 AudioTransceiver::AudioTransceiver(
     RefPtr<GlobalFactory> global_factory,
@@ -26,14 +29,15 @@ AudioTransceiver::AudioTransceiver(
     int mline_index,
     std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
-    mrsAudioTransceiverInteropHandle interop_handle) noexcept
+    const AudioTransceiverInitConfig& config) noexcept
     : Transceiver(std::move(global_factory),
                   MediaKind::kAudio,
                   owner,
-                  transceiver),
+                  transceiver,
+                  config.desired_direction),
       mline_index_(mline_index),
       name_(std::move(name)),
-      interop_handle_(interop_handle) {}
+      interop_handle_(config.transceiver_interop_handle) {}
 
 AudioTransceiver::~AudioTransceiver() {
   // Be sure to clean-up WebRTC objects before unregistering ourself, which
@@ -49,8 +53,7 @@ Result AudioTransceiver::SetDirection(Direction new_direction) noexcept {
     }
     transceiver_->SetDirection(ToRtp(new_direction));
   } else {  // Plan B
-    //< TODO
-    return Result::kUnknownError;
+    // nothing to do
   }
   desired_direction_ = new_direction;
   FireStateUpdatedEvent(mrsTransceiverStateUpdatedReason::kSetDirection);

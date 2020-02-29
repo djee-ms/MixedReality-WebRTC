@@ -34,15 +34,16 @@ class Transceiver : public TrackedObject {
   /// any concept of transceiver.
   Transceiver(RefPtr<GlobalFactory> global_factory,
               MediaKind kind,
-              PeerConnection& owner) noexcept;
+              PeerConnection& owner,
+              Direction desired_direction) noexcept;
 
   /// Construct a Unified Plan transceiver wrapper referencing an actual WebRTC
   /// transceiver implementation object as defined in Unified Plan.
-  Transceiver(
-      RefPtr<GlobalFactory> global_factory,
-      MediaKind kind,
-      PeerConnection& owner,
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept;
+  Transceiver(RefPtr<GlobalFactory> global_factory,
+              MediaKind kind,
+              PeerConnection& owner,
+              rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
+              Direction desired_direction) noexcept;
 
   ~Transceiver() override;
 
@@ -54,8 +55,14 @@ class Transceiver : public TrackedObject {
   /// the object is a |VideoTransceiver| instance.
   MediaKind GetMediaKind() const noexcept { return kind_; }
 
+  /// Get the desired transceiver direction.
+  Direction GetDesiredDirection() const noexcept { return desired_direction_; }
+
   /// Get the current transceiver direction.
   OptDirection GetDirection() const noexcept { return direction_; }
+
+  bool HasSender(webrtc::RtpSenderInterface* sender) const;
+  bool HasReceiver(webrtc::RtpReceiverInterface* receiver) const;
 
   //
   // Interop callbacks
@@ -78,9 +85,23 @@ class Transceiver : public TrackedObject {
   [[nodiscard]] rtc::scoped_refptr<webrtc::RtpTransceiverInterface> impl()
       const;
 
+  /// Synchronize the RTP sender with the desired direction when using Plan B.
+  /// |needed| indicate whether an RTP sender is needed or not. |peer| is passed
+  /// as argument for convenience, as |owner_| cannot access it. |media_kind| is
+  /// the Cricket value, so "audio" or "video".
+  void SyncSenderPlanB(bool needed,
+                       rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer,
+                       const char* media_kind,
+                       const char* stream_id);
+
+  /// Set the RTP receiver created for Plan B emulation when the desired
+  /// direction allows receiving.
+  void SetReceiverPlanB(
+      rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver);
+
   /// Callback on local description updated, to check for any change in the
   /// transceiver direction and update its state.
-  void OnSessionDescUpdated(bool remote);
+  void OnSessionDescUpdated(bool remote, bool forced = false);
 
   /// Fire the StateUpdated event, invoking the |state_updated_callback_| if
   /// any is registered.
@@ -92,6 +113,8 @@ class Transceiver : public TrackedObject {
       webrtc::RtpTransceiverDirection rtp_direction);
   [[nodiscard]] static OptDirection FromRtp(
       std::optional<webrtc::RtpTransceiverDirection> rtp_direction);
+  [[nodiscard]] static Direction FromSendRecv(bool send, bool recv);
+  [[nodiscard]] static OptDirection OptFromSendRecv(bool send, bool recv);
 
   [[nodiscard]] static std::vector<std::string> DecodeStreamIDs(
       const char* encoded_stream_ids);
@@ -99,6 +122,8 @@ class Transceiver : public TrackedObject {
       const std::vector<std::string>& stream_ids);
 
  protected:
+  struct PlanBEmulation;
+
   /// Weak reference to the PeerConnection object owning this transceiver.
   PeerConnection* owner_{};
 
@@ -121,6 +146,13 @@ class Transceiver : public TrackedObject {
   /// This is also used as a cache of which Plan is in use, to avoid querying
   /// the peer connection.
   rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver_;
+
+  /// Emulation layer for transceiver-over-PlanB. Used when SDP semantic is set
+  /// Plan B to emulate the behavior of a transceiver using the track-based API.
+  /// This is NULL if using Unified Plan.
+  /// This is also used as a cache of which Plan is in use, to avoid querying
+  /// the peer connection.
+  std::unique_ptr<PlanBEmulation> plan_b_;
 
   /// Interop callback invoked when the internal state of the transceiver has
   /// been updated.
