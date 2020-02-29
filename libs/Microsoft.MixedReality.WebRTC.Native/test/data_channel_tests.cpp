@@ -9,7 +9,21 @@
 
 namespace {
 
-class DataChannelTests : public TestUtils::TestBase {};
+constexpr const SdpSemantic TestSemantics[] = {SdpSemantic::kUnifiedPlan,
+                                               SdpSemantic::kPlanB};
+
+std::string SdpSemanticToString(
+    const testing::TestParamInfo<SdpSemantic>& info) {
+  switch (info.param) {
+    case SdpSemantic::kPlanB:
+      return "PlanB";
+    case SdpSemantic::kUnifiedPlan:
+      return "UnifiedPlan";
+  }
+}
+
+class DataChannelTests : public TestUtils::TestBase,
+                         public testing::WithParamInterface<SdpSemantic> {};
 
 const mrsPeerConnectionInteropHandle kFakeInteropPeerConnectionHandle =
     (void*)0x1;
@@ -41,8 +55,15 @@ void MRS_CALL StaticStateCallback(void* user_data, int32_t state, int32_t id) {
 
 }  // namespace
 
-TEST_F(DataChannelTests, AddChannelBeforeInit) {
-  PCRaii pc;
+INSTANTIATE_TEST_CASE_P(DataChannel,
+                        DataChannelTests,
+                        testing::ValuesIn(TestSemantics),
+                        SdpSemanticToString);
+
+TEST_P(DataChannelTests, AddChannelBeforeInit) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  PCRaii pc(pc_config);
   ASSERT_NE(nullptr, pc.handle());
   mrsDataChannelConfig config{};
   config.label = "data";
@@ -56,12 +77,13 @@ TEST_F(DataChannelTests, AddChannelBeforeInit) {
                                             callbacks, &handle));
 }
 
-TEST_F(DataChannelTests, InBand) {
+TEST_P(DataChannelTests, InBand) {
   // Create PC
-  PeerConnectionConfiguration config{};  // local connection only
-  PCRaii pc1(config);
+  PeerConnectionConfiguration pc_config{};  // local connection only
+  pc_config.sdp_semantic = GetParam();
+  PCRaii pc1(pc_config);
   ASSERT_NE(nullptr, pc1.handle());
-  PCRaii pc2(config);
+  PCRaii pc2(pc_config);
   ASSERT_NE(nullptr, pc2.handle());
 
   // In order to allow creating interop wrappers from native code, register the
@@ -201,8 +223,10 @@ TEST_F(DataChannelTests, InBand) {
   }
 }
 
-TEST_F(DataChannelTests, MultiThreadCreate) {
-  PCRaii pc;
+TEST_P(DataChannelTests, MultiThreadCreate) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  PCRaii pc(pc_config);
   constexpr int kNumThreads = 16;
   std::thread threads[kNumThreads];
   Event ev_start;
@@ -223,8 +247,10 @@ TEST_F(DataChannelTests, MultiThreadCreate) {
   }
 }
 
-TEST_F(DataChannelTests, Send) {
-  LocalPeerPairRaii pair;
+TEST_P(DataChannelTests, Send) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  LocalPeerPairRaii pair(pc_config);
 
   const int kId = 42;
 

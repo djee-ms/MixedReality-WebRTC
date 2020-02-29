@@ -1306,21 +1306,27 @@ bool PeerConnectionImpl::SetRemoteDescriptionAsync(
     return false;
   rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface> observer =
       new rtc::RefCountedObject<SetRemoteSessionDescObserver>([this, callback] {
-        // Inspect transceiver directions, check for changes to update the
-        // interop layer with the actually negotiated direction.
-        std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-            changed_transceivers;
-        int mline_index = 0;  // native transceivers are in mline_index order
-        for (auto&& tr : peer_->GetTransceivers()) {
-          // If transceiver is created from the result of applying a remote
-          // description, then the transceiver name is extracted from the
-          // receiver, in an attempt to pair with the remote peer's track.
-          std::string name = ExtractTransceiverNameFromReceiver(tr->receiver());
-          ErrorOr<RefPtr<Transceiver>> err =
-              GetOrCreateTransceiver(mline_index, tr, std::move(name));
-          RTC_DCHECK(err.ok());
-          err.value()->OnSessionDescUpdated(/*remote=*/true);
-          ++mline_index;
+        // For Unified Plan only, inspect transceiver directions, check for
+        // changes to update the interop layer with the actually negotiated
+        // direction.
+        if (peer_->GetConfiguration().sdp_semantics ==
+            webrtc::SdpSemantics::kUnifiedPlan) {
+          std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+              changed_transceivers;
+          int mline_index = 0;  // native transceivers are in mline_index order
+          for (auto&& tr : peer_->GetTransceivers()) {
+            // If transceiver is created from the result of applying a
+            // remote description, then the transceiver name is extracted
+            // from the receiver, in an attempt to pair with the remote
+            // peer's track.
+            std::string name =
+                ExtractTransceiverNameFromReceiver(tr->receiver());
+            ErrorOr<RefPtr<Transceiver>> err =
+                GetOrCreateTransceiver(mline_index, tr, std::move(name));
+            RTC_DCHECK(err.ok());
+            err.value()->OnSessionDescUpdated(/*remote=*/true);
+            ++mline_index;
+          }
         }
         // Fire completed callback to signal remote description was applied.
         callback();
@@ -1713,21 +1719,27 @@ void PeerConnectionImpl::OnLocalDescCreated(
   }
   rtc::scoped_refptr<webrtc::SetSessionDescriptionObserver> observer =
       new rtc::RefCountedObject<SessionDescObserver>([this] {
-        // Inspect transceiver directions, check for changes to update the
-        // interop layer with the actually negotiated direction.
-        std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-            changed_transceivers;
-        int mline_index = 0;  // native transceivers are in mline_index order
-        for (auto&& tr : peer_->GetTransceivers()) {
-          // If transceiver is created from the result of applying a local
-          // description, then the transceiver name is extracted from the
-          // sender, as the name should have been set by the user.
-          std::string name = ExtractTransceiverNameFromSender(tr->sender());
-          ErrorOr<RefPtr<Transceiver>> err =
-              GetOrCreateTransceiver(mline_index, tr, std::move(name));
-          RTC_DCHECK(err.ok());
-          err.value()->OnSessionDescUpdated(/*remote=*/false);
-          ++mline_index;
+        // For Unified Plan only, inspect transceivers to observe changes after
+        // applying the local description, and update the state of the
+        // associated wrappers.
+        if (peer_->GetConfiguration().sdp_semantics ==
+            webrtc::SdpSemantics::kUnifiedPlan) {
+          // Inspect transceiver directions, check for changes to update the
+          // interop layer with the actually negotiated direction.
+          std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+              changed_transceivers;
+          int mline_index = 0;  // native transceivers are in mline_index order
+          for (auto&& tr : peer_->GetTransceivers()) {
+            // If transceiver is created from the result of applying a local
+            // description, then the transceiver name is extracted from the
+            // sender, as the name should have been set by the user.
+            std::string name = ExtractTransceiverNameFromSender(tr->sender());
+            ErrorOr<RefPtr<Transceiver>> err =
+                GetOrCreateTransceiver(mline_index, tr, std::move(name));
+            RTC_DCHECK(err.ok());
+            err.value()->OnSessionDescUpdated(/*remote=*/false);
+            ++mline_index;
+          }
         }
 
         // Fire interop callback, if any
