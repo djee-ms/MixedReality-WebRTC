@@ -5,14 +5,7 @@
 
 #include "interop_api.h"
 
-namespace {
-
-void MRS_CALL SetEventOnCompleted(void* user_data) {
-  Event* ev = (Event*)user_data;
-  ev->Set();
-}
-
-}  // namespace
+#include "test_utils.h"
 
 TEST(PeerConnection, LocalNoIce) {
   for (int i = 0; i < 3; ++i) {
@@ -27,20 +20,21 @@ TEST(PeerConnection, LocalNoIce) {
     SdpCallback sdp1_cb(pc1.handle(), [&pc2](const char* type,
                                              const char* sdp_data) {
       Event ev;
-      ASSERT_EQ(Result::kSuccess,
-                mrsPeerConnectionSetRemoteDescriptionAsync(
-                    pc2.handle(), type, sdp_data, &SetEventOnCompleted, &ev));
+      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescriptionAsync(
+                                      pc2.handle(), type, sdp_data,
+                                      &TestUtils::SetEventOnCompleted, &ev));
       ev.Wait();
       if (kOfferString == type) {
-        ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateAnswer(pc2.handle()));
+        ASSERT_EQ(Result::kSuccess,
+                  mrsPeerConnectionCreateAnswer(pc2.handle()));
       }
     });
     SdpCallback sdp2_cb(pc2.handle(), [&pc1](const char* type,
                                              const char* sdp_data) {
       Event ev;
-      ASSERT_EQ(Result::kSuccess,
-                mrsPeerConnectionSetRemoteDescriptionAsync(
-                    pc1.handle(), type, sdp_data, &SetEventOnCompleted, &ev));
+      ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescriptionAsync(
+                                      pc1.handle(), type, sdp_data,
+                                      &TestUtils::SetEventOnCompleted, &ev));
       ev.Wait();
       if (kOfferString == type) {
         ASSERT_EQ(Result::kSuccess,

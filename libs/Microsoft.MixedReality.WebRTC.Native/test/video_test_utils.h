@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#include "../src/mrs_errors.h"
-#include "../src/interop/global_factory.h"
+#pragma once
+
 #include "../include/interop_api.h"
 #include "../include/peer_connection_interop.h"
+#include "../src/interop/global_factory.h"
 #include "../src/mrs_errors.h"
 
 using namespace Microsoft::MixedReality::WebRTC;
@@ -18,4 +19,4 @@ mrsResult MRS_CALL MakeTestFrame(void* /*user_data*/,
 
 void CheckIsTestFrame(const I420AVideoFrame& frame);
 
-}
+}  // namespace VideoTestUtils

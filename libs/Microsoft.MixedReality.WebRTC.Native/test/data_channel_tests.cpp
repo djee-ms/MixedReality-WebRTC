@@ -26,11 +26,6 @@ FakeIterop_DataChannelCreate(mrsPeerConnectionInteropHandle /*parent*/,
 using DataAddedCallback =
     InteropCallback<mrsDataChannelInteropHandle, DataChannelHandle>;
 
-void MRS_CALL SetEventOnCompleted(void* user_data) {
-  Event* ev = (Event*)user_data;
-  ev->Set();
-}
-
 void MRS_CALL StaticMessageCallback(void* user_data,
                                     const void* data,
                                     const uint64_t size) {
@@ -80,9 +75,9 @@ TEST_F(DataChannelTests, InBand) {
   SdpCallback sdp1_cb(pc1.handle(), [&pc2](const char* type,
                                            const char* sdp_data) {
     Event ev;
-    ASSERT_EQ(Result::kSuccess,
-              mrsPeerConnectionSetRemoteDescriptionAsync(
-                  pc2.handle(), type, sdp_data, &SetEventOnCompleted, &ev));
+    ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescriptionAsync(
+                                    pc2.handle(), type, sdp_data,
+                                    &TestUtils::SetEventOnCompleted, &ev));
     ev.Wait();
     if (kOfferString == type) {
       ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateAnswer(pc2.handle()));
@@ -91,9 +86,9 @@ TEST_F(DataChannelTests, InBand) {
   SdpCallback sdp2_cb(pc2.handle(), [&pc1](const char* type,
                                            const char* sdp_data) {
     Event ev;
-    ASSERT_EQ(Result::kSuccess,
-              mrsPeerConnectionSetRemoteDescriptionAsync(
-                  pc1.handle(), type, sdp_data, &SetEventOnCompleted, &ev));
+    ASSERT_EQ(Result::kSuccess, mrsPeerConnectionSetRemoteDescriptionAsync(
+                                    pc1.handle(), type, sdp_data,
+                                    &TestUtils::SetEventOnCompleted, &ev));
     ev.Wait();
     if (kOfferString == type) {
       ASSERT_EQ(Result::kSuccess, mrsPeerConnectionCreateAnswer(pc1.handle()));

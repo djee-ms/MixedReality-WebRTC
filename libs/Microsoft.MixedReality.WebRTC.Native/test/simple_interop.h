@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#pragma once
+
 #include "../src/mrs_errors.h"
 #include "../src/interop/global_factory.h"
 #include "../include/interop_api.h"
