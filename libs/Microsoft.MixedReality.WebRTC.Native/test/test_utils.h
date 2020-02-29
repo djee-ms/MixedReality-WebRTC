@@ -23,4 +23,10 @@ class TestBase : public ::testing::Test {
 /// on it when invoked.
 void MRS_CALL SetEventOnCompleted(void* user_data);
 
+constexpr const SdpSemantic TestSemantics[] = {SdpSemantic::kUnifiedPlan,
+                                               SdpSemantic::kPlanB};
+
+std::string SdpSemanticToString(
+    const testing::TestParamInfo<SdpSemantic>& info);
+
 }  // namespace TestUtils

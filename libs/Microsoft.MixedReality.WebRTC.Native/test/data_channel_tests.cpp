@@ -9,19 +9,6 @@
 
 namespace {
 
-constexpr const SdpSemantic TestSemantics[] = {SdpSemantic::kUnifiedPlan,
-                                               SdpSemantic::kPlanB};
-
-std::string SdpSemanticToString(
-    const testing::TestParamInfo<SdpSemantic>& info) {
-  switch (info.param) {
-    case SdpSemantic::kPlanB:
-      return "PlanB";
-    case SdpSemantic::kUnifiedPlan:
-      return "UnifiedPlan";
-  }
-}
-
 class DataChannelTests : public TestUtils::TestBase,
                          public testing::WithParamInterface<SdpSemantic> {};
 
@@ -57,8 +44,8 @@ void MRS_CALL StaticStateCallback(void* user_data, int32_t state, int32_t id) {
 
 INSTANTIATE_TEST_CASE_P(DataChannel,
                         DataChannelTests,
-                        testing::ValuesIn(TestSemantics),
-                        SdpSemanticToString);
+                        testing::ValuesIn(TestUtils::TestSemantics),
+                        TestUtils::SdpSemanticToString);
 
 TEST_P(DataChannelTests, AddChannelBeforeInit) {
   PeerConnectionConfiguration pc_config{};
