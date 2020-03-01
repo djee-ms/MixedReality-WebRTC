@@ -260,6 +260,7 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
     transceiver_config.name = "video_transceiver_1";
     transceiver_config.transceiver_interop_handle =
         kFakeInteropVideoTransceiverHandle;
+    transceiver_config.desired_direction = mrsTransceiverDirection::kInactive;
     renegotiation_needed1_ev.Reset();
     ASSERT_EQ(Result::kSuccess,
               mrsPeerConnectionAddVideoTransceiver(
@@ -389,6 +390,8 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
   // Remove track from transceiver #1 with non-null track
   ASSERT_EQ(Result::kSuccess,
             mrsVideoTransceiverSetLocalTrack(transceiver_handle1, nullptr));
+  mrsLocalVideoTrackRemoveRef(track_handle1);
+  mrsExternalVideoTrackSourceRemoveRef(source_handle1);
 
   // Check video transceiver #1 consistency
   {
@@ -414,13 +417,14 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
   pair.ConnectAndWait();
 
   // Check video transceiver #1 consistency
-  //< FIXME - In theory should wait for SetRemoteDesc on #1 (from #2's answer),
-  // but since state doesn't change there is no way to wait for that.
   {
     // Again, nothing changed
     ASSERT_EQ(mrsTransceiverOptDirection::kSendOnly, dir_negotiated1);
     ASSERT_EQ(mrsTransceiverDirection::kSendRecv, dir_desired1);
   }
+
+  // Wait until the SDP session exchange completed before cleaning-up
+  ASSERT_TRUE(pair.WaitExchangeCompletedFor(10s));
 
   // Clean-up
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
@@ -579,6 +583,8 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
   // Remote track from transceiver #1 with non-null track
   ASSERT_EQ(Result::kSuccess,
             mrsVideoTransceiverSetLocalTrack(transceiver_handle1, nullptr));
+  mrsLocalVideoTrackRemoveRef(track_handle1);
+  mrsExternalVideoTrackSourceRemoveRef(source_handle1);
 
   // Check video transceiver #1 consistency
   {
@@ -603,8 +609,6 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
   pair.ConnectAndWait();
 
   // Check video transceiver #1 consistency
-  //< FIXME - In theory should wait for SetRemoteDesc on #1 (from #2's answer),
-  // but since state doesn't change there is no way to wait for that.
   {
     // Note how nothing changed, because SetLocalTrack() does not change the
     // desired direction of Receive, and the remote peer #2 still doesn't have a
@@ -612,6 +616,9 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
     ASSERT_EQ(mrsTransceiverOptDirection::kInactive, dir_negotiated1);
     ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);
   }
+
+  // Wait until the SDP session exchange completed before cleaning-up
+  ASSERT_TRUE(pair.WaitExchangeCompletedFor(10s));
 
   // Clean-up
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
