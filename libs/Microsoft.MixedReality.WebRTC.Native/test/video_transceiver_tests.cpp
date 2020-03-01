@@ -66,7 +66,7 @@ using I420VideoFrameCallback = InteropCallback<const I420AVideoFrame&>;
 
 }  // namespace
 
-INSTANTIATE_TEST_CASE_P(VideoTransceiver,
+INSTANTIATE_TEST_CASE_P(,
                         VideoTransceiverTests,
                         testing::ValuesIn(TestUtils::TestSemantics),
                         TestUtils::SdpSemanticToString);

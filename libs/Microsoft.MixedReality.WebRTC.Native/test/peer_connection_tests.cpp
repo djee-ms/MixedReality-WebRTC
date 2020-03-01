@@ -14,7 +14,7 @@ class PeerConnectionTests : public TestUtils::TestBase,
 
 }  // namespace
 
-INSTANTIATE_TEST_CASE_P(PeerConnection,
+INSTANTIATE_TEST_CASE_P(,
                         PeerConnectionTests,
                         testing::ValuesIn(TestUtils::TestSemantics),
                         TestUtils::SdpSemanticToString);

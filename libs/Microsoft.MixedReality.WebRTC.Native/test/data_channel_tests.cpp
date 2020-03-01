@@ -42,7 +42,7 @@ void MRS_CALL StaticStateCallback(void* user_data, int32_t state, int32_t id) {
 
 }  // namespace
 
-INSTANTIATE_TEST_CASE_P(DataChannel,
+INSTANTIATE_TEST_CASE_P(,
                         DataChannelTests,
                         testing::ValuesIn(TestUtils::TestSemantics),
                         TestUtils::SdpSemanticToString);

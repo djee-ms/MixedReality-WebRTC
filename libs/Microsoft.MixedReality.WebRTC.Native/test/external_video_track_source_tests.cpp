@@ -128,7 +128,7 @@ using Argb32VideoFrameCallback = InteropCallback<const mrsArgb32VideoFrame&>;
 
 }  // namespace
 
-INSTANTIATE_TEST_CASE_P(ExternalVideoTrackSource,
+INSTANTIATE_TEST_CASE_P(,
                         ExternalVideoTrackSourceTests,
                         testing::ValuesIn(TestUtils::TestSemantics),
                         TestUtils::SdpSemanticToString);

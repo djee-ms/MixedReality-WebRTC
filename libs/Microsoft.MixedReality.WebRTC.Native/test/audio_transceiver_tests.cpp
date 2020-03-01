@@ -64,7 +64,7 @@ using I420AudioFrameCallback = InteropCallback<const AudioFrame&>;
 
 }  // namespace
 
-INSTANTIATE_TEST_CASE_P(AudioTransceiver,
+INSTANTIATE_TEST_CASE_P(,
                         AudioTransceiverTests,
                         testing::ValuesIn(TestUtils::TestSemantics),
                         TestUtils::SdpSemanticToString);
