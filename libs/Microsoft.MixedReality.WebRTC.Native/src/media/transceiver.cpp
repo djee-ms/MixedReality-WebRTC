@@ -11,8 +11,20 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 struct Transceiver::PlanBEmulation {
+  /// RTP sender, indicating that the transceiver wants to send and/or is
+  /// already sending.
   rtc::scoped_refptr<webrtc::RtpSenderInterface> rtp_sender_;
+
+  /// RTP receiver, indicating that the transceiver is receiving.
   rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtp_receiver_;
+
+  /// Local media stream track sending through the RTP sender.
+  /// This is kept separated from the RTP sender because it can be set and
+  /// cleared independently of it, and when set it should not force the creation
+  /// of an RTP sender to be consistent with the hot-swap of tracks on
+  /// transceivers not changing any transceiver direction nor generating a
+  /// renegotiation in Unified Plan.
+  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> sender_track_;
 };
 
 Transceiver::Transceiver(RefPtr<GlobalFactory> global_factory,
@@ -138,17 +150,19 @@ std::string Transceiver::EncodeStreamIDs(
   return rtc::join(stream_ids, ';');
 }
 
-void Transceiver::SyncSenderPlanB(
-    bool needed,
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer,
-    const char* media_kind,
-    const char* stream_id) {
+void Transceiver::SyncSenderPlanB(bool needed,
+                                  webrtc::PeerConnectionInterface* peer,
+                                  const char* media_kind,
+                                  const char* stream_id) {
   RTC_DCHECK(plan_b_);
   if (needed && !plan_b_->rtp_sender_) {
     // Create a new RTP sender without a track, and add it to the peer
     // connection. This produces a send offer when calling |CreateOffer()| or
     // |CreateAnswer()|.
     plan_b_->rtp_sender_ = peer->CreateSender(media_kind, stream_id);
+    if (plan_b_->sender_track_) {
+      plan_b_->rtp_sender_->SetTrack(plan_b_->sender_track_);
+    }
   } else if (!needed && plan_b_->rtp_sender_) {
     // Remove the RTP sender from the peer connection, and destroy it. This
     // prevents producing a send offer when calling |CreateOffer()| or
@@ -162,6 +176,23 @@ void Transceiver::SetReceiverPlanB(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
   RTC_DCHECK(plan_b_);
   plan_b_->rtp_receiver_ = std::move(receiver);
+}
+
+void Transceiver::SetTrackPlanB(webrtc::MediaStreamTrackInterface* new_track) {
+  RTC_DCHECK(plan_b_);
+  plan_b_->sender_track_ = new_track;
+  if (plan_b_->rtp_sender_) {
+    RTC_DCHECK(
+        !new_track ||
+        ((plan_b_->rtp_sender_->media_type() ==
+          cricket::MediaType::MEDIA_TYPE_AUDIO) &&
+         (new_track->kind() ==
+          webrtc::MediaStreamTrackInterface::kAudioKind)) ||
+        ((plan_b_->rtp_sender_->media_type() ==
+          cricket::MediaType::MEDIA_TYPE_VIDEO) &&
+         (new_track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind)));
+    plan_b_->rtp_sender_->SetTrack(new_track);
+  }
 }
 
 void Transceiver::OnSessionDescUpdated(bool remote, bool forced) {

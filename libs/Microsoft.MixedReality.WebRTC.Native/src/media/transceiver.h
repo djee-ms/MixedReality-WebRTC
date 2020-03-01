@@ -47,22 +47,33 @@ class Transceiver : public TrackedObject {
 
   ~Transceiver() override;
 
-  std::string GetName() const override;
+  [[nodiscard]] std::string GetName() const override;
 
   /// Get the kind of transceiver. This is generally used for determining what
   /// type to static_cast<> a |Transceiver| pointer to. If this is |kAudio| then
   /// the object is an |AudioTransceiver| instance, and if this is |kVideo| then
   /// the object is a |VideoTransceiver| instance.
-  MediaKind GetMediaKind() const noexcept { return kind_; }
+  [[nodiscard]] MediaKind GetMediaKind() const noexcept { return kind_; }
 
   /// Get the desired transceiver direction.
-  Direction GetDesiredDirection() const noexcept { return desired_direction_; }
+  [[nodiscard]] Direction GetDesiredDirection() const noexcept {
+    return desired_direction_;
+  }
 
   /// Get the current transceiver direction.
-  OptDirection GetDirection() const noexcept { return direction_; }
+  [[nodiscard]] OptDirection GetDirection() const noexcept {
+    return direction_;
+  }
 
-  bool HasSender(webrtc::RtpSenderInterface* sender) const;
-  bool HasReceiver(webrtc::RtpReceiverInterface* receiver) const;
+  [[nodiscard]] bool IsUnifiedPlan() const {
+    RTC_DCHECK(!plan_b_ != !transceiver_);
+    return (transceiver_ != nullptr);
+  }
+
+  [[nodiscard]] bool IsPlanB() const { return !IsUnifiedPlan(); }
+
+  [[nodiscard]] bool HasSender(webrtc::RtpSenderInterface* sender) const;
+  [[nodiscard]] bool HasReceiver(webrtc::RtpReceiverInterface* receiver) const;
 
   //
   // Interop callbacks
@@ -90,7 +101,7 @@ class Transceiver : public TrackedObject {
   /// as argument for convenience, as |owner_| cannot access it. |media_kind| is
   /// the Cricket value, so "audio" or "video".
   void SyncSenderPlanB(bool needed,
-                       rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer,
+                       webrtc::PeerConnectionInterface* peer,
                        const char* media_kind,
                        const char* stream_id);
 
@@ -98,6 +109,15 @@ class Transceiver : public TrackedObject {
   /// direction allows receiving.
   void SetReceiverPlanB(
       rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver);
+
+  /// Hot-swap the local sender track on this transceiver, without changing the
+  /// transceiver direction. This emulates the RTP transceiver's SetTrack
+  /// function. Because the RTP sender in Plan B only exists when the track is
+  /// sending, and therefore acts as a marker for the sender direction, this
+  /// does not create an RTP sender if none exists, but instead stores a
+  /// reference to it for later. This will however assign the track if an RTP
+  /// sender already exists at the time of the call.
+  void SetTrackPlanB(webrtc::MediaStreamTrackInterface* new_track);
 
   /// Callback on local description updated, to check for any change in the
   /// transceiver direction and update its state.
