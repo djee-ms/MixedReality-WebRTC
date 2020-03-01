@@ -202,7 +202,8 @@ TEST_P(AudioTransceiverTests, SetDirection) {
     ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);
   }
 
-  // Renegotiate
+  // Renegotiate once the previous exchange is done
+  ASSERT_TRUE(pair.WaitExchangeCompletedFor(5s));
   pair.ConnectAndWait();
 
   // Wait for transceiver to be updated; this happens *after* connect, during
@@ -227,13 +228,13 @@ TEST_P(AudioTransceiverTests, SetDirection) {
   mrsAudioTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(AudioTransceiver, SetDirection_InvalidHandle) {
+TEST_F(AudioTransceiverTests, SetDirection_InvalidHandle) {
   ASSERT_EQ(Result::kInvalidNativeHandle,
             mrsAudioTransceiverSetDirection(
                 nullptr, mrsTransceiverDirection::kRecvOnly));
 }
 
-TEST(AudioTransceiver, SetLocalTrack_InvalidHandle) {
+TEST_F(AudioTransceiverTests, SetLocalTrack_InvalidHandle) {
   LocalAudioTrackHandle dummy = (void*)0x1;  // looks legit
   ASSERT_EQ(Result::kInvalidNativeHandle,
             mrsAudioTransceiverSetLocalTrack(nullptr, dummy));

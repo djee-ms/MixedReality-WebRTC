@@ -204,7 +204,8 @@ TEST_P(VideoTransceiverTests, SetDirection) {
     ASSERT_EQ(mrsTransceiverDirection::kRecvOnly, dir_desired1);
   }
 
-  // Renegotiate
+  // Renegotiate once the previous exchange is done
+  ASSERT_TRUE(pair.WaitExchangeCompletedFor(5s));
   pair.ConnectAndWait();
 
   // Wait for transceiver to be updated; this happens *after* connect, during
@@ -229,14 +230,16 @@ TEST_P(VideoTransceiverTests, SetDirection) {
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(VideoTransceiver, SetDirection_InvalidHandle) {
+TEST_F(VideoTransceiverTests, SetDirection_InvalidHandle) {
   ASSERT_EQ(Result::kInvalidNativeHandle,
             mrsVideoTransceiverSetDirection(
                 nullptr, mrsTransceiverDirection::kRecvOnly));
 }
 
-TEST(VideoTransceiver, SetLocalTrackSendRecv) {
-  LocalPeerPairRaii pair;
+TEST_P(VideoTransceiverTests, SetLocalTrackSendRecv) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  LocalPeerPairRaii pair(pc_config);
   FakeInteropRaii interop({pair.pc1(), pair.pc2()});
 
   // Register event for renegotiation needed
@@ -430,8 +433,10 @@ TEST(VideoTransceiver, SetLocalTrackSendRecv) {
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
-  LocalPeerPairRaii pair;
+TEST_P(VideoTransceiverTests, SetLocalTrackRecvOnly) {
+  PeerConnectionConfiguration pc_config{};
+  pc_config.sdp_semantic = GetParam();
+  LocalPeerPairRaii pair(pc_config);
   FakeInteropRaii interop({pair.pc1(), pair.pc2()});
 
   // Register event for renegotiation needed
@@ -624,7 +629,7 @@ TEST(VideoTransceiver, SetLocalTrackRecvOnly) {
   mrsVideoTransceiverRemoveRef(transceiver_handle1);
 }
 
-TEST(VideoTransceiver, SetLocalTrack_InvalidHandle) {
+TEST_F(VideoTransceiverTests, SetLocalTrack_InvalidHandle) {
   LocalVideoTrackHandle dummy = (void*)0x1;  // looks legit
   ASSERT_EQ(Result::kInvalidNativeHandle,
             mrsVideoTransceiverSetLocalTrack(nullptr, dummy));
