@@ -58,7 +58,6 @@ namespace Microsoft.MixedReality.WebRTC
         /// disposed, to shutdown the internal threads and release the global resources, and allow the
         /// library's module to be unloaded.
         /// </summary>
-        /// <param name="options">Options for shutdown.</param>
         public static ShutdownOptionsFlags ShutdownOptions
         {
             get { return Utils.LibraryGetShutdownOptions(); }
