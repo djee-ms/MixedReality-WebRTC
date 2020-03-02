@@ -1,0 +1,32 @@
+
+#raw-content {
+    display: inline-block;
+    width: 49%;
+    height: 400px;
+}
+
+#parsed-content {
+    display: inline-block;
+    width: 49%;
+    vertical-align: top;
+}
+
+.error {
+    color: #d00;
+}
+
+.field {
+    color: #333;
+}
+
+.value {
+    color: #223;
+}
+
+.field-version, .value-version {
+    color: #555;
+}
+
+.op-equal {
+    color: #ccc;
+}

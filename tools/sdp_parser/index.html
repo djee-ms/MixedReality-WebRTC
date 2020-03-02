@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>SDP parser</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="masala-parser.min.js"></script>
+    <script src="jquery-3.4.1.min.js"></script>
+    <script>
+        //import {C,Streams} from '@masala/parser'
+        let C = masalaParser.C;
+        let N = masalaParser.N;
+        let Streams = masalaParser.Streams;
+        $(document).ready(function () {
+            const t = $("#raw-content");
+            t.bind('input propertychange', function() {
+                var sdp = $.trim(this.value);
+                if (sdp != "") {
+                    let stream = Streams.ofString(sdp);
+                    //const lineParser = C.letter().then(C.char('=').drop()).then(C.charNotIn("\r\n").rep().join(''));
+                    const versionParser = C.char('v').drop().then(C.char('=').drop()).then(N.digits());
+                    let content = [];
+                    sdp = versionParser.parse(stream);
+                    if (sdp.isAccepted()) {
+                        //let key = sdp.value.value[0];
+                        let value = sdp.value.value[1];
+                        content.push([
+                            "<span class=\"field field-version\">v</span>",
+                            "<span class=\"op-equal\">=</span>",
+                            "<span class=\"value value-version\">" + value + "</span>"
+                            ].join("\n"));
+                        $("#parsed-content").html(content.join("\n"));
+                    } else {
+                        content.push([
+                            "<span class=\"field field-version error\">v</span>",
+                            "<span class=\"op-equal error\">=</span>"
+                            ].join("\n"));
+                        $("#parsed-content").html(content.join("\n"));
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <textarea id="raw-content" placeholder="Input raw SDP message here..."></textarea>
+    <div id="parsed-content"></div>
+</body>
+
+</html>
