@@ -1439,34 +1439,6 @@ void PeerConnectionImpl::OnTrack(
   }
 }
 
-void PeerConnectionImpl::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) noexcept {
-  RTC_LOG(LS_INFO) << "Added transceiver mid=#" << transceiver->mid().value()
-                   << " of type " << (int)transceiver->media_type()
-                   << " with desired direction "
-                   << (int)transceiver->direction();
-  auto receiver = transceiver->receiver();
-  if (auto track = receiver->track()) {
-    RTC_LOG(LS_INFO) << "Recv with track #" << track->id()
-                     << " enabled=" << track->enabled();
-  } else {
-    RTC_LOG(LS_INFO) << "Recv with NULL track";
-  }
-  for (auto&& id : receiver->stream_ids()) {
-    RTC_LOG(LS_INFO) << "+ Stream #" << id;
-  }
-  auto sender = transceiver->sender();
-  if (auto track = sender->track()) {
-    RTC_LOG(LS_INFO) << "Send #" << track->id()
-                     << " enabled=" << track->enabled();
-  } else {
-    RTC_LOG(LS_INFO) << "Send with NULL track";
-  }
-  for (auto&& id : sender->stream_ids()) {
-    RTC_LOG(LS_INFO) << "+ Stream #" << id;
-  }
-}
-
 void PeerConnectionImpl::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) noexcept {
   RTC_LOG(LS_INFO) << "Removed track #" << receiver->id() << " of type "

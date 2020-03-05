@@ -4,9 +4,6 @@
 #include "pch.h"
 
 #include "audio_frame.h"
-#include "audio_transceiver_interop.h"
-#include "local_audio_track_interop.h"
-#include "remote_audio_track_interop.h"
 #include "interop_api.h"
 #include "local_audio_track_interop.h"
 #include "remote_audio_track_interop.h"

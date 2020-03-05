@@ -140,7 +140,6 @@
     <ClInclude Include="..\data_channel.h" />
     <ClInclude Include="..\interop\global_factory.h" />
     <ClInclude Include="..\media\external_video_track_source.h" />
-    <ClInclude Include="..\media\audio_transceiver.h" />
     <ClInclude Include="..\media\external_video_track_source_impl.h" />
     <ClInclude Include="..\media\local_video_track.h" />
     <ClInclude Include="..\mrs_errors.h" />

@@ -241,32 +241,6 @@ class PeerConnection : public TrackedObject {
   virtual void RegisterVideoTrackRemovedCallback(
       VideoTrackRemovedCallback&& callback) noexcept = 0;
 
-  /// Callback invoked when a remote video track is added to the peer
-  /// connection.
-  using VideoTrackAddedCallback = Callback<mrsRemoteVideoTrackInteropHandle,
-                                           mrsRemoteVideoTrackHandle,
-                                           mrsVideoTransceiverInteropHandle,
-                                           mrsVideoTransceiverHandle>;
-
-  /// Register a custom |VideoTrackAddedCallback| invoked when a remote video
-  /// track is added to the peer connection. Only one callback can be registered
-  /// at a time.
-  virtual void RegisterVideoTrackAddedCallback(
-      VideoTrackAddedCallback&& callback) noexcept = 0;
-
-  /// Callback invoked when a remote video track is removed from the peer
-  /// connection.
-  using VideoTrackRemovedCallback = Callback<mrsRemoteVideoTrackInteropHandle,
-                                             mrsRemoteVideoTrackHandle,
-                                             mrsVideoTransceiverInteropHandle,
-                                             mrsVideoTransceiverHandle>;
-
-  /// Register a custom |VideoTrackRemovedCallback| invoked when a remote video
-  /// track is removed from the peer connection. Only one callback can be
-  /// registered at a time.
-  virtual void RegisterVideoTrackRemovedCallback(
-      VideoTrackRemovedCallback&& callback) noexcept = 0;
-
   /// Rounding mode of video frame height for |SetFrameHeightRoundMode()|.
   /// This is only used on HoloLens 1 (UWP x86).
   enum class FrameHeightRoundMode {
@@ -389,38 +363,6 @@ class PeerConnection : public TrackedObject {
   /// manually.
   virtual mrsResult RegisterInteropCallbacks(
       const mrsPeerConnectionInteropCallbacks& callbacks) noexcept = 0;
-
-  //
-  // Internal
-  //
-
-  /// Internal callback on local audio track added to an audio transceiver of
-  /// this peer connection, to add it to the internal collection of local audio
-  /// tracks.
-  virtual void OnLocalTrackAddedToAudioTransceiver(
-      AudioTransceiver& transceiver,
-      LocalAudioTrack& track) = 0;
-
-  /// Internal callback on local audio track removed from an audio transceiver
-  /// of this peer connection, to remove it from the internal collection of
-  /// local audio tracks.
-  virtual void OnLocalTrackRemovedFromAudioTransceiver(
-      AudioTransceiver& transceiver,
-      LocalAudioTrack& track) = 0;
-
-  /// Internal callback on local video track added to a video transceiver of
-  /// this peer connection, to add it to the internal collection of local video
-  /// tracks.
-  virtual void OnLocalTrackAddedToVideoTransceiver(
-      VideoTransceiver& transceiver,
-      LocalVideoTrack& track) = 0;
-
-  /// Internal callback on local video track removed from a video transceiver
-  /// of this peer connection, to remove it from the internal collection of
-  /// local video tracks.
-  virtual void OnLocalTrackRemovedFromVideoTransceiver(
-      VideoTransceiver& transceiver,
-      LocalVideoTrack& track) = 0;
 
  protected:
   PeerConnection(RefPtr<GlobalFactory> global_factory);
