@@ -13,12 +13,14 @@ void MRS_CALL SetEventOnCompleted(void* user_data) {
 }
 
 std::string SdpSemanticToString(
-    const testing::TestParamInfo<SdpSemantic>& info) {
+    const testing::TestParamInfo<mrsSdpSemantic>& info) {
   switch (info.param) {
-    case SdpSemantic::kPlanB:
+    case mrsSdpSemantic::kPlanB:
       return "PlanB";
-    case SdpSemantic::kUnifiedPlan:
+    case mrsSdpSemantic::kUnifiedPlan:
       return "UnifiedPlan";
+    default:
+      return "Invalid mrsSdpSemantic !";
   }
 }
 

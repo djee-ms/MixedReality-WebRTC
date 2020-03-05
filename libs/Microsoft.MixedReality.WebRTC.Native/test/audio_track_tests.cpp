@@ -8,13 +8,16 @@
 #include "local_audio_track_interop.h"
 #include "remote_audio_track_interop.h"
 #include "interop_api.h"
+#include "local_audio_track_interop.h"
+#include "remote_audio_track_interop.h"
+#include "transceiver_interop.h"
 
 #include "test_utils.h"
 
 namespace {
 
 class AudioTrackTests : public TestUtils::TestBase,
-                        public testing::WithParamInterface<SdpSemantic> {};
+                        public testing::WithParamInterface<mrsSdpSemantic> {};
 
 }  // namespace
 
@@ -37,8 +40,8 @@ mrsRemoteAudioTrackInteropHandle MRS_CALL FakeIterop_RemoteAudioTrackCreate(
 using AudioTrackAddedCallback =
     InteropCallback<mrsRemoteVideoTrackInteropHandle,
                     mrsRemoteAudioTrackHandle,
-                    mrsAudioTransceiverInteropHandle,
-                    mrsAudioTransceiverHandle>;
+                    mrsTransceiverInteropHandle,
+                    mrsTransceiverHandle>;
 
 // PeerConnectionAudioFrameCallback
 using AudioFrameCallback = InteropCallback<const AudioFrame&>;
@@ -105,7 +108,7 @@ INSTANTIATE_TEST_CASE_P(,
 //
 
 TEST_P(AudioTrackTests, Simple) {
-  PeerConnectionConfiguration pc_config{};
+  mrsPeerConnectionConfiguration pc_config{};
   pc_config.sdp_semantic = GetParam();
   LocalPeerPairRaii pair(pc_config);
 
@@ -118,15 +121,15 @@ TEST_P(AudioTrackTests, Simple) {
 
   // Grab the handle of the remote track from the remote peer (#2) via the
   // AudioTrackAdded callback.
-  mrsAudioTransceiverHandle audio_transceiver2{};
+  mrsTransceiverHandle audio_transceiver2{};
   mrsRemoteAudioTrackHandle audio_track2{};
   Event track_added2_ev;
   AudioTrackAddedCallback track_added2_cb =
       [&audio_track2, &audio_transceiver2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
           mrsRemoteAudioTrackHandle track_handle,
-          mrsAudioTransceiverInteropHandle /*interop_handle*/,
-          mrsAudioTransceiverHandle transceiver_handle) {
+          mrsTransceiverInteropHandle /*interop_handle*/,
+          mrsTransceiverHandle transceiver_handle) {
         audio_track2 = track_handle;
         audio_transceiver2 = transceiver_handle;
         track_added2_ev.Set();
@@ -135,8 +138,8 @@ TEST_P(AudioTrackTests, Simple) {
                                                    CB(track_added2_cb));
 
   // Create an audio transceiver on #1
-  mrsAudioTransceiverHandle audio_transceiver1{};
-  AudioTransceiverInitConfig transceiver_config{};
+  mrsTransceiverHandle audio_transceiver1{};
+  mrsTransceiverInitConfig transceiver_config{};
   transceiver_config.name = "transceiver1";
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddAudioTransceiver(
@@ -144,7 +147,7 @@ TEST_P(AudioTrackTests, Simple) {
   ASSERT_NE(nullptr, audio_transceiver1);
 
   // Create the local audio track #1
-  LocalAudioTrackInitConfig config{};
+  mrsLocalAudioTrackInitConfig config{};
   mrsLocalAudioTrackHandle audio_track1{};
   ASSERT_EQ(Result::kSuccess, mrsLocalAudioTrackCreateFromDevice(
                                   &config, "test_audio_track", &audio_track1));
@@ -157,33 +160,32 @@ TEST_P(AudioTrackTests, Simple) {
   {
     // Local track is NULL
     mrsLocalVideoTrackHandle track_handle_local{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetLocalAudioTrack(
                                     audio_transceiver1, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote track is NULL
     mrsRemoteVideoTrackHandle track_handle_remote{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetRemoteAudioTrack(
                                     audio_transceiver1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
   }
 
   // Add the local audio track on the transceiver #1
   ASSERT_EQ(Result::kSuccess,
-            mrsAudioTransceiverSetLocalTrack(audio_transceiver1, audio_track1));
+            mrsTransceiverSetLocalAudioTrack(audio_transceiver1, audio_track1));
 
   // Check transceiver #1 consistency
   {
     // Local track is audio_track1
     mrsLocalVideoTrackHandle track_handle_local{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetLocalAudioTrack(
                                     audio_transceiver1, &track_handle_local));
     ASSERT_EQ(audio_track1, track_handle_local);
-    mrsLocalAudioTrackRemoveRef(track_handle_local);
 
     // Remote track is NULL
     mrsRemoteVideoTrackHandle track_handle_remote{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetRemoteAudioTrack(
                                     audio_transceiver1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
   }
@@ -200,16 +202,15 @@ TEST_P(AudioTrackTests, Simple) {
   {
     // Local track is NULL
     mrsLocalVideoTrackHandle track_handle_local{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetLocalAudioTrack(
                                     audio_transceiver2, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote track is audio_track2
     mrsRemoteVideoTrackHandle track_handle_remote{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetRemoteAudioTrack(
                                     audio_transceiver2, &track_handle_remote));
     ASSERT_EQ(audio_track2, track_handle_remote);
-    mrsRemoteAudioTrackRemoveRef(track_handle_remote);
   }
 
   // Register a callback on the remote track of #2
@@ -260,13 +261,13 @@ TEST_P(AudioTrackTests, Simple) {
   // Clean-up
   mrsRemoteAudioTrackRegisterFrameCallback(audio_track2, nullptr, nullptr);
   mrsRemoteAudioTrackRemoveRef(audio_track2);
-  mrsAudioTransceiverRemoveRef(audio_transceiver2);
+  mrsTransceiverRemoveRef(audio_transceiver2);
   mrsLocalAudioTrackRemoveRef(audio_track1);
-  mrsAudioTransceiverRemoveRef(audio_transceiver1);
+  mrsTransceiverRemoveRef(audio_transceiver1);
 }
 
 TEST_P(AudioTrackTests, Muted) {
-  PeerConnectionConfiguration pc_config{};
+  mrsPeerConnectionConfiguration pc_config{};
   pc_config.sdp_semantic = GetParam();
   LocalPeerPairRaii pair(pc_config);
 
@@ -279,15 +280,15 @@ TEST_P(AudioTrackTests, Muted) {
 
   // Grab the handle of the remote track from the remote peer (#2) via the
   // AudioTrackAdded callback.
-  mrsAudioTransceiverHandle audio_transceiver2{};
+  mrsTransceiverHandle audio_transceiver2{};
   mrsRemoteAudioTrackHandle audio_track2{};
   Event track_added2_ev;
   AudioTrackAddedCallback track_added2_cb =
       [&audio_track2, &audio_transceiver2, &track_added2_ev](
           mrsRemoteVideoTrackInteropHandle /*interop_handle*/,
           mrsRemoteAudioTrackHandle track_handle,
-          mrsAudioTransceiverInteropHandle /*interop_handle*/,
-          mrsAudioTransceiverHandle transceiver_handle) {
+          mrsTransceiverInteropHandle /*interop_handle*/,
+          mrsTransceiverHandle transceiver_handle) {
         audio_track2 = track_handle;
         audio_transceiver2 = transceiver_handle;
         track_added2_ev.Set();
@@ -296,8 +297,8 @@ TEST_P(AudioTrackTests, Muted) {
                                                    CB(track_added2_cb));
 
   // Create an audio transceiver on #1
-  mrsAudioTransceiverHandle audio_transceiver1{};
-  AudioTransceiverInitConfig transceiver_config{};
+  mrsTransceiverHandle audio_transceiver1{};
+  mrsTransceiverInitConfig transceiver_config{};
   transceiver_config.name = "transceiver1";
   ASSERT_EQ(Result::kSuccess,
             mrsPeerConnectionAddAudioTransceiver(
@@ -305,7 +306,7 @@ TEST_P(AudioTrackTests, Muted) {
   ASSERT_NE(nullptr, audio_transceiver1);
 
   // Create the local audio track #1
-  LocalAudioTrackInitConfig config{};
+  mrsLocalAudioTrackInitConfig config{};
   mrsLocalAudioTrackHandle audio_track1{};
   ASSERT_EQ(Result::kSuccess, mrsLocalAudioTrackCreateFromDevice(
                                   &config, "test_audio_track", &audio_track1));
@@ -318,33 +319,32 @@ TEST_P(AudioTrackTests, Muted) {
   {
     // Local track is NULL
     mrsLocalVideoTrackHandle track_handle_local{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetLocalAudioTrack(
                                     audio_transceiver1, &track_handle_local));
     ASSERT_EQ(nullptr, track_handle_local);
 
     // Remote track is NULL
     mrsRemoteVideoTrackHandle track_handle_remote{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetRemoteAudioTrack(
                                     audio_transceiver1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
   }
 
   // Add the local audio track on the transceiver #1
   ASSERT_EQ(Result::kSuccess,
-            mrsAudioTransceiverSetLocalTrack(audio_transceiver1, audio_track1));
+            mrsTransceiverSetLocalAudioTrack(audio_transceiver1, audio_track1));
 
   // Check transceiver #1 consistency
   {
     // Local track is audio_track1
     mrsLocalVideoTrackHandle track_handle_local{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetLocalTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetLocalAudioTrack(
                                     audio_transceiver1, &track_handle_local));
     ASSERT_EQ(audio_track1, track_handle_local);
-    mrsLocalAudioTrackRemoveRef(track_handle_local);
 
     // Remote track is NULL
     mrsRemoteVideoTrackHandle track_handle_remote{};
-    ASSERT_EQ(Result::kSuccess, mrsAudioTransceiverGetRemoteTrack(
+    ASSERT_EQ(Result::kSuccess, mrsTransceiverGetRemoteAudioTrack(
                                     audio_transceiver1, &track_handle_remote));
     ASSERT_EQ(nullptr, track_handle_remote);
   }
@@ -408,9 +408,9 @@ TEST_P(AudioTrackTests, Muted) {
   // Clean-up
   mrsRemoteAudioTrackRegisterFrameCallback(audio_track2, nullptr, nullptr);
   mrsRemoteAudioTrackRemoveRef(audio_track2);
-  mrsAudioTransceiverRemoveRef(audio_transceiver2);
+  mrsTransceiverRemoveRef(audio_transceiver2);
   mrsLocalAudioTrackRemoveRef(audio_track1);
-  mrsAudioTransceiverRemoveRef(audio_transceiver1);
+  mrsTransceiverRemoveRef(audio_transceiver1);
 }
 
 #endif  // MRSW_EXCLUDE_DEVICE_TESTS

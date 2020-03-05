@@ -21,7 +21,7 @@ mrsPeerConnectionRemoveRef(mrsPeerConnectionHandle handle) noexcept;
 
 /// Callback fired when the state of the ICE connection changed.
 using mrsPeerConnectionIceGatheringStateChangedCallback =
-    void(MRS_CALL*)(void* user_data, IceGatheringState new_state);
+    void(MRS_CALL*)(void* user_data, mrsIceGatheringState new_state);
 
 /// Register a callback fired when the ICE connection state changes.
 MRS_API void MRS_CALL mrsPeerConnectionRegisterIceGatheringStateChangedCallback(
@@ -31,16 +31,16 @@ MRS_API void MRS_CALL mrsPeerConnectionRegisterIceGatheringStateChangedCallback(
 
 /// Create a new audio transceiver attached to the given peer connection.
 /// The audio transceiver is initially inactive.
-MRS_API mrsResult MRS_CALL mrsPeerConnectionAddAudioTransceiver(
-    mrsPeerConnectionHandle peer_handle,
-    const AudioTransceiverInitConfig* config,
-    mrsAudioTransceiverHandle* handle) noexcept;
+MRS_API mrsResult MRS_CALL
+mrsPeerConnectionAddAudioTransceiver(mrsPeerConnectionHandle peer_handle,
+                                     const mrsTransceiverInitConfig* config,
+                                     mrsTransceiverHandle* handle) noexcept;
 
 /// Create a new video transceiver attached to the given peer connection.
 /// The audio transceiver is initially inactive.
-MRS_API mrsResult MRS_CALL mrsPeerConnectionAddVideoTransceiver(
-    mrsPeerConnectionHandle peer_handle,
-    const VideoTransceiverInitConfig* config,
-    mrsVideoTransceiverHandle* handle) noexcept;
+MRS_API mrsResult MRS_CALL
+mrsPeerConnectionAddVideoTransceiver(mrsPeerConnectionHandle peer_handle,
+                                     const mrsTransceiverInitConfig* config,
+                                     mrsTransceiverHandle* handle) noexcept;
 
 }  // extern "C"

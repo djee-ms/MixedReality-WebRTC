@@ -23,7 +23,7 @@ class AudioTrackInterface;
 namespace Microsoft::MixedReality::WebRTC {
 
 class PeerConnection;
-class AudioTransceiver;
+class Transceiver;
 
 /// A remote audio track is a media track for a peer connection backed by a
 /// remote audio stream received from the remote peer.
@@ -35,7 +35,7 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
  public:
   RemoteAudioTrack(RefPtr<GlobalFactory> global_factory,
                    PeerConnection& owner,
-                   RefPtr<AudioTransceiver> transceiver,
+                   Transceiver* transceiver,
                    rtc::scoped_refptr<webrtc::AudioTrackInterface> track,
                    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
                    mrsRemoteAudioTrackInteropHandle interop_handle) noexcept;
@@ -59,7 +59,15 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
 
   [[nodiscard]] webrtc::AudioTrackInterface* impl() const;
   [[nodiscard]] webrtc::RtpReceiverInterface* receiver() const;
-  [[nodiscard]] AudioTransceiver* GetTransceiver() const;
+
+  [[nodiscard]] constexpr Transceiver* GetTransceiver() const {
+    return transceiver_;
+  }
+
+  [[nodiscard]] webrtc::MediaStreamTrackInterface* GetMediaImpl()
+      const override {
+    return impl();
+  }
 
   [[nodiscard]] mrsRemoteAudioTrackInteropHandle GetInteropHandle() const
       noexcept {
@@ -76,8 +84,11 @@ class RemoteAudioTrack : public AudioFrameObserver, public MediaTrack {
   /// RTP sender this track is associated with.
   rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver_;
 
-  /// Transceiver this track is associated with, if any.
-  RefPtr<AudioTransceiver> transceiver_;
+  /// Weak back-pointer to the Transceiver this track is associated with. This
+  /// avoids a circular reference with the transceiver itself.
+  /// Note that unlike local tracks, this is never NULL since the remote track
+  /// gets destroyed when detached from the transceiver.
+  Transceiver* transceiver_{nullptr};
 
   /// Optional interop handle, if associated with an interop wrapper.
   mrsRemoteAudioTrackInteropHandle interop_handle_{};

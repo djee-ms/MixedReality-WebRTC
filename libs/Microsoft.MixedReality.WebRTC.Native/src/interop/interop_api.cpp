@@ -94,7 +94,7 @@ class SimpleMediaConstraints : public webrtc::MediaConstraintsInterface {
 
 /// Helper to open a video capture device.
 mrsResult OpenVideoCaptureDevice(
-    const LocalVideoTrackInitConfig& config,
+    const mrsLocalVideoTrackInitConfig& config,
     std::unique_ptr<cricket::VideoCapturer>& capturer_out) noexcept {
   capturer_out.reset();
 #if defined(WINUWP)
@@ -557,7 +557,7 @@ mrsResult MRS_CALL mrsEnumVideoCaptureFormatsAsync(
   return Result::kSuccess;
 }
 mrsResult MRS_CALL
-mrsPeerConnectionCreate(PeerConnectionConfiguration config,
+mrsPeerConnectionCreate(mrsPeerConnectionConfiguration config,
                         mrsPeerConnectionInteropHandle interop_handle,
                         mrsPeerConnectionHandle* peerHandleOut) noexcept {
   if (!peerHandleOut || !interop_handle) {
@@ -588,7 +588,7 @@ mrsResult MRS_CALL mrsPeerConnectionRegisterInteropCallbacks(
 
 void MRS_CALL mrsPeerConnectionRegisterConnectedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionConnectedCallback callback,
+    mrsPeerConnectionConnectedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterConnectedCallback(Callback<>{callback, user_data});
@@ -597,7 +597,7 @@ void MRS_CALL mrsPeerConnectionRegisterConnectedCallback(
 
 void MRS_CALL mrsPeerConnectionRegisterLocalSdpReadytoSendCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionLocalSdpReadytoSendCallback callback,
+    mrsPeerConnectionLocalSdpReadytoSendCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterLocalSdpReadytoSendCallback(
@@ -607,7 +607,7 @@ void MRS_CALL mrsPeerConnectionRegisterLocalSdpReadytoSendCallback(
 
 void MRS_CALL mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionIceCandidateReadytoSendCallback callback,
+    mrsPeerConnectionIceCandidateReadytoSendCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterIceCandidateReadytoSendCallback(
@@ -617,17 +617,17 @@ void MRS_CALL mrsPeerConnectionRegisterIceCandidateReadytoSendCallback(
 
 void MRS_CALL mrsPeerConnectionRegisterIceStateChangedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionIceStateChangedCallback callback,
+    mrsPeerConnectionIceStateChangedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterIceStateChangedCallback(
-        Callback<IceConnectionState>{callback, user_data});
+        Callback<mrsIceConnectionState>{callback, user_data});
   }
 }
 
 void MRS_CALL mrsPeerConnectionRegisterRenegotiationNeededCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionRenegotiationNeededCallback callback,
+    mrsPeerConnectionRenegotiationNeededCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterRenegotiationNeededCallback(Callback<>{callback, user_data});
@@ -636,55 +636,55 @@ void MRS_CALL mrsPeerConnectionRegisterRenegotiationNeededCallback(
 
 void MRS_CALL mrsPeerConnectionRegisterAudioTrackAddedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionAudioTrackAddedCallback callback,
+    mrsPeerConnectionAudioTrackAddedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterAudioTrackAddedCallback(
         Callback<mrsRemoteAudioTrackInteropHandle, mrsRemoteAudioTrackHandle,
-                 mrsAudioTransceiverInteropHandle, mrsAudioTransceiverHandle>{
+                 mrsTransceiverInteropHandle, mrsTransceiverHandle>{
             callback, user_data});
   }
 }
 
 void MRS_CALL mrsPeerConnectionRegisterAudioTrackRemovedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionAudioTrackRemovedCallback callback,
+    mrsPeerConnectionAudioTrackRemovedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterAudioTrackRemovedCallback(
         Callback<mrsRemoteAudioTrackInteropHandle, mrsRemoteAudioTrackHandle,
-                 mrsAudioTransceiverInteropHandle, mrsAudioTransceiverHandle>{
+                 mrsTransceiverInteropHandle, mrsTransceiverHandle>{
             callback, user_data});
   }
 }
 
 void MRS_CALL mrsPeerConnectionRegisterVideoTrackAddedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionVideoTrackAddedCallback callback,
+    mrsPeerConnectionVideoTrackAddedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterVideoTrackAddedCallback(
         Callback<mrsRemoteVideoTrackInteropHandle, mrsRemoteVideoTrackHandle,
-                 mrsVideoTransceiverInteropHandle, mrsVideoTransceiverHandle>{
+                 mrsTransceiverInteropHandle, mrsTransceiverHandle>{
             callback, user_data});
   }
 }
 
 void MRS_CALL mrsPeerConnectionRegisterVideoTrackRemovedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionVideoTrackRemovedCallback callback,
+    mrsPeerConnectionVideoTrackRemovedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterVideoTrackRemovedCallback(
         Callback<mrsRemoteVideoTrackInteropHandle, mrsRemoteVideoTrackHandle,
-                 mrsVideoTransceiverInteropHandle, mrsVideoTransceiverHandle>{
+                 mrsTransceiverInteropHandle, mrsTransceiverHandle>{
             callback, user_data});
   }
 }
 
 void MRS_CALL mrsPeerConnectionRegisterDataChannelAddedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionDataChannelAddedCallback callback,
+    mrsPeerConnectionDataChannelAddedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterDataChannelAddedCallback(
@@ -695,7 +695,7 @@ void MRS_CALL mrsPeerConnectionRegisterDataChannelAddedCallback(
 
 void MRS_CALL mrsPeerConnectionRegisterDataChannelRemovedCallback(
     mrsPeerConnectionHandle peerHandle,
-    PeerConnectionDataChannelRemovedCallback callback,
+    mrsPeerConnectionDataChannelRemovedCallback callback,
     void* user_data) noexcept {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     peer->RegisterDataChannelRemovedCallback(
@@ -705,7 +705,7 @@ void MRS_CALL mrsPeerConnectionRegisterDataChannelRemovedCallback(
 }
 
 mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
-    const LocalAudioTrackInitConfig* config,
+    const mrsLocalAudioTrackInitConfig* config,
     const char* track_name,
     mrsLocalAudioTrackHandle* track_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
@@ -749,7 +749,7 @@ mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
 }
 
 mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
-    const LocalVideoTrackInitConfig* config,
+    const mrsLocalVideoTrackInitConfig* config,
     const char* track_name,
     mrsLocalVideoTrackHandle* track_handle_out) noexcept {
   if (IsStringNullOrEmpty(track_name)) {
@@ -1055,16 +1055,17 @@ T& FindOrInsert(std::vector<std::pair<std::string, T>>& vec,
 
 }  // namespace
 
-mrsResult MRS_CALL
-mrsPeerConnectionGetSimpleStats(mrsPeerConnectionHandle peerHandle,
-                                PeerConnectionGetSimpleStatsCallback callback,
-                                void* user_data) {
+mrsResult MRS_CALL mrsPeerConnectionGetSimpleStats(
+    mrsPeerConnectionHandle peerHandle,
+    mrsPeerConnectionGetSimpleStatsCallback callback,
+    void* user_data) {
   if (auto peer = static_cast<PeerConnection*>(peerHandle)) {
     struct Collector : webrtc::RTCStatsCollectorCallback {
-      Collector(PeerConnectionGetSimpleStatsCallback callback, void* user_data)
+      Collector(mrsPeerConnectionGetSimpleStatsCallback callback,
+                void* user_data)
           : callback_(callback), user_data_(user_data) {}
 
-      PeerConnectionGetSimpleStatsCallback callback_;
+      mrsPeerConnectionGetSimpleStatsCallback callback_;
       void* user_data_;
       void OnStatsDelivered(
           const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report)

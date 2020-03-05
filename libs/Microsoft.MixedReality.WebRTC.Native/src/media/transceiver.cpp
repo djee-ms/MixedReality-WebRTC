@@ -27,17 +27,49 @@ struct Transceiver::PlanBEmulation {
   rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> sender_track_;
 };
 
+RefPtr<Transceiver> Transceiver::CreateForPlanB(
+    RefPtr<GlobalFactory> global_factory,
+    MediaKind kind,
+    PeerConnection& owner,
+    int mline_index,
+    std::string name,
+    Direction desired_direction,
+    mrsTransceiverHandle interop_handle) noexcept {
+  return new Transceiver(std::move(global_factory), kind, owner, mline_index,
+                         std::move(name), desired_direction, interop_handle);
+}
+
+RefPtr<Transceiver> Transceiver::CreateForUnifiedPlan(
+    RefPtr<GlobalFactory> global_factory,
+    MediaKind kind,
+    PeerConnection& owner,
+    int mline_index,
+    std::string name,
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
+    Direction desired_direction,
+    mrsTransceiverHandle interop_handle) noexcept {
+  return new Transceiver(std::move(global_factory), kind, owner, mline_index,
+                         std::move(name), std::move(transceiver),
+                         desired_direction, interop_handle);
+}
+
 Transceiver::Transceiver(RefPtr<GlobalFactory> global_factory,
                          MediaKind kind,
                          PeerConnection& owner,
-                         Direction desired_direction) noexcept
+                         int mline_index,
+                         std::string name,
+                         Direction desired_direction,
+                         mrsTransceiverHandle interop_handle) noexcept
     : TrackedObject(std::move(global_factory),
                     kind == MediaKind::kAudio ? ObjectType::kAudioTransceiver
                                               : ObjectType::kVideoTransceiver),
       owner_(&owner),
       kind_(kind),
+      mline_index_(mline_index),
+      name_(std::move(name)),
       desired_direction_(desired_direction),
-      plan_b_(new PlanBEmulation) {
+      plan_b_(new PlanBEmulation),
+      interop_handle_(interop_handle) {
   RTC_CHECK(owner_);
   //< TODO
   // RTC_CHECK(owner.sdp_semantic == webrtc::SdpSemantics::kPlanB);
@@ -47,26 +79,93 @@ Transceiver::Transceiver(
     RefPtr<GlobalFactory> global_factory,
     MediaKind kind,
     PeerConnection& owner,
+    int mline_index,
+    std::string name,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver,
-    Direction desired_direction) noexcept
+    Direction desired_direction,
+    mrsTransceiverHandle interop_handle) noexcept
     : TrackedObject(std::move(global_factory),
                     kind == MediaKind::kAudio ? ObjectType::kAudioTransceiver
                                               : ObjectType::kVideoTransceiver),
       owner_(&owner),
       kind_(kind),
+      mline_index_(mline_index),
+      name_(std::move(name)),
       desired_direction_(desired_direction),
-      transceiver_(std::move(transceiver)) {
+      transceiver_(std::move(transceiver)),
+      interop_handle_(interop_handle) {
   RTC_CHECK(owner_);
+  RTC_DCHECK(transceiver_);
+  RTC_DCHECK(
+      ((transceiver_->media_type() == cricket::MediaType::MEDIA_TYPE_AUDIO) &&
+       (kind == MediaKind::kAudio)) ||
+      ((transceiver_->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) &&
+       (kind == MediaKind::kVideo)));
   //< TODO
   // RTC_CHECK(owner.sdp_semantic == webrtc::SdpSemantics::kUnifiedPlan);
 }
 
 Transceiver::~Transceiver() {
   // RTC_CHECK(!owner_);
+
+  // Keep the tracks alive for now. This prevents them from being destroyed when
+  // detaching them below, which would invoke their destructor while the
+  // transceiver is in an inconsistent state (in the middle of being destroyed),
+  // and would trigger some assertion in Debug build.
+  RefPtr<MediaTrack> local_track = local_track_;
+  RefPtr<MediaTrack> remote_track = remote_track_;
+
+  // Detach the local track from this transceiver. This will clear the
+  // |local_track_| member.
+  if (local_track_) {
+    rtc::scoped_refptr<webrtc::RtpSenderInterface> rtp_sender;
+    if (IsUnifiedPlan()) {
+      rtp_sender = transceiver_->sender();
+    }
+    if (GetMediaKind() == MediaKind::kAudio) {
+      auto const track = (LocalAudioTrack*)local_track_.get();
+      track->OnRemovedFromPeerConnection(*owner_, this, rtp_sender);
+    } else {
+      RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+      auto const track = (LocalVideoTrack*)local_track_.get();
+      track->OnRemovedFromPeerConnection(*owner_, this, rtp_sender);
+    }
+  }
+  RTC_DCHECK(!local_track_);
+
+  // Detach the remote track too. This transceiver is its sole owner, so this
+  // will destroy it.
+  if (remote_track_) {
+    if (GetMediaKind() == MediaKind::kAudio) {
+      auto const track = (RemoteAudioTrack*)remote_track_.get();
+      track->OnTrackRemoved(*owner_);
+    } else {
+      RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+      auto const track = (RemoteVideoTrack*)remote_track_.get();
+      track->OnTrackRemoved(*owner_);
+    }
+  }
+  RTC_DCHECK(!remote_track_);
+
+  // Be sure to clean-up WebRTC objects before unregistering ourself, which
+  // could lead to the GlobalFactory being destroyed and the WebRTC threads
+  // stopped.
+  transceiver_ = nullptr;
+  plan_b_ = nullptr;
 }
 
-std::string Transceiver::GetName() const {
-  return "TODO";
+Result Transceiver::SetDirection(Direction new_direction) noexcept {
+  if (transceiver_) {  // Unified Plan
+    if (new_direction == desired_direction_) {
+      return Result::kSuccess;
+    }
+    transceiver_->SetDirection(ToRtp(new_direction));
+  } else {  // Plan B
+    // nothing to do yet
+  }
+  desired_direction_ = new_direction;
+  FireStateUpdatedEvent(mrsTransceiverStateUpdatedReason::kSetDirection);
+  return Result::kSuccess;
 }
 
 bool Transceiver::HasSender(webrtc::RtpSenderInterface* sender) const {
@@ -85,6 +184,115 @@ bool Transceiver::HasReceiver(webrtc::RtpReceiverInterface* receiver) const {
   }
 }
 
+Result Transceiver::SetLocalTrackImpl(RefPtr<MediaTrack> local_track) noexcept {
+  if (local_track_ == local_track) {
+    return Result::kSuccess;
+  }
+  Result result = Result::kSuccess;
+  webrtc::MediaStreamTrackInterface* const new_track =
+      local_track ? local_track->GetMediaImpl() : nullptr;
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> rtp_sender;
+  if (IsUnifiedPlan()) {
+    rtp_sender = transceiver_->sender();
+    if (!rtp_sender->SetTrack(new_track)) {
+      result = Result::kInvalidOperation;
+    }
+  } else {
+    RTC_DCHECK(IsPlanB());
+    SetTrackPlanB(new_track);
+  }
+  if (result != Result::kSuccess) {
+    if (local_track) {
+      RTC_LOG(LS_ERROR) << "Failed to set local audio track "
+                        << local_track->GetName() << " of audio transceiver "
+                        << GetName() << ".";
+    } else {
+      RTC_LOG(LS_ERROR)
+          << "Failed to clear local audio track from audio transceiver "
+          << GetName() << ".";
+    }
+    return result;
+  }
+  if (local_track_) {
+    // Detach old local track
+    // Keep a pointer to the track because |local_track_| gets NULL'd. No need
+    // to keep a reference, because |owner_| has one.
+    if (GetMediaKind() == MediaKind::kAudio) {
+      auto const track = (LocalAudioTrack*)local_track_.get();
+      track->OnRemovedFromPeerConnection(*owner_, this, rtp_sender);
+    } else {
+      RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+      auto const track = (LocalVideoTrack*)local_track_.get();
+      track->OnRemovedFromPeerConnection(*owner_, this, rtp_sender);
+    }
+  }
+  local_track_ = std::move(local_track);
+  if (local_track_) {
+    // Attach new local track
+    if (GetMediaKind() == MediaKind::kAudio) {
+      auto const track = (LocalAudioTrack*)local_track_.get();
+      track->OnAddedToPeerConnection(*owner_, this, rtp_sender);
+    } else {
+      RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+      auto const track = (LocalVideoTrack*)local_track_.get();
+      track->OnAddedToPeerConnection(*owner_, this, rtp_sender);
+    }
+  }
+  return Result::kSuccess;
+}
+
+void Transceiver::OnLocalTrackAdded(RefPtr<LocalAudioTrack> track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kAudio);
+  // this may be called multiple times with the same track
+  RTC_DCHECK(!local_track_ || (local_track_ == track));
+  local_track_ = std::move(track);
+}
+
+void Transceiver::OnLocalTrackAdded(RefPtr<LocalVideoTrack> track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+  // this may be called multiple times with the same track
+  RTC_DCHECK(!local_track_ || (local_track_ == track));
+  local_track_ = std::move(track);
+}
+
+void Transceiver::OnRemoteTrackAdded(RefPtr<RemoteAudioTrack> track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kAudio);
+  // this may be called multiple times with the same track
+  RTC_DCHECK(!remote_track_ || (remote_track_ == track));
+  remote_track_ = std::move(track);
+}
+
+void Transceiver::OnRemoteTrackAdded(RefPtr<RemoteVideoTrack> track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+  // this may be called multiple times with the same track
+  RTC_DCHECK(!remote_track_ || (remote_track_ == track));
+  remote_track_ = std::move(track);
+}
+
+void Transceiver::OnLocalTrackRemoved(LocalAudioTrack* track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kAudio);
+  RTC_DCHECK_EQ(track, local_track_.get());
+  local_track_ = nullptr;
+}
+
+void Transceiver::OnLocalTrackRemoved(LocalVideoTrack* track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+  RTC_DCHECK_EQ(track, local_track_.get());
+  local_track_ = nullptr;
+}
+
+void Transceiver::OnRemoteTrackRemoved(RemoteAudioTrack* track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kAudio);
+  RTC_DCHECK_EQ(track, remote_track_.get());
+  remote_track_ = nullptr;
+}
+
+void Transceiver::OnRemoteTrackRemoved(RemoteVideoTrack* track) {
+  RTC_DCHECK(GetMediaKind() == MediaKind::kVideo);
+  RTC_DCHECK_EQ(track, remote_track_.get());
+  remote_track_ = nullptr;
+}
+
 rtc::scoped_refptr<webrtc::RtpTransceiverInterface> Transceiver::impl() const {
   return transceiver_;
 }
@@ -101,15 +309,16 @@ webrtc::RtpTransceiverDirection Transceiver::ToRtp(Direction direction) {
 Transceiver::Direction Transceiver::FromRtp(
     webrtc::RtpTransceiverDirection rtp_direction) {
   using RtpDir = webrtc::RtpTransceiverDirection;
-  static_assert((int)Direction::kSendRecv == (int)RtpDir::kSendRecv, "");
-  static_assert((int)Direction::kSendOnly == (int)RtpDir::kSendOnly, "");
-  static_assert((int)Direction::kRecvOnly == (int)RtpDir::kRecvOnly, "");
-  static_assert((int)Direction::kInactive == (int)RtpDir::kInactive, "");
   return (Direction)rtp_direction;
 }
 
 Transceiver::OptDirection Transceiver::FromRtp(
     std::optional<webrtc::RtpTransceiverDirection> rtp_direction) {
+  using RtpDir = webrtc::RtpTransceiverDirection;
+  static_assert((int)OptDirection::kSendRecv == (int)RtpDir::kSendRecv, "");
+  static_assert((int)OptDirection::kSendOnly == (int)RtpDir::kSendOnly, "");
+  static_assert((int)OptDirection::kRecvOnly == (int)RtpDir::kRecvOnly, "");
+  static_assert((int)OptDirection::kInactive == (int)RtpDir::kInactive, "");
   if (rtp_direction.has_value()) {
     return (OptDirection)FromRtp(rtp_direction.value());
   }

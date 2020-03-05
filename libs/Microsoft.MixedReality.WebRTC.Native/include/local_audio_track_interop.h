@@ -9,9 +9,13 @@
 
 extern "C" {
 
-//
-// Wrapper
-//
+/// Configuration for opening a local audio capture device and creating a local
+/// audio track.
+struct mrsLocalAudioTrackInitConfig {
+  /// Handle of the local audio track interop wrapper, if any, which will be
+  /// associated with the native local audio track object.
+  mrsLocalAudioTrackInteropHandle track_interop_handle{};
+};
 
 /// Add a reference to the native object associated with the given handle.
 MRS_API void MRS_CALL
@@ -24,7 +28,7 @@ mrsLocalAudioTrackRemoveRef(mrsLocalAudioTrackHandle handle) noexcept;
 /// Create a new local audio track by opening a local audio capture device
 /// (webcam).
 MRS_API mrsResult MRS_CALL mrsLocalAudioTrackCreateFromDevice(
-    const LocalAudioTrackInitConfig* config,
+    const mrsLocalAudioTrackInitConfig* config,
     const char* track_name,
     mrsLocalAudioTrackHandle* track_handle_out) noexcept;
 
