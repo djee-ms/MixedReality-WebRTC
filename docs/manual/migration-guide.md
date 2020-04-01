@@ -6,6 +6,27 @@ This guide details the main steps to migrate between major release versions.
 
 The 2.0 release introduces some significant changes in the API compared to the 1.0 release in order to include support for multiple media tracks per peer connection.
 
+### C++ library and native implementation
+
+In the 1.0 release, the term _C++ library_ was referring to the `Microsoft.MixedReality.WebRTC.Native.dll` and was both:
+
+- a library for C++ projects to consume;
+- the low-level implementation used by the C# library.
+
+In the 2.0 release, **`Microsoft.MixedReality.WebRTC.Native.dll` was renamed to `mrwebrtc.dll`**. There are two reasons for this change:
+
+1. Due to a bug in the P/Invoke infrastructure on Windows ([dotnet/runtime#7223](https://github.com/dotnet/runtime/issues/7223)) which will not be fixed, module names with some dot `.` character in their name cannot be referenced by name only, but require an explicit extension instead. This means the `.dll` extension needs to be used in the C# library. This in turns means non-Windows platforms cannot use that C# assembly, and need a second copy of the assembly differing only by a few characters. Instead, the module was renamed without any dot `.` character to work around this issue.
+
+2. The use of a single module for the C++ library and the low-level native implementation were forcing on it incompatible constraints (up to introducing some bugs; see _e.g._ issue [#123](https://github.com/microsoft/MixedReality-WebRTC/issues/123)), resulting in a C-style C++ library to avoid linking issues with inline/template code and DLL use, and forcing many existing WebRTC types and concept to be abstracted for the same reason, leading to many duplicated code. Instead, the 2.0 release split those two modules into the low-level native implementation `mrwebrtc` on one side, and the C++ library building on it on the other side. This allows the latter to use modern C++ concepts (_e.g._ C++17) without being constrained by DLL rules.
+
+Practically, users need to be careful about former uses of `Microsoft.MixedReality.WebRTC.Native.dll`, and use `mrwebrtc.dll` instead:
+
+- Any legacy `Microsoft.MixedReality.WebRTC.Native.dll` file must be renamed into `mrwebrtc.dll`.
+- Referencing older NuGet packages still using the legacy name is discouraged. If proceeding anyway, uses of this module must be identified and dealt with:
+  - usually the project may continue to reference the package via its old name if accessed directly.
+  - if used in conjunction with a recent C# library, which expects `mrwebrtc.dll`, the module must be renamed.
+- Corrolary of the above, Unity projects must use `mrwebrtc.dll` only, as they are based on the C# library which now expects this name only. So users must rename files in the `Assets/Plugins/` folder of their project.
+
 ### C# library
 
 The C# library exposes a transceiver API very similar to the one found in the WebRTC 1.0 standard, and therefore familiarity with that standard helps understanding the API model. The API is not guaranteed to exactly follow the standard, but generally stays pretty close to it.
