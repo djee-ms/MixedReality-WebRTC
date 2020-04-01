@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.28917.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.MixedReality.WebRTC", "libs\Microsoft.MixedReality.WebRTC\Microsoft.MixedReality.WebRTC.csproj", "{BD9DCE7E-7159-4DAA-AAEB-71A8261C02FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.MixedReality.WebRTC.TestAppUWP", "examples\TestAppUwp\Microsoft.MixedReality.WebRTC.TestAppUWP.csproj", "{12C27383-118D-46F8-B025-BE44F42311A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAppUWP", "examples\TestAppUwp\TestAppUwp.csproj", "{12C27383-118D-46F8-B025-BE44F42311A0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D} = {0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}
 	EndProjectSection
