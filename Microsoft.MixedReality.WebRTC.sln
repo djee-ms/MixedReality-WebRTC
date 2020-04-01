@@ -10,23 +10,23 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.MixedReality.WebR
 		{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D} = {0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Native.UWP", "libs\Microsoft.MixedReality.WebRTC.Native\src\uwp\Microsoft.MixedReality.WebRTC.Native.UWP.vcxproj", "{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.uwp", "tools\build\uwp\mrwebrtc.uwp.vcxproj", "{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Native.Win32", "libs\Microsoft.MixedReality.WebRTC.Native\src\win32\Microsoft.MixedReality.WebRTC.Native.Win32.vcxproj", "{928899BC-F131-4343-A1AB-72F3A5787E41}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.win32", "tools\build\win32\mrwebrtc.win32.vcxproj", "{928899BC-F131-4343-A1AB-72F3A5787E41}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.MixedReality.WebRTC.Tests", "tests\Microsoft.MixedReality.WebRTC.Tests\Microsoft.MixedReality.WebRTC.Tests.csproj", "{70AB2CE0-D35D-4911-AC83-545A611EA930}"
 	ProjectSection(ProjectDependencies) = postProject
 		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.MixedReality.WebRTC.Native.Tests", "libs\Microsoft.MixedReality.WebRTC.Native\test\Microsoft.MixedReality.WebRTC.Native.Tests.vcxproj", "{6D020425-2E3E-4BA7-BC46-00C8D29081C0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.win32.tests", "tools\build\win32\tests\mrwebrtc.win32.tests.vcxproj", "{6D020425-2E3E-4BA7-BC46-00C8D29081C0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B32AC033-2CD1-4450-978B-00B16C517DDB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{35C3F3A6-2133-4523-81CA-BDFCE559A98C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{35C3F3A6-2133-4523-81CA-BDFCE559A98C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNetCoreConsole", "examples\TestNetCoreConsole\TestNetCoreConsole.csproj", "{C17D2554-9409-4CC7-8337-E3FBE3CAE415}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -34,6 +34,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNetCoreConsole", "examp
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestReceiveAV", "examples\TestReceiveAV\TestReceiveAV.csproj", "{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BD9DCE7E-7159-4DAA-AAEB-71A8261C02FF} = {BD9DCE7E-7159-4DAA-AAEB-71A8261C02FF}
+		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Foundation", "Foundation", "{5A65440E-39D2-4BC4-A216-48517DA8B7A9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{C90854FA-747C-4EFA-9E25-2511ADB52A23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -120,25 +128,21 @@ Global
 		{6D020425-2E3E-4BA7-BC46-00C8D29081C0}.Release|x86.ActiveCfg = Release|Win32
 		{6D020425-2E3E-4BA7-BC46-00C8D29081C0}.Release|x86.Build.0 = Release|Win32
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Debug|ARM.Build.0 = Debug|Any CPU
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Debug|x64.ActiveCfg = Debug|x64
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Debug|x64.Build.0 = Debug|x64
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Debug|x86.ActiveCfg = Debug|x86
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Debug|x86.Build.0 = Debug|x86
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Release|ARM.ActiveCfg = Release|Any CPU
-		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Release|ARM.Build.0 = Release|Any CPU
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Release|x64.ActiveCfg = Release|x64
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Release|x64.Build.0 = Release|x64
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Release|x86.ActiveCfg = Release|x86
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415}.Release|x86.Build.0 = Release|x86
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Debug|ARM.Build.0 = Debug|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Debug|x64.Build.0 = Debug|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Debug|x86.Build.0 = Debug|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Release|ARM.ActiveCfg = Release|Any CPU
-		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Release|ARM.Build.0 = Release|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Release|x64.ActiveCfg = Release|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Release|x64.Build.0 = Release|Any CPU
 		{209D1A4C-96F1-4F5E-9987-8C64E7998CC3}.Release|x86.ActiveCfg = Release|Any CPU
@@ -148,7 +152,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{BD9DCE7E-7159-4DAA-AAEB-71A8261C02FF} = {C90854FA-747C-4EFA-9E25-2511ADB52A23}
 		{12C27383-118D-46F8-B025-BE44F42311A0} = {B32AC033-2CD1-4450-978B-00B16C517DDB}
+		{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D} = {5A65440E-39D2-4BC4-A216-48517DA8B7A9}
+		{928899BC-F131-4343-A1AB-72F3A5787E41} = {5A65440E-39D2-4BC4-A216-48517DA8B7A9}
 		{70AB2CE0-D35D-4911-AC83-545A611EA930} = {35C3F3A6-2133-4523-81CA-BDFCE559A98C}
 		{6D020425-2E3E-4BA7-BC46-00C8D29081C0} = {35C3F3A6-2133-4523-81CA-BDFCE559A98C}
 		{C17D2554-9409-4CC7-8337-E3FBE3CAE415} = {B32AC033-2CD1-4450-978B-00B16C517DDB}
