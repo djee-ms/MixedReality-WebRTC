@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{af5e61a4-0bf7-4ea2-96f5-a5d3e6086d7b}</ProjectGuid>
+    <Keyword>StaticLibrary</Keyword>
+    <RootNamespace>Microsoft_MixedReality_WebRTC</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.17763.0</WindowsTargetPlatformMinVersion>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <ProjectName>mrwebrtcxx.uwp</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\mrwebrtc\mrwebrtc.targets" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <GenerateManifest>false</GenerateManifest>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <OutDir>$(MRWebRTCRoot)bin\UWP\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(MRWebRTCRoot)build\mrwebrtcxx\UWP\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <TargetName>mrwebrtcxx</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>MR_SHARING_WIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>$(MRWebRTCRoot)libs\mrwebrtcxx\include;$(MRWebRTCRoot)libs\mrwebrtcxx\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\annotations.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame_observer.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\callback.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\data_channel.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\exceptions.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\external_video_track_source.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\local_video_track.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\peer_connection.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\sdp_utils.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame_observer.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\external_video_track_source_impl.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\pch.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\audio_frame_observer.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\data_channel.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\mrs_errors.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\external_video_track_source.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\local_video_track.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\peer_connection.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\sdp_utils.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\str.cpp" />
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\video_frame_observer.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

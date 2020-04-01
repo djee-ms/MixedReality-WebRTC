@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\external_video_track_source.cpp">
+      <Filter>src\media</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\local_video_track.cpp">
+      <Filter>src\media</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\audio_frame_observer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\data_channel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\mrs_errors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\pch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\peer_connection.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\sdp_utils.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\str.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\video_frame_observer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\annotations.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame_observer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\callback.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\data_channel.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\exceptions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\external_video_track_source.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\local_video_track.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\peer_connection.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\sdp_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame_observer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\external_video_track_source_impl.h">
+      <Filter>src\media</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\pch.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\targetver.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{4c1543fc-a25f-4a8e-91a4-3c75fd1e44bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{d0d6e8a6-6d73-4bd1-af8a-6d410addbd75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\media">
+      <UniqueIdentifier>{5683d251-f1a9-4d36-89cb-881b2fd36b65}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
