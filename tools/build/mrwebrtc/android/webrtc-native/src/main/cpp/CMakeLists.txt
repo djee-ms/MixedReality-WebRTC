@@ -5,12 +5,12 @@ cmake_minimum_required(VERSION 3.10.2)
 
 #---------------------------------------------------------------------
 # Import libwebrtc.a static library
-# See ../libwebrtc/README.md for instructions on building libwebrtc.a.
+# See libwebrtc/README.md for instructions on building libwebrtc.a.
 #
 
 # Import CMake settings for libwebrtc.a. This file is generated during
 # the libwebrtc build.
-include(../../../../../libwebrtc/.libwebrtc.cmake)
+include(../../../../../../libwebrtc/.libwebrtc.cmake)
 
 # Declare and configure the library.
 add_library(
@@ -28,7 +28,7 @@ set_target_properties(
 #
 
 # Base path to mrwebrtc project.
-set(mr-webrtc-native-dir ../../../../../../../libs/Microsoft.MixedReality.WebRTC.Native)
+set(mr-webrtc-native-dir ../../../../../../../../libs/mrwebrtc)
 
 # List of source files to compile.
 add_library(

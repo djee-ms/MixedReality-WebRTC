@@ -10,16 +10,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAppUWP", "examples\Test
 		{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D} = {0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.uwp", "tools\build\uwp\mrwebrtc.uwp.vcxproj", "{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.uwp", "tools\build\mrwebrtc\uwp\mrwebrtc.uwp.vcxproj", "{0A6C45B9-76A4-4AB6-947B-0C0519AAE67D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.win32", "tools\build\win32\mrwebrtc.win32.vcxproj", "{928899BC-F131-4343-A1AB-72F3A5787E41}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.win32", "tools\build\mrwebrtc\win32\mrwebrtc.win32.vcxproj", "{928899BC-F131-4343-A1AB-72F3A5787E41}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.MixedReality.WebRTC.Tests", "tests\Microsoft.MixedReality.WebRTC.Tests\Microsoft.MixedReality.WebRTC.Tests.csproj", "{70AB2CE0-D35D-4911-AC83-545A611EA930}"
 	ProjectSection(ProjectDependencies) = postProject
 		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.win32.tests", "tools\build\win32\tests\mrwebrtc.win32.tests.vcxproj", "{6D020425-2E3E-4BA7-BC46-00C8D29081C0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mrwebrtc.win32.tests", "tools\build\mrwebrtc\win32\tests\mrwebrtc.win32.tests.vcxproj", "{6D020425-2E3E-4BA7-BC46-00C8D29081C0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{928899BC-F131-4343-A1AB-72F3A5787E41} = {928899BC-F131-4343-A1AB-72F3A5787E41}
 	EndProjectSection
