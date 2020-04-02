@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include "audio_frame_observer.h"
-#include "export.h"
-#include "interop_api.h"
+#include <mrwebrtc/export.h>
+#include <mrwebrtc/interop_api.h>
 
 extern "C" {
 

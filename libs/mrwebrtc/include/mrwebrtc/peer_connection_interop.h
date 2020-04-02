@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "interop_api.h"
+#include <mrwebrtc/interop_api.h>
 
 extern "C" {
 
