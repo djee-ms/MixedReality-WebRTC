@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "exceptions.h"
-#include "mrs_webrtc.h"
+#include <mrwebrtcxx/exceptions.h>
+
+#include <mrwebrtc/interop_api.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 

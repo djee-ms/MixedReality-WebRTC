@@ -6,11 +6,10 @@
 #include <future>
 #include <optional>
 
-#include "audio_frame.h"
-#include "data_channel.h"
-#include "exceptions.h"
-#include "mrwebrtcxx.h"
-#include "video_frame.h"
+#include <mrwebrtcxx/audio_frame.h>
+#include <mrwebrtcxx/data_channel.h>
+#include <mrwebrtcxx/exceptions.h>
+#include <mrwebrtcxx/video_frame.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 

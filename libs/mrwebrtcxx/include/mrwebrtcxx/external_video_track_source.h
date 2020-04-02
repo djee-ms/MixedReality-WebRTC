@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "mrs_errors.h"
-#include "external_video_track_source.h"
-#include "video_frame.h"
+#include <mrwebrtcxx/mrs_errors.h>
+#include <mrwebrtcxx/external_video_track_source.h>
+#include <mrwebrtcxx/video_frame.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 

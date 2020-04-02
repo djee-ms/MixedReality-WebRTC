@@ -5,8 +5,8 @@
 
 #include <mutex>
 
-#include "callback.h"
-#include "video_frame.h"
+#include <mrwebrtcxx/callback.h>
+#include <mrwebrtcxx/video_frame.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 

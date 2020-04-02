@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "callback.h"
+#include <mrwebrtcxx/callback.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 
