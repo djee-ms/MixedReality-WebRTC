@@ -105,28 +105,28 @@
     <ClInclude Include="$(SourcesRoot)src\media\transceiver.h">
       <Filter>src\media</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\transceiver_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\transceiver_interop.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\remote_video_track_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\remote_video_track_interop.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\remote_audio_track_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\remote_audio_track_interop.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\peer_connection_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\peer_connection_interop.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\local_video_track_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\local_video_track_interop.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\local_audio_track_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\local_audio_track_interop.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\interop_api.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\interop_api.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\external_video_track_source_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\external_video_track_source_interop.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="$(SourcesRoot)src\data_channel.h">
@@ -150,7 +150,7 @@
     <ClInclude Include="$(SourcesRoot)src\refptr.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\result.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\result.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="$(SourcesRoot)src\sdp_utils.h">
@@ -177,16 +177,16 @@
     <ClInclude Include="$(SourcesRoot)src\interop\global_factory.h">
       <Filter>src\interop</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\audio_frame.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\audio_frame.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\video_frame.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\video_frame.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\export.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\export.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(SourcesRoot)include\data_channel_interop.h">
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\data_channel_interop.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

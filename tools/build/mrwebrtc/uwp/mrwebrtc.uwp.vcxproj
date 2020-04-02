@@ -110,7 +110,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SourcesRoot)include;$(SourcesRoot)src;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc;$(WebRTCCoreRepoPath)webrtc\xplatform;$(WebRTCCoreRepoPath)webrtc\xplatform\chromium;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows\wrapper;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows\wrapper\generated\cppwinrt;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows\wrapper\override\cppwinrt;$(WebRTCCoreRepoPath)webrtc\xplatform\chromium\third_party\abseil-cpp;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\third_party\idl;$(WebRTCCoreRepoPath)webrtc\xplatform\zsLib;$(WebRTCCoreRepoPath)webrtc\xplatform\zsLib-eventing;$(WebRTCCoreRepoPath)webrtc\xplatform\libyuv\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SourcesRoot)include;$(SourcesRoot)include\mrwebrtc;$(SourcesRoot)src;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc;$(WebRTCCoreRepoPath)webrtc\xplatform;$(WebRTCCoreRepoPath)webrtc\xplatform\chromium;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows\wrapper;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows\wrapper\generated\cppwinrt;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\sdk\windows\wrapper\override\cppwinrt;$(WebRTCCoreRepoPath)webrtc\xplatform\chromium\third_party\abseil-cpp;$(WebRTCCoreRepoPath)webrtc\xplatform\webrtc\third_party\idl;$(WebRTCCoreRepoPath)webrtc\xplatform\zsLib;$(WebRTCCoreRepoPath)webrtc\xplatform\zsLib-eventing;$(WebRTCCoreRepoPath)webrtc\xplatform\libyuv\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
@@ -148,15 +148,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="$(SourcesRoot)src\pch.h" />
-    <ClInclude Include="$(SourcesRoot)include\audio_frame.h" />
-    <ClInclude Include="$(SourcesRoot)include\data_channel_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\export.h" />
-    <ClInclude Include="$(SourcesRoot)include\external_video_track_source_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\interop_api.h" />
-    <ClInclude Include="$(SourcesRoot)include\local_video_track_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\peer_connection_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\result.h" />
-    <ClInclude Include="$(SourcesRoot)include\video_frame.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\audio_frame.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\data_channel_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\export.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\external_video_track_source_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\interop_api.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\local_video_track_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\peer_connection_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\result.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\video_frame.h" />
     <ClInclude Include="$(SourcesRoot)src\audio_frame_observer.h" />
     <ClInclude Include="$(SourcesRoot)src\callback.h" />
     <ClInclude Include="$(SourcesRoot)src\data_channel.h" />
@@ -172,10 +172,10 @@
     <ClInclude Include="$(SourcesRoot)src\str.h" />
     <ClInclude Include="$(SourcesRoot)src\targetver.h" />
     <ClInclude Include="$(SourcesRoot)src\tracked_object.h" />
-    <ClInclude Include="$(SourcesRoot)include\transceiver_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\local_audio_track_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\remote_audio_track_interop.h" />
-    <ClInclude Include="$(SourcesRoot)include\remote_video_track_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\transceiver_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\local_audio_track_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\remote_audio_track_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\remote_video_track_interop.h" />
     <ClInclude Include="$(SourcesRoot)src\utils.h" />
     <ClInclude Include="$(SourcesRoot)src\video_frame_observer.h" />
     <ClInclude Include="$(SourcesRoot)src\media\local_audio_track.h" />
