@@ -14,8 +14,7 @@
 #include <string_view>
 #include <unordered_set>
 
-// Microsoft.MixedReality.WebRTC (Interop API)
-#include <interop_api.h>
+#include <mrwebrtc/interop_api.h>
 
-#include <annotations.h>
-#include <exceptions.h>
+#include <mrwebrtcxx/annotations.h>
+#include <mrwebrtcxx/exceptions.h>

@@ -3,8 +3,10 @@
 
 #include "pch.h"
 
-#include "data_channel.h"
-#include "peer_connection.h"
+#include <mrwebrtcxx/data_channel.h>
+#include <mrwebrtcxx/peer_connection.h>
+
+#include <mrwebrtc/data_channel_interop.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 

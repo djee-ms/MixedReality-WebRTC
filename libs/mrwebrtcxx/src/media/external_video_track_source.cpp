@@ -3,8 +3,7 @@
 
 #include "pch.h"
 
-#include "global_factory.h"
-#include "media/external_video_track_source_impl.h"
+#include <mrwebrtcxx/media/external_video_track_source_impl.h>
 
 namespace {
 

@@ -82,7 +82,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx;$(MRWebRTCRoot)libs\mrwebrtcxx\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MRWebRTCRoot)libs\mrwebrtcxx\include;$(MRWebRTCRoot)libs\mrwebrtcxx\src;$(MRWebRTCRoot)libs\mrwebrtc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
@@ -127,6 +127,8 @@
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\local_video_track.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\mrwebrtcxx.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\peer_connection.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\remote_audio_track.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\remote_video_track.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\sdp_utils.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame_observer.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame.h" />

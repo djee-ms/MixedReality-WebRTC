@@ -3,9 +3,14 @@
 
 #pragma once
 
-#include <mrwebrtcxx/mrs_errors.h>
+#include <memory>
+
+#include <mrwebrtcxx/exceptions.h>
 #include <mrwebrtcxx/external_video_track_source.h>
 #include <mrwebrtcxx/video_frame.h>
+
+#include <mrwebrtc/interop_api.h>
+#include <mrwebrtc/result.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -114,7 +119,7 @@ class ExternalVideoTrackSource {
   // Advanced use
   //
 
-  [[nodiscard]] ExternalVideoTrackSourceHandle GetHandle() const {
+  [[nodiscard]] mrsExternalVideoTrackSourceHandle GetHandle() const {
     if (!handle_) {
       throw new InvalidOperationException();
     }
@@ -127,7 +132,7 @@ class ExternalVideoTrackSource {
   //}
 
  protected:
-  ExternalVideoTrackSourceHandle handle_{};
+  mrsExternalVideoTrackSourceHandle handle_{};
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

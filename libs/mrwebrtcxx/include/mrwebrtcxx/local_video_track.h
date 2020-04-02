@@ -4,6 +4,10 @@
 #pragma once
 
 #include <mrwebrtcxx/callback.h>
+#include <mrwebrtcxx/exceptions.h>
+
+#include <mrwebrtc/result.h>
+#include <mrwebrtc/local_video_track_interop.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 
@@ -50,7 +54,7 @@ class LocalVideoTrack {
 
   /// Get the handle to the implementation object, to make an API call.
   /// This throws an |InvalidOperationException| when the handle is not valid.
-  [[nodiscard]] LocalVideoTrackHandle GetHandle() const {
+  [[nodiscard]] mrsLocalVideoTrackHandle GetHandle() const {
     if (!handle_) {
       throw new InvalidOperationException();
     }
@@ -62,7 +66,7 @@ class LocalVideoTrack {
   PeerConnection* owner_{};
 
   /// Handle to the implementation object.
-  LocalVideoTrackHandle handle_{};
+  mrsLocalVideoTrackHandle handle_{};
 };
 
 }  // namespace Microsoft::MixedReality::WebRTC

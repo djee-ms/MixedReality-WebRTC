@@ -3,8 +3,9 @@
 
 #include "pch.h"
 
-#include "interop_api.h"
-#include "mrs_errors.h"
+#include <mrwebrtcxx/mrs_errors.h>
+
+#include <mrwebrtc/interop_api.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 

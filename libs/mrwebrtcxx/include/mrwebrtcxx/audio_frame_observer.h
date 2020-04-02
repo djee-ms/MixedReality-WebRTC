@@ -4,6 +4,7 @@
 #pragma once
 
 #include <mutex>
+#include <functional>
 
 #include <mrwebrtcxx/callback.h>
 #include <mrwebrtcxx/audio_frame.h>
@@ -11,10 +12,10 @@
 namespace Microsoft::MixedReality::WebRTC {
 
 /// Callback fired on newly available audio frame.
-using AudioFrameReadyCallback = Callback<const AudioFrame&>;
+using AudioFrameReadyCallback = std::function<const AudioFrame&>;
 
 /// Audio frame observer to get notified of newly available audio frames.
-class AudioFrameObserver : public webrtc::AudioTrackSinkInterface {
+class AudioFrameObserver {
  public:
   void SetCallback(AudioFrameReadyCallback callback) noexcept;
 

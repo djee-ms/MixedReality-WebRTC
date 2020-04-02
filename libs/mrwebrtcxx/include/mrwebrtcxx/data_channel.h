@@ -27,7 +27,7 @@ enum class Result : uint32_t;
 class DataChannel {
  public:
   /// Data channel state as marshaled through the public API.
-  enum class State : int {
+  enum class State : std::uint8_t {
     /// The data channel is being connected, but is not yet ready to send nor
     /// received any data.
     kConnecting = 0,
@@ -85,7 +85,7 @@ class DataChannel {
   /// Get the handle to the implementation object, to make an API call.
   /// This throws an |InvalidOperationException| if the data channel was closed,
   /// or more generally when the handle is not valid.
-  DataChannelHandle GetHandle() const {
+  mrsDataChannelHandle GetHandle() const {
     if (!handle_) {
       throw new InvalidOperationException();
     }
@@ -103,16 +103,15 @@ class DataChannel {
               bool ordered,
               bool reliable) noexcept;
 
-  static void StaticMessageCallback(void* user_data,
-                                    const void* data,
-                                    const uint64_t size);
-  static void StaticBufferingCallback(void* user_data,
-                                      const uint64_t previous,
-                                      const uint64_t current,
-                                      const uint64_t max_capacity);
-  static void StaticStateCallback(void* user_data, int state, int id);
+  static void MRS_CALL StaticMessageCallback(void* user_data,
+                                             const void* data,
+                                             const uint64_t size);
+  static void MRS_CALL StaticBufferingCallback(void* user_data,
+                                               const uint64_t previous,
+                                               const uint64_t current,
+                                               const uint64_t max_capacity);
+  static void MRS_CALL StaticStateCallback(void* user_data, int state, int id);
 
-  // See PeerConnection::AddDataChannel()
   friend class PeerConnection;
 
  private:
@@ -120,10 +119,10 @@ class DataChannel {
   /// creation until the data channel is removed from the peer connection with
   /// RemoveDataChannel(), at which point the data channel is removed from its
   /// parent's collection and |owner_| is set to nullptr.
-  PeerConnection* owner_{};
+  PeerConnection* owner_{nullptr};
 
   /// Handle to the implementation object.
-  DataChannelHandle handle_{};
+  mrsDataChannelHandle handle_{};
 
   /// Unique ID of the data channel within the current session.
   const int id_;

@@ -3,11 +3,10 @@
 
 #pragma once
 
-#include "media/base/adaptedvideotracksource.h"
+#include <mrwebrtcxx/callback.h>
+#include <mrwebrtcxx/external_video_track_source.h>
 
-#include "callback.h"
-#include "external_video_track_source.h"
-#include "interop/interop_api.h"
+#include <mrwebrtc/interop_api.h>
 
 namespace Microsoft::MixedReality::WebRTC::detail {
 

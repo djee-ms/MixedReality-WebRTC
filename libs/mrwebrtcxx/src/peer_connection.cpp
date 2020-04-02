@@ -5,10 +5,13 @@
 // line, to prevent clang-format from reordering it with other headers.
 #include "pch.h"
 
-#include "data_channel.h"
-#include "external_video_track_source.h"
-#include "local_video_track.h"
-#include "peer_connection.h"
+#include <mrwebrtcxx/data_channel.h>
+#include <mrwebrtcxx/external_video_track_source.h>
+#include <mrwebrtcxx/local_video_track.h>
+#include <mrwebrtcxx/peer_connection.h>
+
+#include <mrwebrtc/data_channel_interop.h>
+#include <mrwebrtc/interop_api.h>
 
 #if defined(_M_IX86) /* x86 */ && defined(WINAPI_FAMILY) && \
     (WINAPI_FAMILY == WINAPI_FAMILY_APP) /* UWP app */ &&   \
@@ -457,42 +460,11 @@ class CString {
 
 }  // namespace
 
-ErrorOr<std::shared_ptr<LocalVideoTrack>> PeerConnection::AddLocalVideoTrack(
-    std::string_view track_name,
-    const VideoDeviceConfiguration& config) {
-  LocalVideoTrackHandle track_interop_handle{};
-  CheckResult(mrsPeerConnectionAddLocalVideoTrack(
-      GetHandle(), CString(track_name), config, &track_interop_handle));
-  return std::make_shared<LocalVideoTrack>(*this, track_interop_handle);
-}
-
-void PeerConnection::RemoveLocalVideoTrack(LocalVideoTrack& video_track) {
-  CheckResult(mrsPeerConnectionRemoveLocalVideoTrack(GetHandle(),
-                                                     video_track.GetHandle()));
-}
-
-void PeerConnection::RemoveLocalVideoTracksFromSource(
-    ExternalVideoTrackSource& source) {
-  CheckResult(mrsPeerConnectionRemoveLocalVideoTracksFromSource(
-      GetHandle(), source.GetHandle()));
-}
-
-void PeerConnection::SetLocalAudioTrackEnabled(bool enabled) {
-  CheckResult(mrsPeerConnectionSetLocalAudioTrackEnabled(
-      GetHandle(), enabled ? mrsBool::kTrue : mrsBool::kFalse));
-}
-
-bool PeerConnection::IsLocalAudioTrackEnabled() const noexcept {
-  return (mrsPeerConnectionIsLocalAudioTrackEnabled(GetHandle()) !=
-          mrsBool::kFalse);
-}
-
-void PeerConnection::AddLocalAudioTrack() {
-  CheckResult(mrsPeerConnectionAddLocalAudioTrack(GetHandle()));
-}
-
-void PeerConnection::RemoveLocalAudioTrack() {
-  mrsPeerConnectionRemoveLocalAudioTrack(GetHandle());
+std::unique_ptr<PeerConnection> Create(
+    const mrsPeerConnectionConfiguration& config) {
+  mrsPeerConnectionHandle handle;
+  ThrowOnError(mrsPeerConnectionCreate(&config, &handle));
+  return std::make_unique<PeerConnection>(handle);
 }
 
 std::shared_ptr<DataChannel> PeerConnection::AddDataChannel(
@@ -504,6 +476,20 @@ std::shared_ptr<DataChannel> PeerConnection::AddDataChannel(
   std::unique_ptr<DataChannel> data_channel{
       new DataChannel(this, id, label, ordered, reliable)};
 
+  // Create the data channel implementation and add it to the peer connection
+  mrsDataChannelConfig config{};
+  config.id = id;
+  config.label = CString(label);
+  if (ordered) {
+    config.flags = config.flags | mrsDataChannelConfigFlags::kOrdered;
+  }
+  if (reliable) {
+    config.flags = config.flags | mrsDataChannelConfigFlags::kReliable;
+  }
+  mrsDataChannelHandle handle{};
+  CheckResult(mrsPeerConnectionAddDataChannel(GetHandle(), &config, &handle));
+  mrsDataChannelSetUserData(handle, this);
+
   // Setup static trampolines
   mrsDataChannelCallbacks callbacks{};
   callbacks.message_callback = &DataChannel::StaticMessageCallback;
@@ -512,36 +498,17 @@ std::shared_ptr<DataChannel> PeerConnection::AddDataChannel(
   callbacks.buffering_user_data = this;
   callbacks.state_callback = &DataChannel::StaticStateCallback;
   callbacks.state_user_data = this;
-
-  // Create the data channel implementation and add it to the peer connection
-  mrsDataChannelConfig config{};
-  config.id = id;
-  config.label = CString(label);
-  if (ordered) {
-    config.flags |= mrsDataChannelConfigFlags::kOrdered;
-  }
-  if (reliable) {
-    config.flags |= mrsDataChannelConfigFlags::kReliable;
-  }
-  DataChannelHandle handle{};
-  mrsDataChannelInteropHandle interop_handle = this;
-  CheckResult(mrsPeerConnectionAddDataChannel(GetHandle(), interop_handle,
-                                              config, callbacks, &handle));
+  mrsDataChannelRegisterCallbacks(handle, &callbacks);
 
   // On success, assign the handle to the newly created wrapper and return it
   data_channel->handle_ = handle;
   return data_channel;
 }
 
-void PeerConnection::RemoveDataChannel(const DataChannel& data_channel) {
+void PeerConnection::RemoveDataChannel(DataChannel& data_channel) {
   CheckResult(mrsPeerConnectionRemoveDataChannel(GetHandle(),
                                                  data_channel.GetHandle()));
-}
-
-void PeerConnection::RemoveAllDataChannels() {
-  //< FIXME...
-  throw new NotImplementedException();
-  // CheckResult(mrsPeerConnectionRemoveAllDataChannels(GetHandle()));
+  data_channel.handle_ = nullptr;
 }
 
 void PeerConnection::AddIceCandidate(const IceCandidate& candidate) {
@@ -573,11 +540,12 @@ void PeerConnection::Close() {
 std::future<void> PeerConnection::SetRemoteDescriptionAsync(
     const SdpDescription& desc) {
   auto observer = std::make_unique<RemoteDescriptionAppliedObserver>();
-  CheckResult(mrsPeerConnectionSetRemoteDescription(
+  CheckResult(mrsPeerConnectionSetRemoteDescriptionAsync(
       GetHandle(), SdpTypeToString(desc.type), desc.sdp.c_str(),
       &RemoteDescriptionAppliedObserver::StaticExec, observer.get()));
+  std::future<void> future{observer->GetFuture()};
   observer.release();  // no exception, keep alive
-  return observer->GetFuture();
+  return future;
 }
 
 }  // namespace Microsoft::MixedReality::WebRTC

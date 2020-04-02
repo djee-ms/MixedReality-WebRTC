@@ -81,6 +81,12 @@
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame_observer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\remote_audio_track.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\remote_video_track.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

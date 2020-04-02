@@ -3,13 +3,13 @@
 
 #include "pch.h"
 
-#include "local_video_track.h"
-#include "peer_connection.h"
+#include <mrwebrtcxx/local_video_track.h>
+#include <mrwebrtcxx/peer_connection.h>
 
 namespace Microsoft::MixedReality::WebRTC {
 
 LocalVideoTrack::LocalVideoTrack(PeerConnection& owner,
-                                 LocalVideoTrackHandle handle)
+                                 mrsLocalVideoTrackHandle handle)
     : owner_(&owner), handle_(handle) {
   assert(owner_);
 }

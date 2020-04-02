@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include <mutex>
+#include <map>
+#include <string>
 
 #include <mrwebrtcxx/callback.h>
 
