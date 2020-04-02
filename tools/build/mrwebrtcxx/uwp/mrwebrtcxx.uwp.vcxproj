@@ -82,7 +82,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(MRWebRTCRoot)libs\mrwebrtcxx\include;$(MRWebRTCRoot)libs\mrwebrtcxx\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx;$(MRWebRTCRoot)libs\mrwebrtcxx\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
@@ -117,19 +117,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\annotations.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame_observer.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\callback.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\data_channel.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\exceptions.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\external_video_track_source.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\local_video_track.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\peer_connection.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\sdp_utils.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame_observer.h" />
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\annotations.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\audio_frame_observer.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\audio_frame.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\callback.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\data_channel.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\exceptions.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\external_video_track_source.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\local_video_track.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\mrwebrtcxx.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\peer_connection.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\sdp_utils.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame_observer.h" />
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\media\external_video_track_source_impl.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\pch.h" />
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\targetver.h" />

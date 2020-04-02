@@ -33,43 +33,43 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\annotations.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\annotations.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\audio_frame.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\audio_frame_observer.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\audio_frame_observer.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\callback.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\callback.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\data_channel.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\data_channel.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\exceptions.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\exceptions.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\external_video_track_source.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\external_video_track_source.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\local_video_track.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\local_video_track.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\mrwebrtcxx.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\peer_connection.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\peer_connection.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\sdp_utils.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\sdp_utils.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\video_frame_observer.h">
+    <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\include\mrwebrtcxx\video_frame_observer.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="$(MRWebRTCRoot)libs\mrwebrtcxx\src\pch.h">
