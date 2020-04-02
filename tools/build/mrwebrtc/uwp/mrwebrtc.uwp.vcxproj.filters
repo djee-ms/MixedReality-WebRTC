@@ -189,6 +189,9 @@
     <ClInclude Include="$(SourcesRoot)src\video_frame_observer.h">
       <Filter>src\media</Filter>
     </ClInclude>
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\mrwebrtc.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

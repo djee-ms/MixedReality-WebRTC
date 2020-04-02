@@ -189,6 +189,9 @@
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\data_channel_interop.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\mrwebrtc.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

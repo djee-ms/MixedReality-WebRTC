@@ -154,6 +154,7 @@
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\external_video_track_source_interop.h" />
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\interop_api.h" />
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\local_video_track_interop.h" />
+    <ClInclude Include="$(SourcesRoot)include\mrwebrtc\mrwebrtc.h" />
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\peer_connection_interop.h" />
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\result.h" />
     <ClInclude Include="$(SourcesRoot)include\mrwebrtc\video_frame.h" />
