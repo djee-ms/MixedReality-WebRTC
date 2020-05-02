@@ -13,6 +13,13 @@
 
 #include <exception>
 
+#if !defined(MR_SHARING_ANDROID) && !defined(WINUWP)
+#pragma warning(push)
+#pragma warning(disable : 4100 4127 4244)
+#include "modules/audio_device/win/audio_device_core_win.h"
+#pragma warning(pop)
+#endif
+
 namespace Microsoft {
 namespace MixedReality {
 namespace WebRTC {
@@ -254,9 +261,37 @@ mrsResult GlobalFactory::InitializeImplNoLock() {
                              signaling_thread_.get());
   signaling_thread_->Start();
 
+#if defined(MR_SHARING_ANDROID)
+  // Use a null value to use default implementation
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
+#else   // defined(MR_SHARING_ANDROID)
+  // Force the use of the CoreAudio 2 ADM, which supports more devices like
+  // Azure Kinect DK. The ADM needs to be created on the worker thread where it
+  // will be used, and requires COM to be initialized.
+  auto adm =
+      worker_thread_->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+          RTC_FROM_HERE, [this] {
+            // Initializing COM for this thread is required. See
+            // AudioDeviceWindowsCore constructor in audio_device_core_win.cc
+            // for more details. Worker thread objects are generally not shared
+            // so assume Single-Threaded Apartmnet (STA).
+            worker_com_initializer_.reset(
+                new webrtc::ScopedCOMInitializer(/*STA*/));
+            RTC_DCHECK(worker_com_initializer_->succeeded())
+                << "Failed to initialize COM (STA) on WebRTC worker thread.";
+            return webrtc::CreateWindowsCoreAudioAudioDeviceModule();
+          });
+  if (!adm) {
+    RTC_LOG(LS_ERROR) << "Failed to create audio device module (CoreAudio).";
+    return Result::kUnknownError;
+  }
+  RTC_LOG(LS_INFO)
+      << "Using CoreAudio ADM2 on Windows for audio capture and playback.";
+#endif  // defined(MR_SHARING_ANDROID)
+
   peer_factory_ = webrtc::CreatePeerConnectionFactory(
       network_thread_.get(), worker_thread_.get(), signaling_thread_.get(),
-      nullptr, webrtc::CreateBuiltinAudioEncoderFactory(),
+      std::move(adm), webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
       std::unique_ptr<webrtc::VideoEncoderFactory>(
           new webrtc::MultiplexEncoderFactory(
@@ -317,6 +352,7 @@ bool GlobalFactory::ShutdownImplNoLock(ShutdownAction shutdown_action) {
   network_thread_.reset();
   worker_thread_.reset();
   signaling_thread_.reset();
+  worker_com_initializer_.reset();
 #endif  // defined(WINUWP)
   return true;
 }

@@ -7,6 +7,10 @@
 #include "peer_connection.h"
 #include "utils.h"
 
+namespace webrtc {
+class ScopedCOMInitializer;
+}
+
 namespace Microsoft {
 namespace MixedReality {
 namespace WebRTC {
@@ -212,6 +216,9 @@ class GlobalFactory {
   /// is initialized, and is immutable between init and shutdown, so do not
   /// require |mutex_| for access, but |init_mutex_| instead.
   std::unique_ptr<rtc::Thread> signaling_thread_ RTC_GUARDED_BY(init_mutex_);
+
+  /// COM initializer for worker thread (for ADM2).
+  std::unique_ptr<webrtc::ScopedCOMInitializer> worker_com_initializer_;
 
 #endif  // defined(WINUWP)
 
