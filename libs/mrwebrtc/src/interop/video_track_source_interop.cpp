@@ -347,3 +347,12 @@ mrsResult MRS_CALL mrsVideoTrackSourceCreateFromDevice(
   *source_handle_out = wrapper.release();
   return Result::kSuccess;
 }
+
+void MRS_CALL mrsVideoTrackSourceRegisterFrameCallback(
+    mrsVideoTrackSourceHandle source_handle,
+    mrsI420AVideoFrameCallback callback,
+    void* user_data) noexcept {
+  if (auto source = static_cast<VideoTrackSource*>(source_handle)) {
+    source->SetCallback(I420AFrameReadyCallback{callback, user_data});
+  }
+}

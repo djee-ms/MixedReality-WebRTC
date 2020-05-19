@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.MixedReality.WebRTC.Interop;
+using Microsoft.MixedReality.WebRTC.Tracing;
 
 namespace Microsoft.MixedReality.WebRTC
 {
@@ -119,6 +120,32 @@ namespace Microsoft.MixedReality.WebRTC
         public List<LocalVideoTrack> Tracks { get; private set; } = new List<LocalVideoTrack>();
 
         /// <summary>
+        /// Event that occurs when a video frame has been produced by the source.
+        /// </summary>
+        public event I420AVideoFrameDelegate VideoFrameReady
+        {
+            add
+            {
+                bool isFirstHandler = (_videoFrameReady == null);
+                _videoFrameReady += value;
+                if (isFirstHandler)
+                {
+                    RegisterVideoFrameCallback();
+                }
+            }
+            remove
+            {
+                // FIXME - ideally unregister first so no need to check for NULL event in handler
+                _videoFrameReady -= value;
+                bool isLastHandler = (_videoFrameReady == null);
+                if (isLastHandler)
+                {
+                    UnregisterVideoFrameCallback();
+                }
+            }
+        }
+
+        /// <summary>
         /// Handle to the native VideoTrackSource object.
         /// </summary>
         /// <remarks>
@@ -127,11 +154,24 @@ namespace Microsoft.MixedReality.WebRTC
         internal VideoTrackSourceHandle _nativeHandle { get; private set; } = new VideoTrackSourceHandle();
 
         /// <summary>
+        /// Handle to self for interop callbacks. This adds a reference to the current object, preventing
+        /// it from being garbage-collected.
+        /// </summary>
+        private IntPtr _selfHandle = IntPtr.Zero;
+
+        /// <summary>
+        /// Callback arguments to ensure delegates registered with the native layer don't go out of scope.
+        /// </summary>
+        private VideoTrackSourceInterop.InteropCallbackArgs _interopCallbackArgs;
+
+        /// <summary>
         /// Backing field for <see cref="Name"/>, and cache for the native name.
         /// Since the name can only be set by the user, this cached value is always up-to-date with the
         /// internal name of the native object, by design.
         /// </summary>
         private string _name = string.Empty;
+
+        private event I420AVideoFrameDelegate _videoFrameReady;
 
         /// <summary>
         /// Create an video track source using a local video capture device (webcam).
@@ -237,6 +277,25 @@ namespace Microsoft.MixedReality.WebRTC
             _nativeHandle.Dispose();
         }
 
+        private void RegisterVideoFrameCallback()
+        {
+            _interopCallbackArgs = new VideoTrackSourceInterop.InteropCallbackArgs()
+            {
+                Source = this,
+                I420AFrameCallback = VideoTrackSourceInterop.I420AFrameCallback,
+            };
+            _selfHandle = Utils.MakeWrapperRef(this);
+            VideoTrackSourceInterop.VideoTrackSource_RegisterFrameCallback(
+                _nativeHandle, _interopCallbackArgs.I420AFrameCallback, _selfHandle);
+        }
+
+        private void UnregisterVideoFrameCallback()
+        {
+            VideoTrackSourceInterop.VideoTrackSource_RegisterFrameCallback(_nativeHandle, null, IntPtr.Zero);
+            Utils.ReleaseWrapperRef(_selfHandle);
+            _interopCallbackArgs = null;
+        }
+
         /// <summary>
         /// Internal callback when a track starts using this source.
         /// </summary>
@@ -281,6 +340,12 @@ namespace Microsoft.MixedReality.WebRTC
                 }
             }
             Tracks = remainingTracks;
+        }
+
+        internal void OnI420AFrameReady(I420AVideoFrame frame)
+        {
+            MainEventSource.Log.I420ALocalVideoFrameReady(frame.width, frame.height);
+            _videoFrameReady?.Invoke(frame);
         }
 
         /// <inheritdoc/>

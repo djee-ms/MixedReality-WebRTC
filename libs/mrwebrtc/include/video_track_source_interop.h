@@ -105,4 +105,12 @@ MRS_API mrsResult MRS_CALL mrsVideoTrackSourceCreateFromDevice(
     const mrsLocalVideoDeviceInitConfig* init_config,
     mrsVideoTrackSourceHandle* source_handle_out) noexcept;
 
+/// Register a custom callback to be called when the video track source produced
+/// a frame. The produced frame is passed to the registered callback in I420
+/// encoding.
+MRS_API void MRS_CALL mrsVideoTrackSourceRegisterFrameCallback(
+    mrsVideoTrackSourceHandle source_handle,
+    mrsI420AVideoFrameCallback callback,
+    void* user_data) noexcept;
+
 }  // extern "C"

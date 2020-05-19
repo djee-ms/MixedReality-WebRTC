@@ -145,6 +145,15 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             }
         }
 
+        #region Unmanaged delegates
+
+        // Note - none of those method arguments can be SafeHandle; use IntPtr instead.
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        public delegate void I420AVideoFrameUnmanagedCallback(IntPtr userData, in I420AVideoFrame frame);
+
+        #endregion
+
         #region P/Invoke static functions
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
@@ -178,6 +187,24 @@ namespace Microsoft.MixedReality.WebRTC.Interop
         public static unsafe extern uint VideoTrackSource_CreateFromDevice(
             in LocalVideoDeviceMarshalInitConfig config, out VideoTrackSourceHandle sourceHandle);
 
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsVideoTrackSourceRegisterFrameCallback")]
+        public static extern void VideoTrackSource_RegisterFrameCallback(VideoTrackSourceHandle trackHandle,
+            I420AVideoFrameUnmanagedCallback callback, IntPtr userData);
+
         #endregion
+
+        public class InteropCallbackArgs
+        {
+            public VideoTrackSource Source;
+            public I420AVideoFrameUnmanagedCallback I420AFrameCallback;
+        }
+
+        [MonoPInvokeCallback(typeof(I420AVideoFrameUnmanagedCallback))]
+        public static void I420AFrameCallback(IntPtr userData, in I420AVideoFrame frame)
+        {
+            var source = Utils.ToWrapper<VideoTrackSource>(userData);
+            source.OnI420AFrameReady(frame);
+        }
     }
 }
