@@ -701,15 +701,15 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         private Task RequestAccessAndInitAsync(CancellationToken token)
         {
 #if UNITY_WSA && !UNITY_EDITOR
-            // On UWP the app must have the "webcam" capability, and the user must allow webcam
-            // access. So check that access before trying to initialize the WebRTC library, as this
-            // may result in a popup window being displayed the first time, which needs to be accepted
-            // before the camera can be accessed by WebRTC.
+            // FIXME - Use ADM2 instead, this /maybe/ avoids this.
+            // On UWP the app must have the "microphone" capability, and the user must allow microphone
+            // access. This is due to the audio module (ADM1) being initialized at startup, even if no audio
+            // track is used. Preventing access to audio crashes the ADM1 at startup and the entire application.
             var mediaAccessRequester = new MediaCapture();
             var mediaSettings = new MediaCaptureInitializationSettings();
             mediaSettings.AudioDeviceId = "";
             mediaSettings.VideoDeviceId = "";
-            mediaSettings.StreamingCaptureMode = StreamingCaptureMode.AudioAndVideo;
+            mediaSettings.StreamingCaptureMode = StreamingCaptureMode.Audio;
             mediaSettings.PhotoCaptureSource = PhotoCaptureSource.VideoPreview;
             mediaSettings.SharingMode = MediaCaptureSharingMode.SharedReadOnly; // for MRC and lower res camera
             var accessTask = mediaAccessRequester.InitializeAsync(mediaSettings).AsTask(token);
@@ -726,7 +726,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                     var ex = prevTask.Exception;
                     _mainThreadWorkQueue.Enqueue(() =>
                     {
-                        OnError.Invoke($"Audio/Video access failure: {ex.Message}.");
+                        OnError.Invoke($"Audio access failure: {ex.Message}.");
                     });
                 }
             }, token);

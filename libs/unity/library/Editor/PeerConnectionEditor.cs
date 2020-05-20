@@ -212,6 +212,23 @@ namespace Microsoft.MixedReality.WebRTC.Unity.Editor
         {
             serializedObject.Update();
 
+#if UNITY_WSA
+            if (!PlayerSettings.WSA.GetCapability(PlayerSettings.WSACapability.Microphone))
+            {
+                EditorGUILayout.HelpBox("The UWP player is missing the Microphone capability. Currently on UWP the native WebRTC implementation always tries to"
+                    + " open the microphone while initialzing the audio subsystem at startup. Not granting access will fail initialization, and generally crash the app."
+                    + " Add the Microphone capability in Project Settings > Player > UWP > Publishing Settings > Capabilities.", MessageType.Error);
+                if (GUILayout.Button("Open Player Settings"))
+                {
+                    SettingsService.OpenProjectSettings("Project/Player");
+                }
+                if (GUILayout.Button("Add Microphone Capability"))
+                {
+                    PlayerSettings.WSA.SetCapability(PlayerSettings.WSACapability.Microphone, true);
+                }
+            }
+#endif
+
             EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(autoInitOnStart_, new GUIContent("Initialize during component start",
