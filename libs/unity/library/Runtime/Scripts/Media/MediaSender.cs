@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Threading.Tasks;
+using System;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.WebRTC.Unity
@@ -10,7 +10,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// Base class for media sources generating their media frames locally,
     /// with the intention to send them to the remote peer.
     /// </summary>
-    public abstract class MediaSender : MediaSource
+    public abstract class MediaSender
     {
         /// <summary>
         /// Name of the local media track this component will create when calling <see cref="StartCaptureAsync"/>.
@@ -32,74 +32,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         [SdpToken(allowEmpty: true)]
         public string TrackName;
 
-        /// <summary>
-        /// Automatically start media capture when the component is enabled, and stop capture
-        /// when the component is disabled.
-        /// 
-        /// If <c>true</c>, then <see cref="StartCaptureAsync"/> is automatically called
-        /// when the <see xref="UnityEngine.MonoBehaviour.OnEnabled"/> callback is invoked
-        /// by Unity, and conversely <see cref="StopCapture"/> is automatically called when
-        /// the <see xref="UnityEngine.MonoBehaviour.OnEnabled"/> callback is invoked by Unity.
-        /// 
-        /// If <c>false</c>, then the user has to manually call <see cref="StartCaptureAsync"/>
-        /// to start capture before the media sender is attached to a transceiver, and call
-        /// <see cref="StopCapture"/> to stop capture.
-        /// </summary>
-        /// <remarks>
-        /// When the media sender is attached to a transceiver, media capture starts automatically
-        /// if the component is active and enabled, even if <see cref="AutoStartOnEnabled"/> is false.
-        /// 
-        /// To have complete manual control on capture, set both <see cref="AutoStartOnEnabled"/> and
-        /// <see xref="UnityEngine.MonoBehaviour.enabled"/> to <c>false</c>.
-        /// </remarks>
-        [Tooltip("Automatically start media capture when the component is enabled")]
-        [Editor.ToggleLeft]
-        public bool AutoStartOnEnabled = true;
+        public MediaKind MediaKind { get; }
 
-        /// <summary>
-        /// Is the media source currently generating frames from local capture?
-        /// The concept of _capture_ is described in the <see cref="StartCaptureAsync"/> function.
-        /// </summary>
-        /// <seealso cref="StartCaptureAsync"/>
-        /// <seealso cref="StopCapture()"/>
-        public bool IsCapturing { get; private set; }
-
-        /// <inheritdoc/>
-        public MediaSender(MediaKind mediaKind) : base(mediaKind)
+        public MediaSender(MediaKind mediaKind)
         {
-        }
-
-        /// <summary>
-        /// Manually start capture of the local media by creating a local media track.
-        /// 
-        /// If <see cref="AutoStartOnEnabled"/> is <c>true</c> then this is called automatically
-        /// as soon as the component is enabled. Otherwise the user must call this method to create
-        /// the underlying local media track.
-        /// </summary>
-        /// <seealso cref="StopCapture()"/>
-        /// <seealso cref="IsCapturing"/>
-        /// <seealso cref="AutoStartOnEnabled"/>
-        public async Task StartCaptureAsync()
-        {
-            if (!IsCapturing)
-            {
-                await CreateLocalTrackAsync();
-                IsCapturing = true;
-            }
-        }
-
-        /// <summary>
-        /// Stop capture of the local video track and destroy it.
-        /// </summary>
-        /// <seealso cref="StartCaptureAsync()"/>
-        /// <seealso cref="IsCapturing"/>
-        public void StopCapture()
-        {
-            if (IsCapturing)
-            {
-                DestroyLocalTrack();
-                IsCapturing = false;
-            }
+            MediaKind = mediaKind;
         }
 
         /// <summary>
@@ -123,37 +60,10 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             MuteImpl(false);
         }
 
-        /// <inheritdoc/>
-        protected async Task OnEnable()
-        {
-            if (AutoStartOnEnabled)
-            {
-                await StartCaptureAsync();
-            }
-        }
-
-        /// <inheritdoc/>
-        protected void OnDisable()
-        {
-            if (AutoStartOnEnabled)
-            {
-                StopCapture();
-            }
-        }
-
-        /// <inheritdoc/>
-        protected void OnDestroy()
-        {
-            // Note that capture can be started manually even if inactive,
-            // so force destruction when the component is destroyed to release
-            // native resources.
-            StopCapture();
-        }
-
-        internal abstract Task AttachTrackAsync();
+        internal abstract void AttachTrack();
         internal abstract void DetachTrack();
 
-        protected abstract Task CreateLocalTrackAsync();
+        protected abstract void CreateLocalTrack();
         protected abstract void DestroyLocalTrack();
 
         /// <summary>

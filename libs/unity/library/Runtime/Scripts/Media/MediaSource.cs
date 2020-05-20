@@ -12,9 +12,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// 
     /// This component encapsulates one of 4 types of media tracks, depending on the actual
     /// class deriving from it:
-    /// - <see cref="AudioSender"/> : produces audio frames locally, to be sent to the remote peer
+    /// - <see cref="AudioTrackSource"/> : produces audio frames locally, to be sent to the remote peer
     /// - <see cref="AudioReceiver"/> : receives audio frames from the remote peer
-    /// - <see cref="VideoSender"/> : produces video frames locally, to be sent to the remote peer
+    /// - <see cref="VideoTrackSource"/> : produces video frames locally, to be sent to the remote peer
     /// - <see cref="VideoReceiver"/> : receives video frames from the remote peer
     /// 
     /// The media source can be conveniently played using a <see cref="MediaPlayer"/>.

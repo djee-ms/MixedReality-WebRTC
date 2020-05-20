@@ -16,7 +16,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// </remarks>
     /// <seealso cref="MediaPlayer"/>
     [AddComponentMenu("MixedReality-WebRTC/Audio Receiver")]
-    [RequireComponent(typeof(UnityEngine.AudioSource))]
+    //[RequireComponent(typeof(UnityEngine.AudioSource))]
     public class AudioReceiver : MediaReceiver, IAudioSource
     {
         /// <inheritdoc/>
@@ -278,7 +278,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         /// <summary>
         /// Free-threaded callback invoked by the owning peer connection when a track is paired
-        /// with this receiver.
+        /// with this receiver, which enqueues the <see cref="AudioTrackSource.AudioStreamStarted"/>
+        /// event to be fired from the main Unity app thread.
         /// </summary>
         internal override void OnPaired(MediaTrack track)
         {
@@ -293,7 +294,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         /// <summary>
         /// Free-threaded callback invoked by the owning peer connection when a track is unpaired
-        /// from this receiver.
+        /// from this receiver, which enqueues the <see cref="AudioTrackSource.AudioStreamStopped"/>
+        /// event to be fired from the main Unity app thread.
         /// </summary>
         internal override void OnUnpaired(MediaTrack track)
         {
