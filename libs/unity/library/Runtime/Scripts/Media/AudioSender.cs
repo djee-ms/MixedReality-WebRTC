@@ -15,11 +15,12 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// <p>
     /// Currently the low-level WebRTC implementation does not support registering
     /// local audio callbacks, therefore the audio track cannot be rendered locally
-    /// with a <see cref="MediaPlayer"/>.
+    /// with a <see cref="VideoRenderer"/>.
     /// </p>
     /// </div>
     /// </summary>
     /// <seealso cref="MicrophoneSource"/>
+    /// <seealso cref="VideoRenderer"/>
     public class AudioSender : MediaSender, IDisposable
     {
         /// <summary>

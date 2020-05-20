@@ -8,13 +8,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// <summary>
     /// This component represents a remote audio source added as an audio track to an
     /// existing WebRTC peer connection by a remote peer and received locally.
-    /// The audio track can optionally be displayed locally with a <see cref="MediaPlayer"/>.
+    /// The audio track can optionally be displayed locally with a <see cref="VideoRenderer"/>.
     /// </summary>
     /// <remarks>
     /// This component will play audio only while it is active and a remote track is associated
     /// to the paired <see cref="WebRTC.Transceiver"/>.
     /// </remarks>
-    /// <seealso cref="MediaPlayer"/>
+    /// <seealso cref="VideoRenderer"/>
     [AddComponentMenu("MixedReality-WebRTC/Audio Receiver")]
     //[RequireComponent(typeof(UnityEngine.AudioSource))]
     public class AudioReceiver : MediaReceiver, IAudioSource

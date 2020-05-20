@@ -17,13 +17,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// - <see cref="VideoTrackSource"/> : produces video frames locally, to be sent to the remote peer
     /// - <see cref="VideoReceiver"/> : receives video frames from the remote peer
     /// 
-    /// The media source can be conveniently played using a <see cref="MediaPlayer"/>.
+    /// The media source can be conveniently played using a <see cref="VideoRenderer"/>.
     /// </summary>
     /// <seealso cref="AudioSender"/>
     /// <seealso cref="AudioReceiver"/>
     /// <seealso cref="VideoSender"/>
     /// <seealso cref="VideoReceiver"/>
-    /// <seealso cref="MediaPlayer"/>
+    /// <seealso cref="VideoRenderer"/>
     public abstract class MediaSource : MonoBehaviour
     {
         /// <summary>
