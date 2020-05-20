@@ -8,7 +8,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// <summary>
     /// This component represents a remote video source added as a video track to an
     /// existing WebRTC peer connection by a remote peer and received locally.
-    /// The video track can optionally be displayed locally with a <see cref="MediaPlayer"/>.
+    /// The video track can optionally be displayed locally with a <see cref="VideoRenderer"/>.
     /// </summary>
     [AddComponentMenu("MixedReality-WebRTC/Video Receiver")]
     public class VideoReceiver : MediaReceiver, IVideoSource

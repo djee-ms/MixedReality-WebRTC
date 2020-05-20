@@ -40,7 +40,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
     /// <summary>
     /// Interface for video sources plugging into the internal peer connection API to
-    /// expose a single video stream to a renderer (<see cref="MediaPlayer"/> or custom).
+    /// expose a single video stream to a renderer (<see cref="VideoRenderer"/> or custom).
     /// </summary>
     public interface IVideoSource
     {
@@ -66,7 +66,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         
         /// <summary>
         /// Video encoding indicating the kind of frames the source is producing.
-        /// This is used for example by the <see cref="MediaPlayer"/> to determine how to
+        /// This is used for example by the <see cref="VideoRenderer"/> to determine how to
         /// render the frame.
         /// </summary>
         VideoEncoding FrameEncoding { get; }
