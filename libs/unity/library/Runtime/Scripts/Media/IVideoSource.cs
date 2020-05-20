@@ -73,6 +73,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         void RegisterCallback(I420AVideoFrameDelegate callback);
         void UnregisterCallback(I420AVideoFrameDelegate callback);
+
+        // TODO - Remove ARGB callbacks, use I420 callbacks only and expose some conversion
+        // utility to convert from ARGB to I420 when needed (to be called by the user).
         void RegisterCallback(Argb32VideoFrameDelegate callback);
         void UnregisterCallback(Argb32VideoFrameDelegate callback);
     }

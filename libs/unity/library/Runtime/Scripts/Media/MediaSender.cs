@@ -7,9 +7,13 @@ using UnityEngine;
 namespace Microsoft.MixedReality.WebRTC.Unity
 {
     /// <summary>
-    /// Base class for media sources generating their media frames locally,
-    /// with the intention to send them to the remote peer.
+    /// Base class for media senders acting as automated bridges between a media track source
+    /// (frame producer) and a transceiver of a peer connection. The media sender is managed
+    /// by the peer connection automatically, so users typically do not use this class or one
+    /// of its derived classes directly.
     /// </summary>
+    /// <seealso cref="AudioSender"/>
+    /// <seealso cref="VideoSender"/>
     public abstract class MediaSender
     {
         /// <summary>
@@ -32,7 +36,19 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         [SdpToken(allowEmpty: true)]
         public string TrackName;
 
-        public MediaKind MediaKind { get; }
+        /// <summary>
+        /// Kind of media the sender is managing. This field is immutable, and determines whether the
+        /// concrete class is <see cref="AudioSender"/> or <see cref="VideoSender"/>.
+        /// </summary>
+        public readonly MediaKind MediaKind;
+
+        /// <summary>
+        /// Transceiver this sender is paired with, if any.
+        /// 
+        /// This is <c>null</c> until a remote description is applied which pairs the media line
+        /// the sender is associated with to a transceiver.
+        /// </summary>
+        public Transceiver Transceiver { get; private set; }
 
         public MediaSender(MediaKind mediaKind)
         {
@@ -60,11 +76,41 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             MuteImpl(false);
         }
 
-        internal abstract void AttachTrack();
-        internal abstract void DetachTrack();
+        /// <summary>
+        /// Internal callback invoked when the sender is attached to a transceiver created
+        /// just before the peer connection creates an SDP offer.
+        /// </summary>
+        /// <param name="transceiver">The transceiver this sender is attached with.</param>
+        internal void AttachToTransceiver(Transceiver transceiver)
+        {
+            Debug.Assert((Transceiver == null) || (Transceiver == transceiver));
+            Transceiver = transceiver;
+        }
 
-        protected abstract void CreateLocalTrack();
-        protected abstract void DestroyLocalTrack();
+        /// <summary>
+        /// Internal callback invoked when the sender is detached from a transceiver about to be
+        /// destroyed by the native implementation.
+        /// </summary>
+        /// <param name="transceiver">The transceiver this sender is attached with.</param>
+        internal void DetachFromTransceiver(Transceiver transceiver)
+        {
+            Debug.Assert((Transceiver == null) || (Transceiver == transceiver));
+            Transceiver = null;
+        }
+
+        /// <summary>
+        /// Internal callback invoked when a peer connection is about to create an offer, and
+        /// determines that the media track needs to be attache to a new transceiver. The media
+        /// sender must attach the local media track to <see cref="Transceiver"/>.
+        /// </summary>
+        internal abstract void AttachTrack();
+
+        /// <summary>
+        /// Internal callback invoked when a peer connection is about to create an offer,
+        /// and determines that the media track needs to be detached from its current transceiver.
+        /// The media sender must detach the local media track from <see cref="Transceiver"/>.
+        /// </summary>
+        internal abstract void DetachTrack();
 
         /// <summary>
         /// Derived classes implement the mute/unmute action on the track.

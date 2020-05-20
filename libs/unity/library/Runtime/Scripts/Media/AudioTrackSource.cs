@@ -15,6 +15,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// <seealso cref="MicrophoneSource"/>
     public abstract class AudioTrackSource : MediaTrackSource, IAudioSource
     {
+        #region IAudioSource interface
+
         /// <inheritdoc/>
         public bool IsStreaming { get; protected set; }
 
@@ -51,22 +53,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public AudioStreamStoppedEvent GetAudioStreamStopped() { return AudioSourceStopped; }
 
         /// <summary>
-        /// Audio track source object from the underlying C# library that this component encapsulates.
-        /// 
-        /// The object is owned by this component, which will create it and dispose of it automatically.
-        /// </summary>
-        public WebRTC.AudioTrackSource Source { get; protected set; } = null;
-
-        /// <summary>
-        /// List of audio senders (tracks) using this source.
-        /// </summary>
-        public List<AudioSender> Senders { get; } = new List<AudioSender>();
-
-        public AudioTrackSource() : base(MediaKind.Audio)
-        {
-        }
-
-        /// <summary>
         /// Register a frame callback to listen to outgoing audio data produced by this audio sender
         /// and sent to the remote peer.
         /// 
@@ -100,6 +86,28 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             throw new NotImplementedException("Local audio callbacks are not currently implemented.");
         }
+
+        #endregion
+
+
+        /// <summary>
+        /// Audio track source object from the underlying C# library that this component encapsulates.
+        /// 
+        /// The object is owned by this component, which will create it and dispose of it automatically.
+        /// </summary>
+        public WebRTC.AudioTrackSource Source { get; protected set; } = null;
+
+        /// <summary>
+        /// List of audio senders (tracks) using this source.
+        /// </summary>
+        public List<AudioSender> Senders { get; } = new List<AudioSender>();
+
+        public AudioTrackSource() : base(MediaKind.Audio)
+        {
+        }
+
+
+        #region MediaTrackSource implementation
 
         protected override async Task CreateSourceAsync()
         {
@@ -140,6 +148,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
+        #endregion
+
+
         /// <summary>
         /// Implement this callback to create the <see cref="Source"/> instance.
         /// On failure, this method must throw an exception. Otherwise it must set the <see cref="Source"/>
@@ -156,9 +167,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (Source != null)
             {
                 // Notify senders using that source
-                while (Senders.Count > 0) // OnSourceDestroyed() will modify the collection
+                while (Senders.Count > 0) // Dispose() calls OnSenderRemoved() which will modify the collection
                 {
-                    Senders[Senders.Count - 1].OnSourceDestroyed();
+                    Senders[Senders.Count - 1].Dispose();
                 }
 
                 // Audio track sources are disposable objects owned by the user (this component)

@@ -19,6 +19,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// <seealso cref="SceneVideoSender"/>
     public abstract class VideoTrackSource : MediaTrackSource, IVideoSource
     {
+        #region IVideoSource interface
+
         /// <inheritdoc/>
         public bool IsStreaming { get; protected set; }
 
@@ -57,23 +59,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// <inheritdoc/>
         public VideoEncoding FrameEncoding { get; } = VideoEncoding.I420A;
 
-        /// <summary>
-        /// Video track source object from the underlying C# library that this component encapsulates.
-        /// 
-        /// The object is owned by this component, which will create it and dispose of it automatically.
-        /// </summary>
-        public WebRTC.VideoTrackSource Source { get; protected set; } = null;
-
-        /// <summary>
-        /// List of video senders (tracks) using this source.
-        /// </summary>
-        public List<VideoSender> Senders { get; } = new List<VideoSender>();
-
-        public VideoTrackSource(VideoEncoding frameEncoding) : base(MediaKind.Video)
-        {
-            FrameEncoding = frameEncoding;
-        }
-
         public void RegisterCallback(I420AVideoFrameDelegate callback)
         {
             if (Source != null)
@@ -92,13 +77,40 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 
         public void RegisterCallback(Argb32VideoFrameDelegate callback)
         {
+            // TODO - Remove ARGB callbacks, use I420 callbacks only and expose some conversion
+            // utility to convert from ARGB to I420 when needed (to be called by the user).
             throw new NotImplementedException();
         }
 
         public void UnregisterCallback(Argb32VideoFrameDelegate callback)
         {
+            // TODO - Remove ARGB callbacks, use I420 callbacks only and expose some conversion
+            // utility to convert from ARGB to I420 when needed (to be called by the user).
             throw new NotImplementedException();
         }
+
+        #endregion
+
+
+        /// <summary>
+        /// Video track source object from the underlying C# library that this component encapsulates.
+        /// 
+        /// The object is owned by this component, which will create it and dispose of it automatically.
+        /// </summary>
+        public WebRTC.VideoTrackSource Source { get; protected set; } = null;
+
+        /// <summary>
+        /// List of video senders (tracks) using this source.
+        /// </summary>
+        public List<VideoSender> Senders { get; } = new List<VideoSender>();
+
+        public VideoTrackSource(VideoEncoding frameEncoding) : base(MediaKind.Video)
+        {
+            FrameEncoding = frameEncoding;
+        }
+
+
+        #region MediaTrackSource implementation
 
         protected override async Task CreateSourceAsync()
         {
@@ -139,6 +151,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
+        #endregion
+
+
         /// <summary>
         /// Implement this callback to create the <see cref="Track"/> instance.
         /// On failure, this method must throw an exception. Otherwise it must set the <see cref="Track"/>
@@ -155,9 +170,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             if (Source != null)
             {
                 // Notify senders using that source
-                while (Senders.Count > 0) // OnSourceDestroyed() will modify the collection
+                while (Senders.Count > 0) // Dispose() calls OnSenderRemoved() which will modify the collection
                 {
-                    Senders[Senders.Count - 1].OnSourceDestroyed();
+                    Senders[Senders.Count - 1].Dispose();
                 }
 
                 // Video track sources are disposable objects owned by the user (this component)

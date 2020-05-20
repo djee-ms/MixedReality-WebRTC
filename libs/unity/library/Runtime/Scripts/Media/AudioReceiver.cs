@@ -56,15 +56,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         public AudioStreamStoppedEvent GetAudioStreamStopped() { return AudioStreamStopped; }
 
         /// <summary>
-        /// Audio transceiver this receiver is paired with, if any.
-        ///
-        /// This is <c>null</c> until a remote description is applied which pairs the media line
-        /// this receiver is associated with to a transceiver, or until the peer connection of this
-        /// receiver's media line creates the audio receiver right before creating an SDP offer.
-        /// </summary>
-        public Transceiver Transceiver { get; private set; }
-
-        /// <summary>
         /// Remote audio track receiving data from the remote peer.
         /// </summary>
         /// <remarks>
@@ -247,33 +238,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 Track.AudioFrameReady -= callback;
             }
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the audio receiver is attached to a transceiver created
-        /// just before the peer connection creates an SDP offer.
-        /// </summary>
-        /// <param name="audioTransceiver">The audio transceiver this receiver is attached with.</param>
-        /// <remarks>
-        /// At this time the transceiver does not yet contain a remote track. The remote track will be
-        /// created when receiving an answer from the remote peer, if it agreed to send media data through
-        /// that transceiver, and <see cref="OnPaired"/> will be invoked at that time.
-        /// </remarks>
-        internal void AttachToTransceiver(Transceiver audioTransceiver)
-        {
-            Debug.Assert((Transceiver == null) || (Transceiver == audioTransceiver));
-            Transceiver = audioTransceiver;
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the audio receiver is detached from a transceiver about to be
-        /// destroyed by the native implementation.
-        /// </summary>
-        /// <param name="audioTransceiver">The audio transceiver this receiver is attached with.</param>
-        internal void DetachFromTransceiver(Transceiver audioTransceiver)
-        {
-            Debug.Assert((Transceiver == null) || (Transceiver == audioTransceiver));
-            Transceiver = null;
         }
 
         /// <summary>

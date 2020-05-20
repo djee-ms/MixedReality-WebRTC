@@ -162,25 +162,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         {
             if ((_source != null) && (Sender == null))
             {
-                if (Kind == MediaKind.Audio)
-                {
-                    CreateAudioSender();
-                }
-                else
-                {
-                    CreateVideoSender();
-                }
+                CreateSender();
             }
             else if ((_source == null) && (Sender != null))
             {
-                if (Kind == MediaKind.Audio)
-                {
-                    DestroyVideoSender();
-                }
-                else
-                {
-                    DestroyVideoSender();
-                }
+                DestroySender();
             }
         }
 
@@ -240,31 +226,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             }
         }
 
-        internal void OnUnpaired(RemoteAudioTrack track)
+        internal void OnUnpaired(MediaTrack track)
         {
             Debug.Assert(track != null);
-            Debug.Assert(Kind == MediaKind.Audio);
-            Debug.Assert(Transceiver != null);
-            Debug.Assert(Transceiver.RemoteAudioTrack == null); // already removed
-            // This is called by the TrackRemoved event, which can be fired sometimes even
-            // though we did not have any opportunity yet to pair. So only unpair if we did.
-            // In details, the case is the answering peer being in sendonly mode, yet created
-            // automatically by the implementation during SetRemoteDescription() in recvonly
-            // mode (per the WebRTC spec). So the SetDirection(sendonly) triggers the TrackRemoved
-            // event, but the pairing was never done because SetDirection() is called before
-            // the received is updated.
-            if (_pairedReceiver != null)
-            {
-                var audioReceiver = (AudioReceiver)_pairedReceiver;
-                audioReceiver.OnUnpaired(track);
-                _pairedReceiver = null;
-            }
-        }
-
-        internal void OnUnpaired(RemoteVideoTrack track)
-        {
-            Debug.Assert(track != null);
-            Debug.Assert(Kind == MediaKind.Video);
             Debug.Assert(Transceiver != null);
             Debug.Assert(Transceiver.RemoteTrack == null); // already removed
             // This is called by the TrackRemoved event, which can be fired sometimes even
@@ -276,47 +240,40 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // the received is updated.
             if (_pairedReceiver != null)
             {
-                var videoReceiver = (VideoReceiver)_pairedReceiver;
-                videoReceiver.OnUnpaired(track);
+                _pairedReceiver.OnUnpaired(track);
                 _pairedReceiver = null;
             }
         }
 
-        private void CreateAudioSender()
+        private void CreateSender()
         {
-            Debug.Assert(Kind == MediaKind.Audio);
             Debug.Assert(Source != null);
             if (Source.isActiveAndEnabled)
             {
-                var sender = AudioSender.CreateFromSource((AudioTrackSource)Source, trackName: /*TODO*/string.Empty);
-                Sender = sender;
+                if (Kind == MediaKind.Audio)
+                {
+                    Sender = AudioSender.CreateFromSource((AudioTrackSource)Source, trackName: /*TODO*/string.Empty);
+                }
+                else
+                {
+                    Debug.Assert(Kind == MediaKind.Video);
+                    Sender = VideoSender.CreateFromSource((VideoTrackSource)Source, trackName: /*TODO*/string.Empty);
+                }
             }
         }
 
-        private void CreateVideoSender()
+        private void DestroySender()
         {
-            Debug.Assert(Kind == MediaKind.Video);
-            Debug.Assert(Source != null);
-            if (Source.isActiveAndEnabled)
+            Debug.Assert(Sender != null);
+            if (Kind == MediaKind.Audio)
             {
-                var sender = VideoSender.CreateFromSource((VideoTrackSource)Source, trackName: /*TODO*/string.Empty);
-                Sender = sender;
+                ((AudioSender)Sender).Dispose();
             }
-        }
-
-        private void DestroyAudioSender()
-        {
-            Debug.Assert(Kind == MediaKind.Audio);
-            Debug.Assert(Sender != null);
-            ((AudioSender)Sender).Dispose();
-            Sender = null;
-        }
-
-        private void DestroyVideoSender()
-        {
-            Debug.Assert(Kind == MediaKind.Video);
-            Debug.Assert(Sender != null);
-            ((VideoSender)Sender).Dispose();
+            else
+            {
+                Debug.Assert(Kind == MediaKind.Video);
+                ((VideoSender)Sender).Dispose();
+            }
             Sender = null;
         }
 
@@ -349,49 +306,21 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // need to be updated on the next offer even if that is not the first one.
             bool wantsSend = (Source != null);
             bool wantsRecv = (Receiver != null);
-            if (Kind == MediaKind.Audio)
+            if (wantsSend)
             {
-                var audioTransceiver = Transceiver;
-                if (wantsSend)
+                if (Sender == null)
                 {
-                    if (Sender == null)
-                    {
-                        CreateAudioSender();
-                    }
-                    var audioSender = (AudioSender)Sender;
-                    // CreateAudioSender() might do nothing if the source is inactive
-                    if (audioSender != null)
-                    {
-                        audioSender.AttachToTransceiver(audioTransceiver);
-                    }
+                    CreateSender();
                 }
-                if (wantsRecv)
+                // CreateSender() might do nothing if the source is inactive
+                if (Sender != null)
                 {
-                    var audioReceiver = (AudioReceiver)Receiver;
-                    audioReceiver.AttachToTransceiver(audioTransceiver);
+                    Sender.AttachToTransceiver(Transceiver);
                 }
             }
-            else if (Kind == MediaKind.Video)
+            if (wantsRecv)
             {
-                var videoTransceiver = Transceiver;
-                if (wantsSend)
-                {
-                    if (Sender == null)
-                    {
-                        CreateVideoSender();
-                    }
-                    var videoSender = (VideoSender)Sender;
-                    // CreateVideoSender() might do nothing if the source is inactive
-                    if (videoSender != null)
-                    {
-                        videoSender.AttachToTransceiver(videoTransceiver);
-                    }
-                }
-                if (wantsRecv)
-                {
-                    var videoReceiver = (VideoReceiver)Receiver;
-                    videoReceiver.AttachToTransceiver(videoTransceiver);
-                }
+                Receiver.AttachToTransceiver(Transceiver);
             }
         }
 
@@ -402,35 +331,14 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             // since a sender was not created in that case.
             bool wasSending = (Sender != null);
             bool wasReceiving = (Receiver != null);
-            if (Kind == MediaKind.Audio)
+            if (wasSending)
             {
-                var audioTransceiver = Transceiver;
-                if (wasSending)
-                {
-                    var audioSender = (AudioSender)Sender;
-                    audioSender.DetachFromTransceiver(audioTransceiver);
-                    DestroyAudioSender();
-                }
-                if (wasReceiving)
-                {
-                    var audioReceiver = (AudioReceiver)Receiver;
-                    audioReceiver.DetachFromTransceiver(audioTransceiver);
-                }
+                Sender.DetachFromTransceiver(Transceiver);
+                DestroySender();
             }
-            else if (Kind == MediaKind.Video)
+            if (wasReceiving)
             {
-                var videoTransceiver = Transceiver;
-                if (wasSending)
-                {
-                    var videoSender = (VideoSender)Sender;
-                    videoSender.DetachFromTransceiver(videoTransceiver);
-                    DestroyVideoSender();
-                }
-                if (wasReceiving)
-                {
-                    var videoReceiver = (VideoReceiver)Receiver;
-                    videoReceiver.DetachFromTransceiver(videoTransceiver);
-                }
+                Receiver.DetachFromTransceiver(Transceiver);
             }
         }
 
