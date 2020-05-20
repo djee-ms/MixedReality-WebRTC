@@ -8,19 +8,13 @@ namespace Microsoft.MixedReality.WebRTC.Unity
 {
     /// <summary>
     /// This component represents a local audio source added as an audio track to an
-    /// existing WebRTC peer connection and sent to the remote peer.
+    /// existing WebRTC peer connection and sent to the remote peer. It wraps an audio
+    /// track source and bridges it with an audio transceiver. Internally it manages
+    /// a local audio track (<see cref="LocalAudioTrack"/>).
     /// 
-    /// <div class="WARNING alert alert-warning">
-    /// <h5>WARNING</h5>
-    /// <p>
-    /// Currently the low-level WebRTC implementation does not support registering
-    /// local audio callbacks, therefore the audio track cannot be rendered locally
-    /// with a <see cref="VideoRenderer"/>.
-    /// </p>
-    /// </div>
+    /// This class is typically instantiated and managed by the peer connection automatically
+    /// where needed, and users typically do not have to interact directly with it.
     /// </summary>
-    /// <seealso cref="MicrophoneSource"/>
-    /// <seealso cref="VideoRenderer"/>
     public class AudioSender : MediaSender, IDisposable
     {
         /// <summary>
@@ -35,14 +29,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// Audio source providing frames to this audio sender.
         /// </summary>
         public AudioTrackSource Source { get; private set; } = null;
-
-        /// <summary>
-        /// Audio transceiver this sender is paired with, if any.
-        /// 
-        /// This is <c>null</c> until a remote description is applied which pairs the media line
-        /// the sender is associated with to a transceiver.
-        /// </summary>
-        public Transceiver Transceiver { get; private set; }
 
         /// <summary>
         /// Local audio track that this component encapsulates, which if paired sends data to
@@ -79,6 +65,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 Track.Dispose();
                 Track = null;
             }
+
+            Source = null;
         }
 
         protected AudioSender(AudioTrackSource source, LocalAudioTrack track) : base(MediaKind.Audio)
@@ -88,78 +76,11 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             Source.OnSenderAdded(this);
         }
 
-        protected override void CreateLocalTrack()
-        {
-            if (Track == null)
-            {
-                var initConfig = new LocalAudioTrackInitConfig
-                {
-                    trackName = TrackName
-                };
-                Track = LocalAudioTrack.CreateFromSource(Source.Source, initConfig);
-            }
-
-            // Attach the local track to the transceiver
-            if (Transceiver != null)
-            {
-                Transceiver.LocalAudioTrack = Track;
-            }
-        }
-
-        protected override void DestroyLocalTrack()
-        {
-            if (Track != null)
-            {
-                // Detach the local track from the transceiver
-                if ((Transceiver != null) && (Transceiver.LocalAudioTrack == Track))
-                {
-                    Transceiver.LocalAudioTrack = null;
-                }
-
-                // Local tracks are disposable objects owned by the user (this component)
-                Track.Dispose();
-                Track = null;
-            }
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the underlying video source is about to be destroyed.
-        /// </summary>
-        internal void OnSourceDestroyed()
-        {
-            Dispose();
-            Source = null;
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the audio sender is attached to a transceiver created
-        /// just before the peer connection creates an SDP offer.
-        /// </summary>
-        /// <param name="audioTransceiver">The audio transceiver this sender is attached with.</param>
-        internal void AttachToTransceiver(Transceiver audioTransceiver)
-        {
-            Debug.Assert((Transceiver == null) || (Transceiver == audioTransceiver));
-            Transceiver = audioTransceiver;
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the audio sender is detached from a transceiver about to be
-        /// destroyed by the native implementation.
-        /// </summary>
-        /// <param name="audioTransceiver">The audio transceiver this sender is attached with.</param>
-        internal void DetachFromTransceiver(Transceiver audioTransceiver)
-        {
-            Debug.Assert((Transceiver == null) || (Transceiver == audioTransceiver));
-            Transceiver = null;
-        }
-
         /// <summary>
         /// Internal callback invoked when a peer connection is about to create an offer,
         /// and needs to create the audio transceivers and senders. The audio sender must
         /// create a local audio track and attach it to the given transceiver.
         /// </summary>
-        /// <returns>Once the asynchronous operation is completed, the <see cref="Track"/> property
-        /// must reference it.</returns>
         internal override void AttachTrack()
         {
             Debug.Assert(Transceiver != null);

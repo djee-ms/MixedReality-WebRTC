@@ -29,7 +29,7 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         // Instead we use OnValidate() to make sure the media source is a video source.
 
         [SerializeField]
-        protected MediaSource Source;
+        protected MediaProducer Source;
 
         [Tooltip("Max playback framerate, in frames per second")]
         [Range(0.001f, 120f)]

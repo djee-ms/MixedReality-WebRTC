@@ -12,6 +12,9 @@ namespace Microsoft.MixedReality.WebRTC.Unity
     /// existing WebRTC peer connection and sent to the remote peer. It wraps a video
     /// track source and bridges it with a video transceiver. Internally it manages
     /// a local video track (<see cref="LocalVideoTrack"/>).
+    /// 
+    /// This class is typically instantiated and managed by the peer connection automatically
+    /// where needed, and users typically do not have to interact directly with it.
     /// </summary>
     public class VideoSender : MediaSender, IDisposable
     {
@@ -27,14 +30,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
         /// Video source providing frames to this video sender.
         /// </summary>
         public VideoTrackSource Source { get; private set; } = null;
-
-        /// <summary>
-        /// Video transceiver this sender is paired with, if any.
-        /// 
-        /// This is <c>null</c> until a remote description is applied which pairs the media line
-        /// the sender is associated with to a transceiver.
-        /// </summary>
-        public Transceiver Transceiver { get; private set; }
 
         /// <summary>
         /// Video track that this component encapsulates.
@@ -77,37 +72,8 @@ namespace Microsoft.MixedReality.WebRTC.Unity
                 Track.Dispose();
                 Track = null;
             }
-        }
 
-        /// <summary>
-        /// Internal callback invoked when the underlying video source is about to be destroyed.
-        /// </summary>
-        internal void OnSourceDestroyed()
-        {
-            Dispose();
             Source = null;
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the video sender is attached to a transceiver created
-        /// just before the peer connection creates an SDP offer.
-        /// </summary>
-        /// <param name="videoTransceiver">The video transceiver this sender is attached with.</param>
-        internal void AttachToTransceiver(Transceiver videoTransceiver)
-        {
-            Debug.Assert((Transceiver == null) || (Transceiver == videoTransceiver));
-            Transceiver = videoTransceiver;
-        }
-
-        /// <summary>
-        /// Internal callback invoked when the video sender is detached from a transceiver about to be
-        /// destroyed by the native implementation.
-        /// </summary>
-        /// <param name="videoTransceiver">The video transceiver this sender is attached with.</param>
-        internal void DetachFromTransceiver(Transceiver videoTransceiver)
-        {
-            Debug.Assert((Transceiver == null) || (Transceiver == videoTransceiver));
-            Transceiver = null;
         }
 
         internal override void AttachTrack()
@@ -147,50 +113,6 @@ namespace Microsoft.MixedReality.WebRTC.Unity
             {
                 Track.Enabled = mute;
             }
-        }
-
-        /// <summary>
-        /// Implement this callback to create the <see cref="Track"/> instance.
-        /// On failure, this method must throw an exception. Otherwise it must set the <see cref="Track"/>
-        /// property to a non-<c>null</c> instance.
-        /// </summary>
-        protected Task CreateLocalVideoTrackAsync() { return Task.CompletedTask; }
-
-        /// <summary>
-        /// Re-implement this callback to destroy the <see cref="Track"/> instance
-        /// and other associated resources.
-        /// </summary>
-        protected virtual void DestroyLocalVideoTrack()
-        {
-            if (Track != null)
-            {
-                // Track may not be added to any transceiver (e.g. no connection), or the
-                // transceiver is about to be destroyed so the DetachFromTransceiver() already
-                // cleared it.
-                var transceiver = Transceiver;
-                if (transceiver != null)
-                {
-                    if (transceiver.LocalVideoTrack != null)
-                    {
-                        Debug.Assert(transceiver.LocalVideoTrack == Track);
-                        transceiver.LocalVideoTrack = null;
-                    }
-                }
-
-                // Local tracks are disposable objects owned by the user (this component)
-                Track.Dispose();
-                Track = null;
-            }
-        }
-
-        protected override void CreateLocalTrack()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override void DestroyLocalTrack()
-        {
-            throw new System.NotImplementedException();
         }
     }
 }
