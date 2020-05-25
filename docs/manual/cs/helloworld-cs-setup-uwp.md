@@ -6,10 +6,10 @@ In this tutorial we create a C# UWP application with a simple XAML-based UI to r
 > At this time there is no solution to render raw video frames from a .NET Core 3.0 application that is simple and short enough to be used in a turorial. Instead, we use the `MediaPlayerElement` XAML control from UWP which provides the necessary API. Its WPF equivalent `MediaElement` unfortunately does not currently allow specifying a custom video source other than an URI-based source like a file on disk.
 
 > [!NOTE]
-> This tutorial assumes that the host device where the app will be running during the tutorial has access to:
+> This tutorial assumes that the host device where the application will be running during the tutorial has access to:
 >
-> - a webcam, or any other video capture device recognized by WebRTC
-> - a microphone, or any other audio capture device recognized by WebRTC
+> - a _webcam_, or any other video capture device recognized by WebRTC
+> - a _microphone_, or any other audio capture device recognized by WebRTC
 
 ## Generate the project
 
@@ -44,7 +44,7 @@ _Note_: At the top of the window, the XAML debug bar allows access to debugging 
 
 ## Add a dependency to MixedReality-WebRTC
 
-In order to use the MixedReality-WebRTC project in this new `App1` application, we will add a dependency to its C# NuGet package hosted on [nuget.org](https://www.nuget.org/). This is by far the easiest way, although a locally-built copy of the `Microsoft.MixedReality.WebRTC.dll` assembly could also be alternatively used (but this is out of the scope of this tutorial).
+In order to use the MixedReality-WebRTC project in this new `App1` application, we will add a dependency to its C# NuGet package hosted on [nuget.org](https://www.nuget.org/). This is by far the easiest way, although a locally-built copy of the `Microsoft.MixedReality.WebRTC` assembly could also be alternatively used (but this is out of the scope of this tutorial).
 
 In the **Solution Explorer**, right-click on the **App1 (Universal Windows)** C# project and select the **Manage NuGet Packages...** menu entry. This opens a new tab **NuGet: App1** which allows configuring the NuGet dependencies for this project alone. The **Installed** tab contains the list of NuGet dependencies already installed, and should contain the **Microsoft.NETCore.UniversalWindowsPlatform** which was already installed by Visual Studio when creating the project.
 
@@ -54,9 +54,7 @@ Select the **Browse** tab and, after making sure that the **Package source** is 
 
 ![Install the MixedReality-WebRTC NuGet package](cs-uwp6.png)
 
-_Note_: If you cannot find the package, make sure that **Include prerelease** is checked, which disables filtering out preview packages (those packages with a version containing a suffix like "-preview" after the X.Y.Z version number).
-
-This will download from [nuget.org](https://www.nuget.org/) and install the `Microsoft.MixedReality.WebRTC.UWP.nupkg` NuGet package, which contains the `Microsoft.MixedReality.WebRTC.dll` assembly, as well as its native dependencies (x86, x64, ARM) for the UWP platform.
+This will download from [nuget.org](https://www.nuget.org/) and install the `Microsoft.MixedReality.WebRTC.UWP.nupkg` NuGet package, which contains the `Microsoft.MixedReality.WebRTC.dll` assembly, as well as its native dependencies for the UWP platform.
 
 After that, the `App1` project should contain a reference to the package.
 
@@ -105,7 +103,7 @@ Next, edit `MainPage.xaml.cs`:
 
        // Retrieve a list of available video capture devices (webcams).
        List<VideoCaptureDevice> deviceList =
-           await PeerConnection.GetVideoCaptureDevicesAsync(); 
+           await PeerConnection.GetVideoCaptureDevicesAsync();
 
        // Get the device list and, for example, print them to the debugger console
        foreach (var device in deviceList)

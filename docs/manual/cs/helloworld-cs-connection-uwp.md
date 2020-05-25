@@ -15,7 +15,9 @@ Continue editing the `OnLoaded()` method and append after the [`InitializeAsync(
    };
    ```
 
-   The [`Connected`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.Connected) event is invoked when the peer connection is established, that is when an offer/answer pair is successfully exchanged. The [`IceStateChanged`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.IceStateChanged) is invoked each time the ICE status changes. Note that the [`Connected`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.Connected) event can be invoked before the ICE status reaches its [`IceConnectionState.Connected`](xref:Microsoft.MixedReality.WebRTC.IceConnectionState) state.
+   The [`Connected`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.Connected) event is raised when the peer connection transports are writable. Somewhat confusingly, this is a bit of a misnomer, as the connection itself is not completed yet (the answer was not necessarily received by the offering peer which initiated the call). But this indicates that a the two peers can talk with each other.
+
+   The [`IceStateChanged`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.IceStateChanged) is invoked each time the ICE status changes. Note that the [`Connected`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.Connected) event can be invoked before the ICE status reaches its [`IceConnectionState.Connected`](xref:Microsoft.MixedReality.WebRTC.IceConnectionState) state.
 
 2. In order to render the remote video, we also subscribe to the [`RemoteVideoTrack.I420AVideoFrameReady`](xref:Microsoft.MixedReality.WebRTC.RemoteVideoTrack.I420AVideoFrameReady) event. This requires accessing the remote video track, which is only available once the connection is established and the track created during the session negotiation.
 

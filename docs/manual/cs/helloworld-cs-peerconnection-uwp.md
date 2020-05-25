@@ -7,16 +7,19 @@ The [`PeerConnection`](xref:Microsoft.MixedReality.WebRTC.PeerConnection) class 
 Continue editing the `MainPage.xaml.cs` file and append the following:
 
 1. At the top of the `MainPage` class, declare a private variable of type `PeerConnection`.
+
    ```cs
    private PeerConnection _peerConnection;
    ```
 
 2. Continue to append to the `OnLoaded()` method. First, instantiate the peer connection.
+
    ```cs
    _peerConnection = new PeerConnection();
    ```
 
 3. The [`PeerConnection`](xref:Microsoft.MixedReality.WebRTC.PeerConnection) object is initally created in an idle state where it cannot be used until initialized with a call to [`InitializeAsync()`](xref:Microsoft.MixedReality.WebRTC.PeerConnection.InitializeAsync(Microsoft.MixedReality.WebRTC.PeerConnectionConfiguration,CancellationToken)). This method takes a [`PeerConnectionConfiguration`](xref:Microsoft.MixedReality.WebRTC.PeerConnectionConfiguration) object which allows specifying some options to configure the connection. In this tutorial, most default options are suitable, but we want to specify a STUN server to make sure that the peer connection can connect to the remote peer even if behind a [NAT](https://en.wikipedia.org/wiki/Network_address_translation).
+
    ```cs
    var config = new PeerConnectionConfiguration
    {
@@ -26,17 +29,21 @@ Continue editing the `MainPage.xaml.cs` file and append the following:
    };
    await _peerConnection.InitializeAsync(config);
    ```
+
    In this example we use a free STUN server courtesy of Google. Note that this is fine for testing, but **must not be used for production**. Also, the ICE server list uses the [`List<>`](xref:System.Collections.Generic.List`1) generic class, so we need to import the `System.Collections.Generic` module with a `using` directive at the top of the file.
+
    ```cs
    using System.Collections.Generic;
    ```
 
 4. Print a simple message to the debugger to confirm that the peer connection wass initialized. In a real-world application, properly notifying the user of failures is critical, but here for the sake of this tutorial we simply rely on a any exception interrupting the application before the message is printed if an error occur.
+
     ```cs
    Debugger.Log(0, "", "Peer connection initialized successfully.\n");
    ```
 
 5. In the `App_Suspending()` event handler, add some code to dispose of the peer connection.
+
    ```cs
    private void App_Suspending(object sender, SuspendingEventArgs e)
    {

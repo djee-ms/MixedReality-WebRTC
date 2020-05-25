@@ -50,31 +50,18 @@ Continue editing the `MainPage.xaml.cs` file.
 4. Implement the event handlers, which simply format the SDP message for the signaler.
 
    ```cs
-   private void Peer_LocalSdpReadytoSend(string type, string sdp)
+   private void Peer_LocalSdpReadytoSend(SdpMessage message)
    {
-       var msg = new NodeDssSignaler.Message
-       {
-           MessageType = NodeDssSignaler.Message.WireMessageTypeFromString(type),
-           Data = sdp,
-           IceDataSeparator = "|"
-       };
-       _signaler.SendMessageAsync(msg);
+       var dssMessage = NodeDssSignaler.Message.FromSdpMessage(message);
+       _signaler.SendMessageAsync(dssMessage);
    }
 
-   private void Peer_IceCandidateReadytoSend(
-       string candidate, int sdpMlineindex, string sdpMid)
+   private void Peer_IceCandidateReadytoSend(IceCandidate candidate)
    {
-       var msg = new NodeDssSignaler.Message
-       {
-           MessageType = NodeDssSignaler.Message.WireMessageType.Ice,
-           Data = $"{candidate}|{sdpMlineindex}|{sdpMid}",
-           IceDataSeparator = "|"
-       };
-       _signaler.SendMessageAsync(msg);
+       var dssMessage = NodeDssSignaler.Message.FromIceCandidate(candidate);
+       _signaler.SendMessageAsync(dssMessage);
    }
    ```
-
-   The `NodeDssSignaler` uses a simple JSON-based message encoding with a single string of data per message. For ICE messages, the 3 components of the message are joined together in that string with a given separator passed alongside the message, and split back into individual components on the receiving peer.
 
 5. Continue appending to the `OnLoaded()` method to initialize and start the signaler.
 
@@ -86,28 +73,34 @@ Continue editing the `MainPage.xaml.cs` file.
        LocalPeerId = "App1",
        RemotePeerId = "<input the remote peer ID here>",
    };
-   _signaler.OnMessage += (NodeDssSignaler.Message msg) =>
+   _signaler.OnMessage += async (NodeDssSignaler.Message msg) =>
    {
        switch (msg.MessageType)
        {
            case NodeDssSignaler.Message.WireMessageType.Offer:
-               _peerConnection.SetRemoteDescription("offer", msg.Data);
+               var message = new SdpMessage
+               {
+                   Type = SdpMessageType.Offer,
+                   Content = msg.Data
+               };
+               // Note the 'await' here; it is critical to wait that the remote
+               // description is applied before trying to create an answer.
+               await _peerConnection.SetRemoteDescriptionAsync(message);
                _peerConnection.CreateAnswer();
                break;
 
            case NodeDssSignaler.Message.WireMessageType.Answer:
-               _peerConnection.SetRemoteDescription("answer", msg.Data);
+               var message = new SdpMessage
+               {
+                   Type = SdpMessageType.Answer,
+                   Content = msg.Data
+               };
+               // No need to wait here, there is nothing to do after that
+               _ = _peerConnection.SetRemoteDescriptionAsync(message);
                break;
 
            case NodeDssSignaler.Message.WireMessageType.Ice:
-               var parts = msg.Data.Split(new string[] { msg.IceDataSeparator },
-                   StringSplitOptions.RemoveEmptyEntries);
-               // Note the inverted arguments for historical reasons.
-               // 'candidate' is last in AddIceCandidate(), but first in the message.
-               string sdpMid = parts[2];
-               int sdpMlineindex = int.Parse(parts[1]);
-               string candidate = parts[0];
-               _peerConnection.AddIceCandidate(sdpMid, sdpMlineindex, candidate);
+               _peerConnection.AddIceCandidate(message.ToIceCandidate());
                break;
        }
    };
