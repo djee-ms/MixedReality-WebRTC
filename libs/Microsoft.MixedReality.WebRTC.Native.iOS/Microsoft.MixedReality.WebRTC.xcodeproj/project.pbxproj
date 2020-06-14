@@ -19,21 +19,9 @@
 		30CB851C23E230C40084EAA0 /* audio_frame_observer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB851423E230C40084EAA0 /* audio_frame_observer.cpp */; };
 		30CB851D23E230C40084EAA0 /* pch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB851523E230C40084EAA0 /* pch.cpp */; };
 		30CB851E23E230C40084EAA0 /* mrs_errors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB851623E230C40084EAA0 /* mrs_errors.cpp */; };
-		30CB852F23E230D50084EAA0 /* local_video_track.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB851F23E230D40084EAA0 /* local_video_track.h */; };
-		30CB853023E230D50084EAA0 /* peer_connection.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852023E230D40084EAA0 /* peer_connection.h */; };
-		30CB853123E230D50084EAA0 /* tracked_object.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852123E230D40084EAA0 /* tracked_object.h */; };
 		30CB853223E230D50084EAA0 /* video_frame.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852223E230D40084EAA0 /* video_frame.h */; };
-		30CB853323E230D50084EAA0 /* audio_frame_observer.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852323E230D40084EAA0 /* audio_frame_observer.h */; };
-		30CB853423E230D50084EAA0 /* data_channel.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852423E230D40084EAA0 /* data_channel.h */; };
-		30CB853523E230D50084EAA0 /* sdp_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852523E230D40084EAA0 /* sdp_utils.h */; };
-		30CB853623E230D50084EAA0 /* ref_counted_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852623E230D40084EAA0 /* ref_counted_base.h */; };
-		30CB853723E230D50084EAA0 /* refptr.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852723E230D40084EAA0 /* refptr.h */; };
-		30CB853823E230D50084EAA0 /* external_video_track_source.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852823E230D40084EAA0 /* external_video_track_source.h */; };
 		30CB853923E230D50084EAA0 /* audio_frame.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852923E230D50084EAA0 /* audio_frame.h */; };
-		30CB853A23E230D50084EAA0 /* video_frame_observer.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852A23E230D50084EAA0 /* video_frame_observer.h */; };
-		30CB853B23E230D50084EAA0 /* callback.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852B23E230D50084EAA0 /* callback.h */; };
 		30CB853C23E230D50084EAA0 /* export.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852C23E230D50084EAA0 /* export.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		30CB853E23E230D50084EAA0 /* str.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB852E23E230D50084EAA0 /* str.h */; };
 		30CB854323E23A870084EAA0 /* libwebrtc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CB854223E23A870084EAA0 /* libwebrtc.a */; };
 		30CB854723E23B080084EAA0 /* external_video_track_source_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB854423E23B070084EAA0 /* external_video_track_source_impl.h */; };
 		30CB854823E23B080084EAA0 /* external_video_track_source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB854523E23B080084EAA0 /* external_video_track_source.cpp */; };
@@ -69,6 +57,47 @@
 		30CB85AA24009A4E0084EAA0 /* result.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85A524009A4E0084EAA0 /* result.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		30CB85AD24965D0D0084EAA0 /* video_capture_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85AC24965D0D0084EAA0 /* video_capture_ios.mm */; };
 		30CB85B024967D7E0084EAA0 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CB85AF24967D7D0084EAA0 /* VideoToolbox.framework */; };
+		30CB85B62496A97B0084EAA0 /* transceiver_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85B12496A97B0084EAA0 /* transceiver_interop.h */; };
+		30CB85B72496A97B0084EAA0 /* local_audio_track_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85B22496A97B0084EAA0 /* local_audio_track_interop.h */; };
+		30CB85B82496A97B0084EAA0 /* data_channel_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85B32496A97B0084EAA0 /* data_channel_interop.h */; };
+		30CB85B92496A97B0084EAA0 /* remote_audio_track_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85B42496A97B0084EAA0 /* remote_audio_track_interop.h */; };
+		30CB85BA2496A97B0084EAA0 /* remote_video_track_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85B52496A97B0084EAA0 /* remote_video_track_interop.h */; };
+		30CB85CC2496A9980084EAA0 /* toggle_audio_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85BB2496A9950084EAA0 /* toggle_audio_mixer.cpp */; };
+		30CB85CD2496A9980084EAA0 /* audio_frame_observer.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85BC2496A9950084EAA0 /* audio_frame_observer.h */; };
+		30CB85CE2496A9980084EAA0 /* targetver.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85BD2496A9950084EAA0 /* targetver.h */; };
+		30CB85CF2496A9980084EAA0 /* ref_counted_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85BE2496A9960084EAA0 /* ref_counted_base.h */; };
+		30CB85D02496A9980084EAA0 /* str.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85BF2496A9960084EAA0 /* str.h */; };
+		30CB85D12496A9980084EAA0 /* data_channel.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C02496A9960084EAA0 /* data_channel.h */; };
+		30CB85D22496A9980084EAA0 /* tracked_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85C12496A9960084EAA0 /* tracked_object.cpp */; };
+		30CB85D32496A9980084EAA0 /* peer_connection.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C22496A9960084EAA0 /* peer_connection.h */; };
+		30CB85D42496A9980084EAA0 /* tracked_object.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C32496A9960084EAA0 /* tracked_object.h */; };
+		30CB85D52496A9980084EAA0 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85C42496A9970084EAA0 /* utils.cpp */; };
+		30CB85D62496A9980084EAA0 /* toggle_audio_mixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C52496A9970084EAA0 /* toggle_audio_mixer.h */; };
+		30CB85D72496A9980084EAA0 /* refptr.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C62496A9970084EAA0 /* refptr.h */; };
+		30CB85D82496A9980084EAA0 /* mrs_errors.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C72496A9970084EAA0 /* mrs_errors.h */; };
+		30CB85D92496A9980084EAA0 /* callback.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C82496A9970084EAA0 /* callback.h */; };
+		30CB85DA2496A9980084EAA0 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85C92496A9970084EAA0 /* utils.h */; };
+		30CB85DB2496A9980084EAA0 /* video_frame_observer.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85CA2496A9970084EAA0 /* video_frame_observer.h */; };
+		30CB85DC2496A9980084EAA0 /* sdp_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85CB2496A9980084EAA0 /* sdp_utils.h */; };
+		30CB85EB2496A9B20084EAA0 /* remote_video_track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85DD2496A9AF0084EAA0 /* remote_video_track.cpp */; };
+		30CB85EC2496A9B20084EAA0 /* media_track.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85DE2496A9AF0084EAA0 /* media_track.h */; };
+		30CB85ED2496A9B20084EAA0 /* external_video_track_source.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85DF2496A9B00084EAA0 /* external_video_track_source.h */; };
+		30CB85EE2496A9B20084EAA0 /* media_track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85E02496A9B00084EAA0 /* media_track.cpp */; };
+		30CB85EF2496A9B20084EAA0 /* transceiver.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85E12496A9B00084EAA0 /* transceiver.h */; };
+		30CB85F02496A9B20084EAA0 /* audio_track_read_buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85E22496A9B00084EAA0 /* audio_track_read_buffer.h */; };
+		30CB85F12496A9B20084EAA0 /* remote_audio_track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85E32496A9B00084EAA0 /* remote_audio_track.cpp */; };
+		30CB85F22496A9B20084EAA0 /* remote_video_track.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85E42496A9B00084EAA0 /* remote_video_track.h */; };
+		30CB85F32496A9B20084EAA0 /* local_audio_track.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85E52496A9B10084EAA0 /* local_audio_track.h */; };
+		30CB85F42496A9B20084EAA0 /* local_video_track.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85E62496A9B10084EAA0 /* local_video_track.h */; };
+		30CB85F52496A9B20084EAA0 /* local_audio_track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85E72496A9B10084EAA0 /* local_audio_track.cpp */; };
+		30CB85F62496A9B20084EAA0 /* remote_audio_track.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85E82496A9B10084EAA0 /* remote_audio_track.h */; };
+		30CB85F72496A9B20084EAA0 /* audio_track_read_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85E92496A9B10084EAA0 /* audio_track_read_buffer.cpp */; };
+		30CB85F82496A9B20084EAA0 /* transceiver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85EA2496A9B10084EAA0 /* transceiver.cpp */; };
+		30CB85FE2496A9C70084EAA0 /* local_audio_track_interop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85F92496A9C50084EAA0 /* local_audio_track_interop.cpp */; };
+		30CB85FF2496A9C70084EAA0 /* remote_audio_track_interop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85FA2496A9C60084EAA0 /* remote_audio_track_interop.cpp */; };
+		30CB86002496A9C70084EAA0 /* remote_video_track_interop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85FB2496A9C60084EAA0 /* remote_video_track_interop.cpp */; };
+		30CB86012496A9C70084EAA0 /* transceiver_interop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85FC2496A9C60084EAA0 /* transceiver_interop.cpp */; };
+		30CB86022496A9C70084EAA0 /* data_channel_interop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85FD2496A9C60084EAA0 /* data_channel_interop.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,40 +117,28 @@
 		30CB84FC23DE3C0C0084EAA0 /* Microsoft.MixedReality.WebRTCTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Microsoft.MixedReality.WebRTCTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		30CB850123DE3C0C0084EAA0 /* mrwebrtcTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = mrwebrtcTests.mm; sourceTree = "<group>"; };
 		30CB850323DE3C0C0084EAA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		30CB850D23E2309F0084EAA0 /* peer_connection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = peer_connection.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/peer_connection.cpp; sourceTree = "<group>"; };
-		30CB850F23E230C40084EAA0 /* video_frame_observer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = video_frame_observer.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/video_frame_observer.cpp; sourceTree = "<group>"; };
-		30CB851023E230C40084EAA0 /* str.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = str.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/str.cpp; sourceTree = "<group>"; };
-		30CB851123E230C40084EAA0 /* sdp_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sdp_utils.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/sdp_utils.cpp; sourceTree = "<group>"; };
-		30CB851223E230C40084EAA0 /* data_channel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = data_channel.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/data_channel.cpp; sourceTree = "<group>"; };
-		30CB851323E230C40084EAA0 /* pch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pch.h; path = ../../Microsoft.MixedReality.WebRTC.Native/src/pch.h; sourceTree = "<group>"; };
-		30CB851423E230C40084EAA0 /* audio_frame_observer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = audio_frame_observer.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/audio_frame_observer.cpp; sourceTree = "<group>"; };
-		30CB851523E230C40084EAA0 /* pch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pch.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/pch.cpp; sourceTree = "<group>"; };
-		30CB851623E230C40084EAA0 /* mrs_errors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mrs_errors.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/mrs_errors.cpp; sourceTree = "<group>"; };
-		30CB851F23E230D40084EAA0 /* local_video_track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_video_track.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/local_video_track.h; sourceTree = "<group>"; };
-		30CB852023E230D40084EAA0 /* peer_connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = peer_connection.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/peer_connection.h; sourceTree = "<group>"; };
-		30CB852123E230D40084EAA0 /* tracked_object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tracked_object.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/tracked_object.h; sourceTree = "<group>"; };
-		30CB852223E230D40084EAA0 /* video_frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = video_frame.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/video_frame.h; sourceTree = "<group>"; };
-		30CB852323E230D40084EAA0 /* audio_frame_observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_frame_observer.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/audio_frame_observer.h; sourceTree = "<group>"; };
-		30CB852423E230D40084EAA0 /* data_channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = data_channel.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/data_channel.h; sourceTree = "<group>"; };
-		30CB852523E230D40084EAA0 /* sdp_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sdp_utils.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/sdp_utils.h; sourceTree = "<group>"; };
-		30CB852623E230D40084EAA0 /* ref_counted_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ref_counted_base.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/ref_counted_base.h; sourceTree = "<group>"; };
-		30CB852723E230D40084EAA0 /* refptr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = refptr.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/refptr.h; sourceTree = "<group>"; };
-		30CB852823E230D40084EAA0 /* external_video_track_source.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/external_video_track_source.h; sourceTree = "<group>"; };
-		30CB852923E230D50084EAA0 /* audio_frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_frame.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/audio_frame.h; sourceTree = "<group>"; };
-		30CB852A23E230D50084EAA0 /* video_frame_observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = video_frame_observer.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/video_frame_observer.h; sourceTree = "<group>"; };
-		30CB852B23E230D50084EAA0 /* callback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = callback.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/callback.h; sourceTree = "<group>"; };
-		30CB852C23E230D50084EAA0 /* export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = export.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/export.h; sourceTree = "<group>"; };
-		30CB852E23E230D50084EAA0 /* str.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = str.h; path = ../../Microsoft.MixedReality.WebRTC.Native/include/str.h; sourceTree = "<group>"; };
+		30CB850D23E2309F0084EAA0 /* peer_connection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = peer_connection.cpp; path = ../../mrwebrtc/src/peer_connection.cpp; sourceTree = "<group>"; };
+		30CB850F23E230C40084EAA0 /* video_frame_observer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = video_frame_observer.cpp; path = ../../mrwebrtc/src/video_frame_observer.cpp; sourceTree = "<group>"; };
+		30CB851023E230C40084EAA0 /* str.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = str.cpp; path = ../../mrwebrtc/src/str.cpp; sourceTree = "<group>"; };
+		30CB851123E230C40084EAA0 /* sdp_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sdp_utils.cpp; path = ../../mrwebrtc/src/sdp_utils.cpp; sourceTree = "<group>"; };
+		30CB851223E230C40084EAA0 /* data_channel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = data_channel.cpp; path = ../../mrwebrtc/src/data_channel.cpp; sourceTree = "<group>"; };
+		30CB851323E230C40084EAA0 /* pch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pch.h; path = ../../mrwebrtc/src/pch.h; sourceTree = "<group>"; };
+		30CB851423E230C40084EAA0 /* audio_frame_observer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = audio_frame_observer.cpp; path = ../../mrwebrtc/src/audio_frame_observer.cpp; sourceTree = "<group>"; };
+		30CB851523E230C40084EAA0 /* pch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pch.cpp; path = ../../mrwebrtc/src/pch.cpp; sourceTree = "<group>"; };
+		30CB851623E230C40084EAA0 /* mrs_errors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mrs_errors.cpp; path = ../../mrwebrtc/src/mrs_errors.cpp; sourceTree = "<group>"; };
+		30CB852223E230D40084EAA0 /* video_frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = video_frame.h; path = ../../mrwebrtc/include/video_frame.h; sourceTree = "<group>"; };
+		30CB852923E230D50084EAA0 /* audio_frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_frame.h; path = ../../mrwebrtc/include/audio_frame.h; sourceTree = "<group>"; };
+		30CB852C23E230D50084EAA0 /* export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = export.h; path = ../../mrwebrtc/include/export.h; sourceTree = "<group>"; };
 		30CB854223E23A870084EAA0 /* libwebrtc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebrtc.a; path = ../../../webrtc/src/out/ios_x64/obj/libwebrtc.a; sourceTree = "<group>"; };
-		30CB854423E23B070084EAA0 /* external_video_track_source_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source_impl.h; path = ../../Microsoft.MixedReality.WebRTC.Native/src/media/external_video_track_source_impl.h; sourceTree = "<group>"; };
-		30CB854523E23B080084EAA0 /* external_video_track_source.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = external_video_track_source.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/media/external_video_track_source.cpp; sourceTree = "<group>"; };
-		30CB854623E23B080084EAA0 /* local_video_track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = local_video_track.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/media/local_video_track.cpp; sourceTree = "<group>"; };
-		30CB854D23E23B150084EAA0 /* external_video_track_source_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = external_video_track_source_interop.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/interop/external_video_track_source_interop.cpp; sourceTree = "<group>"; };
-		30CB854F23E23B150084EAA0 /* local_video_track_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = local_video_track_interop.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/interop/local_video_track_interop.cpp; sourceTree = "<group>"; };
-		30CB855023E23B150084EAA0 /* global_factory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = global_factory.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/interop/global_factory.cpp; sourceTree = "<group>"; };
-		30CB855123E23B160084EAA0 /* global_factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global_factory.h; path = ../../Microsoft.MixedReality.WebRTC.Native/src/interop/global_factory.h; sourceTree = "<group>"; };
-		30CB855223E23B160084EAA0 /* peer_connection_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = peer_connection_interop.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/interop/peer_connection_interop.cpp; sourceTree = "<group>"; };
-		30CB855323E23B160084EAA0 /* interop_api.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = interop_api.cpp; path = ../../Microsoft.MixedReality.WebRTC.Native/src/interop/interop_api.cpp; sourceTree = "<group>"; };
+		30CB854423E23B070084EAA0 /* external_video_track_source_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source_impl.h; path = ../../mrwebrtc/src/media/external_video_track_source_impl.h; sourceTree = "<group>"; };
+		30CB854523E23B080084EAA0 /* external_video_track_source.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = external_video_track_source.cpp; path = ../../mrwebrtc/src/media/external_video_track_source.cpp; sourceTree = "<group>"; };
+		30CB854623E23B080084EAA0 /* local_video_track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = local_video_track.cpp; path = ../../mrwebrtc/src/media/local_video_track.cpp; sourceTree = "<group>"; };
+		30CB854D23E23B150084EAA0 /* external_video_track_source_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = external_video_track_source_interop.cpp; path = ../../mrwebrtc/src/interop/external_video_track_source_interop.cpp; sourceTree = "<group>"; };
+		30CB854F23E23B150084EAA0 /* local_video_track_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = local_video_track_interop.cpp; path = ../../mrwebrtc/src/interop/local_video_track_interop.cpp; sourceTree = "<group>"; };
+		30CB855023E23B150084EAA0 /* global_factory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = global_factory.cpp; path = ../../mrwebrtc/src/interop/global_factory.cpp; sourceTree = "<group>"; };
+		30CB855123E23B160084EAA0 /* global_factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global_factory.h; path = ../../mrwebrtc/src/interop/global_factory.h; sourceTree = "<group>"; };
+		30CB855223E23B160084EAA0 /* peer_connection_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = peer_connection_interop.cpp; path = ../../mrwebrtc/src/interop/peer_connection_interop.cpp; sourceTree = "<group>"; };
+		30CB855323E23B160084EAA0 /* interop_api.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = interop_api.cpp; path = ../../mrwebrtc/src/interop/interop_api.cpp; sourceTree = "<group>"; };
 		30CB855E23E23C270084EAA0 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		30CB856023E23C510084EAA0 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		30CB856223E23C620084EAA0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -140,14 +157,55 @@
 		30CB858A23E858650084EAA0 /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
 		30CB859C23ECB4360084EAA0 /* audio_session.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = audio_session.h; sourceTree = "<group>"; };
 		30CB859E23ECB4CC0084EAA0 /* audio_session.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = audio_session.m; sourceTree = "<group>"; };
-		30CB85A124009A4E0084EAA0 /* external_video_track_source_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/external_video_track_source_interop.h; sourceTree = "<group>"; };
-		30CB85A224009A4E0084EAA0 /* interop_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = interop_api.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/interop_api.h; sourceTree = "<group>"; };
-		30CB85A324009A4E0084EAA0 /* peer_connection_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = peer_connection_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/peer_connection_interop.h; sourceTree = "<group>"; };
-		30CB85A424009A4E0084EAA0 /* local_video_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_video_track_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/local_video_track_interop.h; sourceTree = "<group>"; };
-		30CB85A524009A4E0084EAA0 /* result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = result.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/result.h; sourceTree = "<group>"; };
+		30CB85A124009A4E0084EAA0 /* external_video_track_source_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source_interop.h; path = ../../../mrwebrtc/include/external_video_track_source_interop.h; sourceTree = "<group>"; };
+		30CB85A224009A4E0084EAA0 /* interop_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = interop_api.h; path = ../../../mrwebrtc/include/interop_api.h; sourceTree = "<group>"; };
+		30CB85A324009A4E0084EAA0 /* peer_connection_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = peer_connection_interop.h; path = ../../../mrwebrtc/include/peer_connection_interop.h; sourceTree = "<group>"; };
+		30CB85A424009A4E0084EAA0 /* local_video_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_video_track_interop.h; path = ../../../mrwebrtc/include/local_video_track_interop.h; sourceTree = "<group>"; };
+		30CB85A524009A4E0084EAA0 /* result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = result.h; path = ../../../mrwebrtc/include/result.h; sourceTree = "<group>"; };
 		30CB85AC24965D0D0084EAA0 /* video_capture_ios.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = video_capture_ios.mm; sourceTree = "<group>"; };
 		30CB85AE24965F300084EAA0 /* video_capture_ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = video_capture_ios.h; sourceTree = "<group>"; };
 		30CB85AF24967D7D0084EAA0 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
+		30CB85B12496A97B0084EAA0 /* transceiver_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transceiver_interop.h; path = ../../../mrwebrtc/include/transceiver_interop.h; sourceTree = "<group>"; };
+		30CB85B22496A97B0084EAA0 /* local_audio_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_audio_track_interop.h; path = ../../../mrwebrtc/include/local_audio_track_interop.h; sourceTree = "<group>"; };
+		30CB85B32496A97B0084EAA0 /* data_channel_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = data_channel_interop.h; path = ../../../mrwebrtc/include/data_channel_interop.h; sourceTree = "<group>"; };
+		30CB85B42496A97B0084EAA0 /* remote_audio_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = remote_audio_track_interop.h; path = ../../../mrwebrtc/include/remote_audio_track_interop.h; sourceTree = "<group>"; };
+		30CB85B52496A97B0084EAA0 /* remote_video_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = remote_video_track_interop.h; path = ../../../mrwebrtc/include/remote_video_track_interop.h; sourceTree = "<group>"; };
+		30CB85BB2496A9950084EAA0 /* toggle_audio_mixer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = toggle_audio_mixer.cpp; path = ../../mrwebrtc/src/toggle_audio_mixer.cpp; sourceTree = "<group>"; };
+		30CB85BC2496A9950084EAA0 /* audio_frame_observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_frame_observer.h; path = ../../mrwebrtc/src/audio_frame_observer.h; sourceTree = "<group>"; };
+		30CB85BD2496A9950084EAA0 /* targetver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = targetver.h; path = ../../mrwebrtc/src/targetver.h; sourceTree = "<group>"; };
+		30CB85BE2496A9960084EAA0 /* ref_counted_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ref_counted_base.h; path = ../../mrwebrtc/src/ref_counted_base.h; sourceTree = "<group>"; };
+		30CB85BF2496A9960084EAA0 /* str.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = str.h; path = ../../mrwebrtc/src/str.h; sourceTree = "<group>"; };
+		30CB85C02496A9960084EAA0 /* data_channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = data_channel.h; path = ../../mrwebrtc/src/data_channel.h; sourceTree = "<group>"; };
+		30CB85C12496A9960084EAA0 /* tracked_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tracked_object.cpp; path = ../../mrwebrtc/src/tracked_object.cpp; sourceTree = "<group>"; };
+		30CB85C22496A9960084EAA0 /* peer_connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = peer_connection.h; path = ../../mrwebrtc/src/peer_connection.h; sourceTree = "<group>"; };
+		30CB85C32496A9960084EAA0 /* tracked_object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tracked_object.h; path = ../../mrwebrtc/src/tracked_object.h; sourceTree = "<group>"; };
+		30CB85C42496A9970084EAA0 /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = utils.cpp; path = ../../mrwebrtc/src/utils.cpp; sourceTree = "<group>"; };
+		30CB85C52496A9970084EAA0 /* toggle_audio_mixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = toggle_audio_mixer.h; path = ../../mrwebrtc/src/toggle_audio_mixer.h; sourceTree = "<group>"; };
+		30CB85C62496A9970084EAA0 /* refptr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = refptr.h; path = ../../mrwebrtc/src/refptr.h; sourceTree = "<group>"; };
+		30CB85C72496A9970084EAA0 /* mrs_errors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mrs_errors.h; path = ../../mrwebrtc/src/mrs_errors.h; sourceTree = "<group>"; };
+		30CB85C82496A9970084EAA0 /* callback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = callback.h; path = ../../mrwebrtc/src/callback.h; sourceTree = "<group>"; };
+		30CB85C92496A9970084EAA0 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../mrwebrtc/src/utils.h; sourceTree = "<group>"; };
+		30CB85CA2496A9970084EAA0 /* video_frame_observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = video_frame_observer.h; path = ../../mrwebrtc/src/video_frame_observer.h; sourceTree = "<group>"; };
+		30CB85CB2496A9980084EAA0 /* sdp_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sdp_utils.h; path = ../../mrwebrtc/src/sdp_utils.h; sourceTree = "<group>"; };
+		30CB85DD2496A9AF0084EAA0 /* remote_video_track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = remote_video_track.cpp; path = ../../mrwebrtc/src/media/remote_video_track.cpp; sourceTree = "<group>"; };
+		30CB85DE2496A9AF0084EAA0 /* media_track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_track.h; path = ../../mrwebrtc/src/media/media_track.h; sourceTree = "<group>"; };
+		30CB85DF2496A9B00084EAA0 /* external_video_track_source.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source.h; path = ../../mrwebrtc/src/media/external_video_track_source.h; sourceTree = "<group>"; };
+		30CB85E02496A9B00084EAA0 /* media_track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media_track.cpp; path = ../../mrwebrtc/src/media/media_track.cpp; sourceTree = "<group>"; };
+		30CB85E12496A9B00084EAA0 /* transceiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transceiver.h; path = ../../mrwebrtc/src/media/transceiver.h; sourceTree = "<group>"; };
+		30CB85E22496A9B00084EAA0 /* audio_track_read_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_track_read_buffer.h; path = ../../mrwebrtc/src/media/audio_track_read_buffer.h; sourceTree = "<group>"; };
+		30CB85E32496A9B00084EAA0 /* remote_audio_track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = remote_audio_track.cpp; path = ../../mrwebrtc/src/media/remote_audio_track.cpp; sourceTree = "<group>"; };
+		30CB85E42496A9B00084EAA0 /* remote_video_track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = remote_video_track.h; path = ../../mrwebrtc/src/media/remote_video_track.h; sourceTree = "<group>"; };
+		30CB85E52496A9B10084EAA0 /* local_audio_track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_audio_track.h; path = ../../mrwebrtc/src/media/local_audio_track.h; sourceTree = "<group>"; };
+		30CB85E62496A9B10084EAA0 /* local_video_track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_video_track.h; path = ../../mrwebrtc/src/media/local_video_track.h; sourceTree = "<group>"; };
+		30CB85E72496A9B10084EAA0 /* local_audio_track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = local_audio_track.cpp; path = ../../mrwebrtc/src/media/local_audio_track.cpp; sourceTree = "<group>"; };
+		30CB85E82496A9B10084EAA0 /* remote_audio_track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = remote_audio_track.h; path = ../../mrwebrtc/src/media/remote_audio_track.h; sourceTree = "<group>"; };
+		30CB85E92496A9B10084EAA0 /* audio_track_read_buffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = audio_track_read_buffer.cpp; path = ../../mrwebrtc/src/media/audio_track_read_buffer.cpp; sourceTree = "<group>"; };
+		30CB85EA2496A9B10084EAA0 /* transceiver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transceiver.cpp; path = ../../mrwebrtc/src/media/transceiver.cpp; sourceTree = "<group>"; };
+		30CB85F92496A9C50084EAA0 /* local_audio_track_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = local_audio_track_interop.cpp; path = ../../mrwebrtc/src/interop/local_audio_track_interop.cpp; sourceTree = "<group>"; };
+		30CB85FA2496A9C60084EAA0 /* remote_audio_track_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = remote_audio_track_interop.cpp; path = ../../mrwebrtc/src/interop/remote_audio_track_interop.cpp; sourceTree = "<group>"; };
+		30CB85FB2496A9C60084EAA0 /* remote_video_track_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = remote_video_track_interop.cpp; path = ../../mrwebrtc/src/interop/remote_video_track_interop.cpp; sourceTree = "<group>"; };
+		30CB85FC2496A9C60084EAA0 /* transceiver_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transceiver_interop.cpp; path = ../../mrwebrtc/src/interop/transceiver_interop.cpp; sourceTree = "<group>"; };
+		30CB85FD2496A9C60084EAA0 /* data_channel_interop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = data_channel_interop.cpp; path = ../../mrwebrtc/src/interop/data_channel_interop.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +271,42 @@
 		30CB84F523DE3C0C0084EAA0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				30CB85FD2496A9C60084EAA0 /* data_channel_interop.cpp */,
+				30CB85F92496A9C50084EAA0 /* local_audio_track_interop.cpp */,
+				30CB85FA2496A9C60084EAA0 /* remote_audio_track_interop.cpp */,
+				30CB85FB2496A9C60084EAA0 /* remote_video_track_interop.cpp */,
+				30CB85FC2496A9C60084EAA0 /* transceiver_interop.cpp */,
+				30CB85E92496A9B10084EAA0 /* audio_track_read_buffer.cpp */,
+				30CB85E22496A9B00084EAA0 /* audio_track_read_buffer.h */,
+				30CB85DF2496A9B00084EAA0 /* external_video_track_source.h */,
+				30CB85E72496A9B10084EAA0 /* local_audio_track.cpp */,
+				30CB85E52496A9B10084EAA0 /* local_audio_track.h */,
+				30CB85E62496A9B10084EAA0 /* local_video_track.h */,
+				30CB85E02496A9B00084EAA0 /* media_track.cpp */,
+				30CB85DE2496A9AF0084EAA0 /* media_track.h */,
+				30CB85E32496A9B00084EAA0 /* remote_audio_track.cpp */,
+				30CB85E82496A9B10084EAA0 /* remote_audio_track.h */,
+				30CB85DD2496A9AF0084EAA0 /* remote_video_track.cpp */,
+				30CB85E42496A9B00084EAA0 /* remote_video_track.h */,
+				30CB85EA2496A9B10084EAA0 /* transceiver.cpp */,
+				30CB85E12496A9B00084EAA0 /* transceiver.h */,
+				30CB85BC2496A9950084EAA0 /* audio_frame_observer.h */,
+				30CB85C82496A9970084EAA0 /* callback.h */,
+				30CB85C02496A9960084EAA0 /* data_channel.h */,
+				30CB85C72496A9970084EAA0 /* mrs_errors.h */,
+				30CB85C22496A9960084EAA0 /* peer_connection.h */,
+				30CB85BE2496A9960084EAA0 /* ref_counted_base.h */,
+				30CB85C62496A9970084EAA0 /* refptr.h */,
+				30CB85CB2496A9980084EAA0 /* sdp_utils.h */,
+				30CB85BF2496A9960084EAA0 /* str.h */,
+				30CB85BD2496A9950084EAA0 /* targetver.h */,
+				30CB85BB2496A9950084EAA0 /* toggle_audio_mixer.cpp */,
+				30CB85C52496A9970084EAA0 /* toggle_audio_mixer.h */,
+				30CB85C12496A9960084EAA0 /* tracked_object.cpp */,
+				30CB85C32496A9960084EAA0 /* tracked_object.h */,
+				30CB85C42496A9970084EAA0 /* utils.cpp */,
+				30CB85C92496A9970084EAA0 /* utils.h */,
+				30CB85CA2496A9970084EAA0 /* video_frame_observer.h */,
 				30CB85AB24965CCA0084EAA0 /* ios */,
 				30CB858D23EA0D310084EAA0 /* public */,
 				30CB854D23E23B150084EAA0 /* external_video_track_source_interop.cpp */,
@@ -224,20 +318,8 @@
 				30CB854423E23B070084EAA0 /* external_video_track_source_impl.h */,
 				30CB854523E23B080084EAA0 /* external_video_track_source.cpp */,
 				30CB854623E23B080084EAA0 /* local_video_track.cpp */,
-				30CB852323E230D40084EAA0 /* audio_frame_observer.h */,
 				30CB852923E230D50084EAA0 /* audio_frame.h */,
-				30CB852B23E230D50084EAA0 /* callback.h */,
-				30CB852423E230D40084EAA0 /* data_channel.h */,
 				30CB852C23E230D50084EAA0 /* export.h */,
-				30CB852823E230D40084EAA0 /* external_video_track_source.h */,
-				30CB851F23E230D40084EAA0 /* local_video_track.h */,
-				30CB852023E230D40084EAA0 /* peer_connection.h */,
-				30CB852623E230D40084EAA0 /* ref_counted_base.h */,
-				30CB852723E230D40084EAA0 /* refptr.h */,
-				30CB852523E230D40084EAA0 /* sdp_utils.h */,
-				30CB852E23E230D50084EAA0 /* str.h */,
-				30CB852123E230D40084EAA0 /* tracked_object.h */,
-				30CB852A23E230D50084EAA0 /* video_frame_observer.h */,
 				30CB852223E230D40084EAA0 /* video_frame.h */,
 				30CB851423E230C40084EAA0 /* audio_frame_observer.cpp */,
 				30CB851223E230C40084EAA0 /* data_channel.cpp */,
@@ -303,6 +385,11 @@
 		30CB858D23EA0D310084EAA0 /* public */ = {
 			isa = PBXGroup;
 			children = (
+				30CB85B32496A97B0084EAA0 /* data_channel_interop.h */,
+				30CB85B22496A97B0084EAA0 /* local_audio_track_interop.h */,
+				30CB85B42496A97B0084EAA0 /* remote_audio_track_interop.h */,
+				30CB85B52496A97B0084EAA0 /* remote_video_track_interop.h */,
+				30CB85B12496A97B0084EAA0 /* transceiver_interop.h */,
 				30CB85A124009A4E0084EAA0 /* external_video_track_source_interop.h */,
 				30CB85A224009A4E0084EAA0 /* interop_api.h */,
 				30CB85A424009A4E0084EAA0 /* local_video_track_interop.h */,
@@ -330,31 +417,46 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				30CB853E23E230D50084EAA0 /* str.h in Headers */,
+				30CB85ED2496A9B20084EAA0 /* external_video_track_source.h in Headers */,
+				30CB85F42496A9B20084EAA0 /* local_video_track.h in Headers */,
+				30CB85DA2496A9980084EAA0 /* utils.h in Headers */,
+				30CB85D02496A9980084EAA0 /* str.h in Headers */,
+				30CB85D42496A9980084EAA0 /* tracked_object.h in Headers */,
 				30CB859D23ECB4360084EAA0 /* audio_session.h in Headers */,
+				30CB85EF2496A9B20084EAA0 /* transceiver.h in Headers */,
+				30CB85CE2496A9980084EAA0 /* targetver.h in Headers */,
 				30CB85A624009A4E0084EAA0 /* external_video_track_source_interop.h in Headers */,
 				30CB85A724009A4E0084EAA0 /* interop_api.h in Headers */,
+				30CB85F02496A9B20084EAA0 /* audio_track_read_buffer.h in Headers */,
+				30CB85F62496A9B20084EAA0 /* remote_audio_track.h in Headers */,
 				30CB85A924009A4E0084EAA0 /* local_video_track_interop.h in Headers */,
 				30CB85A824009A4E0084EAA0 /* peer_connection_interop.h in Headers */,
+				30CB85D92496A9980084EAA0 /* callback.h in Headers */,
+				30CB85F32496A9B20084EAA0 /* local_audio_track.h in Headers */,
+				30CB85EC2496A9B20084EAA0 /* media_track.h in Headers */,
+				30CB85D72496A9980084EAA0 /* refptr.h in Headers */,
+				30CB85B62496A97B0084EAA0 /* transceiver_interop.h in Headers */,
 				30CB85AA24009A4E0084EAA0 /* result.h in Headers */,
 				30CB853C23E230D50084EAA0 /* export.h in Headers */,
-				30CB853323E230D50084EAA0 /* audio_frame_observer.h in Headers */,
+				30CB85D32496A9980084EAA0 /* peer_connection.h in Headers */,
+				30CB85DB2496A9980084EAA0 /* video_frame_observer.h in Headers */,
+				30CB85B92496A97B0084EAA0 /* remote_audio_track_interop.h in Headers */,
 				30CB851B23E230C40084EAA0 /* pch.h in Headers */,
-				30CB853123E230D50084EAA0 /* tracked_object.h in Headers */,
-				30CB853523E230D50084EAA0 /* sdp_utils.h in Headers */,
-				30CB853A23E230D50084EAA0 /* video_frame_observer.h in Headers */,
+				30CB85D12496A9980084EAA0 /* data_channel.h in Headers */,
+				30CB85BA2496A97B0084EAA0 /* remote_video_track_interop.h in Headers */,
 				30CB853223E230D50084EAA0 /* video_frame.h in Headers */,
-				30CB852F23E230D50084EAA0 /* local_video_track.h in Headers */,
 				30CB855B23E23B160084EAA0 /* global_factory.h in Headers */,
-				30CB853623E230D50084EAA0 /* ref_counted_base.h in Headers */,
-				30CB853023E230D50084EAA0 /* peer_connection.h in Headers */,
 				30CB854723E23B080084EAA0 /* external_video_track_source_impl.h in Headers */,
 				30CB853923E230D50084EAA0 /* audio_frame.h in Headers */,
-				30CB853823E230D50084EAA0 /* external_video_track_source.h in Headers */,
-				30CB853423E230D50084EAA0 /* data_channel.h in Headers */,
-				30CB853723E230D50084EAA0 /* refptr.h in Headers */,
+				30CB85DC2496A9980084EAA0 /* sdp_utils.h in Headers */,
+				30CB85CF2496A9980084EAA0 /* ref_counted_base.h in Headers */,
+				30CB85F22496A9B20084EAA0 /* remote_video_track.h in Headers */,
+				30CB85B72496A97B0084EAA0 /* local_audio_track_interop.h in Headers */,
+				30CB85B82496A97B0084EAA0 /* data_channel_interop.h in Headers */,
+				30CB85D82496A9980084EAA0 /* mrs_errors.h in Headers */,
+				30CB85D62496A9980084EAA0 /* toggle_audio_mixer.h in Headers */,
 				30CB850423DE3C0C0084EAA0 /* mrwebrtc.h in Headers */,
-				30CB853B23E230D50084EAA0 /* callback.h in Headers */,
+				30CB85CD2496A9980084EAA0 /* audio_frame_observer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,17 +594,31 @@
 				30CB85AD24965D0D0084EAA0 /* video_capture_ios.mm in Sources */,
 				30CB855A23E23B160084EAA0 /* global_factory.cpp in Sources */,
 				30CB851C23E230C40084EAA0 /* audio_frame_observer.cpp in Sources */,
+				30CB85F52496A9B20084EAA0 /* local_audio_track.cpp in Sources */,
 				30CB854823E23B080084EAA0 /* external_video_track_source.cpp in Sources */,
 				30CB855C23E23B160084EAA0 /* peer_connection_interop.cpp in Sources */,
+				30CB85D22496A9980084EAA0 /* tracked_object.cpp in Sources */,
 				30CB851D23E230C40084EAA0 /* pch.cpp in Sources */,
 				30CB854923E23B080084EAA0 /* local_video_track.cpp in Sources */,
+				30CB85D52496A9980084EAA0 /* utils.cpp in Sources */,
+				30CB86022496A9C70084EAA0 /* data_channel_interop.cpp in Sources */,
+				30CB85F12496A9B20084EAA0 /* remote_audio_track.cpp in Sources */,
+				30CB86012496A9C70084EAA0 /* transceiver_interop.cpp in Sources */,
 				30CB850E23E2309F0084EAA0 /* peer_connection.cpp in Sources */,
 				30CB851E23E230C40084EAA0 /* mrs_errors.cpp in Sources */,
+				30CB85FF2496A9C70084EAA0 /* remote_audio_track_interop.cpp in Sources */,
 				30CB855723E23B160084EAA0 /* external_video_track_source_interop.cpp in Sources */,
 				30CB851723E230C40084EAA0 /* video_frame_observer.cpp in Sources */,
+				30CB85EE2496A9B20084EAA0 /* media_track.cpp in Sources */,
 				30CB851A23E230C40084EAA0 /* data_channel.cpp in Sources */,
+				30CB85F82496A9B20084EAA0 /* transceiver.cpp in Sources */,
+				30CB85FE2496A9C70084EAA0 /* local_audio_track_interop.cpp in Sources */,
 				30CB855923E23B160084EAA0 /* local_video_track_interop.cpp in Sources */,
+				30CB85CC2496A9980084EAA0 /* toggle_audio_mixer.cpp in Sources */,
+				30CB86002496A9C70084EAA0 /* remote_video_track_interop.cpp in Sources */,
+				30CB85F72496A9B20084EAA0 /* audio_track_read_buffer.cpp in Sources */,
 				30CB859F23ECB4CC0084EAA0 /* audio_session.m in Sources */,
+				30CB85EB2496A9B20084EAA0 /* remote_video_track.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -717,8 +833,8 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					../Microsoft.MixedReality.WebRTC.Native/include,
-					../Microsoft.MixedReality.WebRTC.Native/src,
+					../mrwebrtc/include,
+					../mrwebrtc/src,
 					../../../webrtc/src/,
 					../../../webrtc/src/third_party/libyuv/include,
 					"../../../webrtc/src/third_party/abseil-cpp",
@@ -761,8 +877,8 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					../Microsoft.MixedReality.WebRTC.Native/include,
-					../Microsoft.MixedReality.WebRTC.Native/src,
+					../mrwebrtc/include,
+					../mrwebrtc/src,
 					../../../webrtc/src/,
 					../../../webrtc/src/third_party/libyuv/include,
 					"../../../webrtc/src/third_party/abseil-cpp",

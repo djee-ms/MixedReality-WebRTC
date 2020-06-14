@@ -19,7 +19,7 @@ LocalAudioTrack::LocalAudioTrack(
       track_name_(track_->id()) {
   RTC_CHECK(track_);
   kind_ = mrsTrackKind::kAudioTrack;
-  track_->AddSink(this);  //< FIXME - Implementation is no-op
+  track_->AddSink(this);  // FIXME - Implementation is no-op
 }
 
 LocalAudioTrack::LocalAudioTrack(
@@ -42,7 +42,7 @@ LocalAudioTrack::LocalAudioTrack(
   RTC_CHECK(sender_);
   kind_ = mrsTrackKind::kAudioTrack;
   transceiver_->OnLocalTrackAdded(this);
-  track_->AddSink(this);  //< FIXME - Implementation is no-op
+  track_->AddSink(this);  // FIXME - Implementation is no-op
 }
 
 LocalAudioTrack::~LocalAudioTrack() {

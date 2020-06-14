@@ -106,7 +106,7 @@ class ExternalVideoTrackSourceImpl : public ExternalVideoTrackSource,
 
   /// Collection of pending frame requests
   std::deque<std::pair<uint32_t, int64_t>> pending_requests_
-      RTC_GUARDED_BY(request_lock_);  //< TODO : circular buffer to avoid alloc
+      RTC_GUARDED_BY(request_lock_);  // TODO : circular buffer to avoid alloc
 
   /// Next available ID for a frame request.
   uint32_t next_request_id_ RTC_GUARDED_BY(request_lock_){};

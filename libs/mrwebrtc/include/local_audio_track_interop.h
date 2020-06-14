@@ -11,7 +11,9 @@ extern "C" {
 
 /// Configuration for opening a local audio capture device and creating a local
 /// audio track.
-struct mrsLocalAudioTrackInitConfig {};
+struct mrsLocalAudioTrackInitConfig {
+  char _unused; // avoid warning about 0-sized C struct / 1-sized C++ struct
+};
 
 /// Add a reference to the native object associated with the given handle.
 MRS_API void MRS_CALL

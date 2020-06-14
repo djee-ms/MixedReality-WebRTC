@@ -35,21 +35,21 @@ struct mrsEnumerator {
 
 namespace {
 
-mrsResult RTCToAPIError(const webrtc::RTCError& error) {
-  if (error.ok()) {
-    return Result::kSuccess;
-  }
-  switch (error.type()) {
-    case webrtc::RTCErrorType::INVALID_PARAMETER:
-    case webrtc::RTCErrorType::INVALID_RANGE:
-      return Result::kInvalidParameter;
-    case webrtc::RTCErrorType::INVALID_STATE:
-      return Result::kInvalidOperation;
-    case webrtc::RTCErrorType::INTERNAL_ERROR:
-    default:
-      return Result::kUnknownError;
-  }
-}
+//mrsResult RTCToAPIError(const webrtc::RTCError& error) {
+//  if (error.ok()) {
+//    return Result::kSuccess;
+//  }
+//  switch (error.type()) {
+//    case webrtc::RTCErrorType::INVALID_PARAMETER:
+//    case webrtc::RTCErrorType::INVALID_RANGE:
+//      return Result::kInvalidParameter;
+//    case webrtc::RTCErrorType::INVALID_STATE:
+//      return Result::kInvalidOperation;
+//    case webrtc::RTCErrorType::INTERNAL_ERROR:
+//    default:
+//      return Result::kUnknownError;
+//  }
+//}
 
 #if defined(WINUWP)
 using WebRtcFactoryPtr =
@@ -251,23 +251,6 @@ mrsResult OpenVideoCaptureDevice(
 }
   
 #endif  // !defined(MR_SHARING_IOS)
-
-//< TODO - Unit test / check if RTC has already a utility like this
-std::vector<std::string> SplitString(const std::string& str, char sep) {
-  std::vector<std::string> ret;
-  size_t offset = 0;
-  for (size_t idx = str.find_first_of(sep); idx < std::string::npos;
-       idx = str.find_first_of(sep, offset)) {
-    if (idx > offset) {
-      ret.push_back(str.substr(offset, idx - offset));
-    }
-    offset = idx + 1;
-  }
-  if (offset < str.size()) {
-    ret.push_back(str.substr(offset));
-  }
-  return ret;
-}
 
 /// Convert a WebRTC VideoType format into its FOURCC counterpart.
 uint32_t FourCCFromVideoType(webrtc::VideoType videoType) {
@@ -760,9 +743,9 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
 #if defined(MR_SHARING_IOS)
   
   // Create the iOS video capture source
-  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> source =
+  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
     MRWebRTCVideoCaptureIOS::Create(global_factory);
-  if (!source) {
+  if (!video_source) {
     RTC_LOG(LS_ERROR) << "Failed to create the video track source from the iOS"
     "video capture module.";
     return mrsResult::kUnknownError;

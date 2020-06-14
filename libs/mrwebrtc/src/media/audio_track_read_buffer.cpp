@@ -67,8 +67,8 @@ void AudioTrackReadBuffer::Buffer::addFrame(const Frame& frame,
   std::vector<short> buffer_front;
   std::vector<short> buffer_back;
 
-  const short* curr_data; //< Current version of the processed data.
-  size_t src_count;  //< Includes samples from *all* channels.
+  const short* curr_data; // Current version of the processed data.
+  size_t src_count;  // Includes samples from *all* channels.
   int curr_channels = frame.number_of_channels;
 
   // ensure source is 16 bit

@@ -680,54 +680,6 @@ class PeerConnection : public TrackedObject,
   template <mrsMediaKind MEDIA_KIND>
   struct MediaTrait;
 
-  template <>
-  struct MediaTrait<mrsMediaKind::kAudio> {
-    constexpr static const mrsMediaKind kMediaKind = mrsMediaKind::kAudio;
-    using RtcMediaTrackInterfaceT = webrtc::AudioTrackInterface;
-    using RemoteMediaTrackT = RemoteAudioTrack;
-    using RemoteMediaTrackHandleT = mrsRemoteAudioTrackHandle;
-    using RemoteMediaTrackConfigT = mrsRemoteAudioTrackConfig;
-    using MediaTrackAddedCallbackT =
-        Callback<const mrsRemoteAudioTrackAddedInfo*>;
-    using MediaTrackRemovedCallbackT =
-        Callback<mrsRemoteAudioTrackHandle, mrsTransceiverHandle>;
-    static void ExecTrackAdded(
-        mrsRemoteAudioTrackHandle track_handle,
-        mrsTransceiverHandle transceiver_handle,
-        const char* track_name,
-        const MediaTrackAddedCallbackT& callback) noexcept {
-      mrsRemoteAudioTrackAddedInfo info{};
-      info.track_handle = track_handle;
-      info.audio_transceiver_handle = transceiver_handle;
-      info.track_name = track_name;
-      callback(&info);
-    }
-  };
-
-  template <>
-  struct MediaTrait<mrsMediaKind::kVideo> {
-    constexpr static const mrsMediaKind kMediaKind = mrsMediaKind::kVideo;
-    using RtcMediaTrackInterfaceT = webrtc::VideoTrackInterface;
-    using RemoteMediaTrackT = RemoteVideoTrack;
-    using RemoteMediaTrackHandleT = mrsRemoteVideoTrackHandle;
-    using RemoteMediaTrackConfigT = mrsRemoteVideoTrackConfig;
-    using MediaTrackAddedCallbackT =
-        Callback<const mrsRemoteVideoTrackAddedInfo*>;
-    using MediaTrackRemovedCallbackT =
-        Callback<mrsRemoteVideoTrackHandle, mrsTransceiverHandle>;
-    static void ExecTrackAdded(
-        mrsRemoteVideoTrackHandle track_handle,
-        mrsTransceiverHandle transceiver_handle,
-        const char* track_name,
-        const MediaTrackAddedCallbackT& callback) noexcept {
-      mrsRemoteVideoTrackAddedInfo info{};
-      info.track_handle = track_handle;
-      info.audio_transceiver_handle = transceiver_handle;
-      info.track_name = track_name;
-      callback(&info);
-    }
-  };
-
   /// Create a new remote media (audio or video) track wrapper for an existing
   /// RTP media receiver which was just created or started receiving (Unified
   /// Plan) or was created for a newly receiving track (Plan B).
@@ -816,6 +768,54 @@ class PeerConnection : public TrackedObject,
       }
     }
     // |media_track| goes out of scope and destroys the C++ instance
+  }
+};
+  
+template <>
+struct PeerConnection::MediaTrait<mrsMediaKind::kAudio> {
+  constexpr static const mrsMediaKind kMediaKind = mrsMediaKind::kAudio;
+  using RtcMediaTrackInterfaceT = webrtc::AudioTrackInterface;
+  using RemoteMediaTrackT = RemoteAudioTrack;
+  using RemoteMediaTrackHandleT = mrsRemoteAudioTrackHandle;
+  using RemoteMediaTrackConfigT = mrsRemoteAudioTrackConfig;
+  using MediaTrackAddedCallbackT =
+  Callback<const mrsRemoteAudioTrackAddedInfo*>;
+  using MediaTrackRemovedCallbackT =
+  Callback<mrsRemoteAudioTrackHandle, mrsTransceiverHandle>;
+  static void ExecTrackAdded(
+                             mrsRemoteAudioTrackHandle track_handle,
+                             mrsTransceiverHandle transceiver_handle,
+                             const char* track_name,
+                             const MediaTrackAddedCallbackT& callback) noexcept {
+    mrsRemoteAudioTrackAddedInfo info{};
+    info.track_handle = track_handle;
+    info.audio_transceiver_handle = transceiver_handle;
+    info.track_name = track_name;
+    callback(&info);
+  }
+};
+
+template <>
+struct PeerConnection::MediaTrait<mrsMediaKind::kVideo> {
+  constexpr static const mrsMediaKind kMediaKind = mrsMediaKind::kVideo;
+  using RtcMediaTrackInterfaceT = webrtc::VideoTrackInterface;
+  using RemoteMediaTrackT = RemoteVideoTrack;
+  using RemoteMediaTrackHandleT = mrsRemoteVideoTrackHandle;
+  using RemoteMediaTrackConfigT = mrsRemoteVideoTrackConfig;
+  using MediaTrackAddedCallbackT =
+  Callback<const mrsRemoteVideoTrackAddedInfo*>;
+  using MediaTrackRemovedCallbackT =
+  Callback<mrsRemoteVideoTrackHandle, mrsTransceiverHandle>;
+  static void ExecTrackAdded(
+                             mrsRemoteVideoTrackHandle track_handle,
+                             mrsTransceiverHandle transceiver_handle,
+                             const char* track_name,
+                             const MediaTrackAddedCallbackT& callback) noexcept {
+    mrsRemoteVideoTrackAddedInfo info{};
+    info.track_handle = track_handle;
+    info.audio_transceiver_handle = transceiver_handle;
+    info.track_name = track_name;
+    callback(&info);
   }
 };
 

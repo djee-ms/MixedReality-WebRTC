@@ -25,7 +25,7 @@ class MRWebRTCVideoCaptureIOS : public webrtc::VideoTrackSourceInterface
 {
 public:
   static rtc::scoped_refptr<MRWebRTCVideoCaptureIOS> Create(
-    const std::unique_ptr<GlobalFactory>& global_factory);
+    const RefPtr<GlobalFactory>& global_factory);
   
   //
   // NotifierInterface

@@ -28,7 +28,7 @@
 using namespace Microsoft::MixedReality::WebRTC;
 
 rtc::scoped_refptr<MRWebRTCVideoCaptureIOS> MRWebRTCVideoCaptureIOS::Create(
-  const std::unique_ptr<GlobalFactory>& global_factory)
+  const RefPtr<GlobalFactory>& global_factory)
 {
   rtc::scoped_refptr<MRWebRTCVideoCaptureIOS> source =
     new rtc::RefCountedObject<MRWebRTCVideoCaptureIOS>();
@@ -100,7 +100,7 @@ mrsResult MRWebRTCVideoCaptureIOS::init(GlobalFactory& global_factory)
   }
   
   source_ = webrtc::ObjCToNativeVideoCapturer(capturer,
-                                           global_factory.GetSignalerThread(),
+                                           global_factory.GetSignalingThread(),
                                            global_factory.GetWorkerThread());
   if (!source_) {
     return mrsResult::kUnknownError;

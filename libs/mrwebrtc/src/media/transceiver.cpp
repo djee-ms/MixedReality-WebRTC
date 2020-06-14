@@ -74,7 +74,7 @@ Transceiver::Transceiver(RefPtr<GlobalFactory> global_factory,
       desired_direction_(desired_direction),
       plan_b_(new PlanBEmulation) {
   RTC_CHECK(owner_);
-  //< TODO
+  // TODO
   // RTC_CHECK(owner.sdp_semantic == webrtc::SdpSemantics::kPlanB);
 }
 
@@ -104,7 +104,7 @@ Transceiver::Transceiver(
        (kind == MediaKind::kAudio)) ||
       ((transceiver_->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) &&
        (kind == MediaKind::kVideo)));
-  //< TODO
+  // TODO
   // RTC_CHECK(owner.sdp_semantic == webrtc::SdpSemantics::kUnifiedPlan);
 }
 
