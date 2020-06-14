@@ -22,6 +22,10 @@
 #include "sdp_utils.h"
 #include "utils.h"
 
+#if defined(MR_SHARING_IOS)
+#include "video_capture_ios.h"
+#endif
+
 using namespace Microsoft::MixedReality::WebRTC;
 
 struct mrsEnumerator {
@@ -93,6 +97,8 @@ const std::string kLocalAudioLabel("local_audio");
 //  Constraints optional_;
 //};
 
+#if !defined(MR_SHARING_IOS)
+  
 /// Helper to open a video capture device.
 mrsResult OpenVideoCaptureDevice(
     const mrsLocalVideoTrackInitConfig& config,
@@ -243,6 +249,8 @@ mrsResult OpenVideoCaptureDevice(
   return Result::kUnknownError;
 #endif
 }
+  
+#endif  // !defined(MR_SHARING_IOS)
 
 //< TODO - Unit test / check if RTC has already a utility like this
 std::vector<std::string> SplitString(const std::string& str, char sep) {
@@ -749,6 +757,19 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
     return Result::kInvalidOperation;
   }
 
+#if defined(MR_SHARING_IOS)
+  
+  // Create the iOS video capture source
+  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> source =
+    MRWebRTCVideoCaptureIOS::Create(global_factory);
+  if (!source) {
+    RTC_LOG(LS_ERROR) << "Failed to create the video track source from the iOS"
+    "video capture module.";
+    return mrsResult::kUnknownError;
+  }
+
+#else  // defined(MR_SHARING_IOS)
+
   // Open the video capture device
   std::unique_ptr<cricket::VideoCapturer> video_capturer;
   auto res = OpenVideoCaptureDevice(*config, video_capturer);
@@ -786,6 +807,8 @@ mrsResult MRS_CALL mrsLocalVideoTrackCreateFromDevice(
   if (!video_source) {
     return Result::kUnknownError;
   }
+
+  #endif  // defined(MR_SHARING_IOS)
 
   // Create the video track
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track =

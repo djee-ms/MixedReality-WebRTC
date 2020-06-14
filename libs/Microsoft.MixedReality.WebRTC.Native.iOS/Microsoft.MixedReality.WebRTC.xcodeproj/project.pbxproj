@@ -60,13 +60,15 @@
 		30CB858923E858650084EAA0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CB856223E23C620084EAA0 /* Foundation.framework */; };
 		30CB858B23E858650084EAA0 /* CoreAudioKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CB858A23E858650084EAA0 /* CoreAudioKit.framework */; };
 		30CB858C23E858700084EAA0 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CB856623E23CDC0084EAA0 /* libc++.tbd */; };
-		30CB859623EA0E660084EAA0 /* local_video_track_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB859223EA0E660084EAA0 /* local_video_track_interop.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		30CB859723EA0E660084EAA0 /* peer_connection_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB859323EA0E660084EAA0 /* peer_connection_interop.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		30CB859823EA0E660084EAA0 /* external_video_track_source_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB859423EA0E660084EAA0 /* external_video_track_source_interop.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		30CB859923EA0E660084EAA0 /* interop_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB859523EA0E660084EAA0 /* interop_api.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		30CB859B23EA0E7E0084EAA0 /* mrs_errors.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB859A23EA0E7E0084EAA0 /* mrs_errors.h */; };
 		30CB859D23ECB4360084EAA0 /* audio_session.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB859C23ECB4360084EAA0 /* audio_session.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		30CB859F23ECB4CC0084EAA0 /* audio_session.m in Sources */ = {isa = PBXBuildFile; fileRef = 30CB859E23ECB4CC0084EAA0 /* audio_session.m */; };
+		30CB85A624009A4E0084EAA0 /* external_video_track_source_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85A124009A4E0084EAA0 /* external_video_track_source_interop.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		30CB85A724009A4E0084EAA0 /* interop_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85A224009A4E0084EAA0 /* interop_api.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		30CB85A824009A4E0084EAA0 /* peer_connection_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85A324009A4E0084EAA0 /* peer_connection_interop.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		30CB85A924009A4E0084EAA0 /* local_video_track_interop.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85A424009A4E0084EAA0 /* local_video_track_interop.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		30CB85AA24009A4E0084EAA0 /* result.h in Headers */ = {isa = PBXBuildFile; fileRef = 30CB85A524009A4E0084EAA0 /* result.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		30CB85AD24965D0D0084EAA0 /* video_capture_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 30CB85AC24965D0D0084EAA0 /* video_capture_ios.mm */; };
+		30CB85B024967D7E0084EAA0 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CB85AF24967D7D0084EAA0 /* VideoToolbox.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,13 +138,16 @@
 		30CB858123E858340084EAA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		30CB858223E858340084EAA0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		30CB858A23E858650084EAA0 /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
-		30CB859223EA0E660084EAA0 /* local_video_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_video_track_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/src/interop/local_video_track_interop.h; sourceTree = "<group>"; };
-		30CB859323EA0E660084EAA0 /* peer_connection_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = peer_connection_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/src/interop/peer_connection_interop.h; sourceTree = "<group>"; };
-		30CB859423EA0E660084EAA0 /* external_video_track_source_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/src/interop/external_video_track_source_interop.h; sourceTree = "<group>"; };
-		30CB859523EA0E660084EAA0 /* interop_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = interop_api.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/src/interop/interop_api.h; sourceTree = "<group>"; };
-		30CB859A23EA0E7E0084EAA0 /* mrs_errors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mrs_errors.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/mrs_errors.h; sourceTree = "<group>"; };
 		30CB859C23ECB4360084EAA0 /* audio_session.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = audio_session.h; sourceTree = "<group>"; };
 		30CB859E23ECB4CC0084EAA0 /* audio_session.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = audio_session.m; sourceTree = "<group>"; };
+		30CB85A124009A4E0084EAA0 /* external_video_track_source_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = external_video_track_source_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/external_video_track_source_interop.h; sourceTree = "<group>"; };
+		30CB85A224009A4E0084EAA0 /* interop_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = interop_api.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/interop_api.h; sourceTree = "<group>"; };
+		30CB85A324009A4E0084EAA0 /* peer_connection_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = peer_connection_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/peer_connection_interop.h; sourceTree = "<group>"; };
+		30CB85A424009A4E0084EAA0 /* local_video_track_interop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = local_video_track_interop.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/local_video_track_interop.h; sourceTree = "<group>"; };
+		30CB85A524009A4E0084EAA0 /* result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = result.h; path = ../../../Microsoft.MixedReality.WebRTC.Native/include/result.h; sourceTree = "<group>"; };
+		30CB85AC24965D0D0084EAA0 /* video_capture_ios.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = video_capture_ios.mm; sourceTree = "<group>"; };
+		30CB85AE24965F300084EAA0 /* video_capture_ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = video_capture_ios.h; sourceTree = "<group>"; };
+		30CB85AF24967D7D0084EAA0 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +155,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30CB85B024967D7E0084EAA0 /* VideoToolbox.framework in Frameworks */,
 				30CB856723E23CDC0084EAA0 /* libc++.tbd in Frameworks */,
 				30CB856523E23C840084EAA0 /* UIKit.framework in Frameworks */,
 				30CB856323E23C620084EAA0 /* Foundation.framework in Frameworks */,
@@ -207,6 +213,7 @@
 		30CB84F523DE3C0C0084EAA0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				30CB85AB24965CCA0084EAA0 /* ios */,
 				30CB858D23EA0D310084EAA0 /* public */,
 				30CB854D23E23B150084EAA0 /* external_video_track_source_interop.cpp */,
 				30CB855023E23B150084EAA0 /* global_factory.cpp */,
@@ -244,8 +251,10 @@
 				30CB84F623DE3C0C0084EAA0 /* mrwebrtc.h */,
 				30CB84F723DE3C0C0084EAA0 /* Info.plist */,
 			);
+			indentWidth = 2;
 			path = src;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		30CB850023DE3C0C0084EAA0 /* tests */ = {
 			isa = PBXGroup;
@@ -253,12 +262,15 @@
 				30CB850123DE3C0C0084EAA0 /* mrwebrtcTests.mm */,
 				30CB850323DE3C0C0084EAA0 /* Info.plist */,
 			);
+			indentWidth = 2;
 			path = tests;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		30CB853F23E2394D0084EAA0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				30CB85AF24967D7D0084EAA0 /* VideoToolbox.framework */,
 				30CB858A23E858650084EAA0 /* CoreAudioKit.framework */,
 				30CB856623E23CDC0084EAA0 /* libc++.tbd */,
 				30CB856423E23C840084EAA0 /* UIKit.framework */,
@@ -283,21 +295,32 @@
 				30CB858123E858340084EAA0 /* Info.plist */,
 				30CB858223E858340084EAA0 /* main.m */,
 			);
+			indentWidth = 2;
 			path = testapp;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		30CB858D23EA0D310084EAA0 /* public */ = {
 			isa = PBXGroup;
 			children = (
-				30CB859A23EA0E7E0084EAA0 /* mrs_errors.h */,
-				30CB859423EA0E660084EAA0 /* external_video_track_source_interop.h */,
-				30CB859523EA0E660084EAA0 /* interop_api.h */,
-				30CB859223EA0E660084EAA0 /* local_video_track_interop.h */,
-				30CB859323EA0E660084EAA0 /* peer_connection_interop.h */,
+				30CB85A124009A4E0084EAA0 /* external_video_track_source_interop.h */,
+				30CB85A224009A4E0084EAA0 /* interop_api.h */,
+				30CB85A424009A4E0084EAA0 /* local_video_track_interop.h */,
+				30CB85A324009A4E0084EAA0 /* peer_connection_interop.h */,
+				30CB85A524009A4E0084EAA0 /* result.h */,
 				30CB859C23ECB4360084EAA0 /* audio_session.h */,
 				30CB859E23ECB4CC0084EAA0 /* audio_session.m */,
 			);
 			path = public;
+			sourceTree = "<group>";
+		};
+		30CB85AB24965CCA0084EAA0 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				30CB85AC24965D0D0084EAA0 /* video_capture_ios.mm */,
+				30CB85AE24965F300084EAA0 /* video_capture_ios.h */,
+			);
+			path = ios;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -307,12 +330,13 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				30CB859723EA0E660084EAA0 /* peer_connection_interop.h in Headers */,
 				30CB853E23E230D50084EAA0 /* str.h in Headers */,
-				30CB859823EA0E660084EAA0 /* external_video_track_source_interop.h in Headers */,
-				30CB859923EA0E660084EAA0 /* interop_api.h in Headers */,
-				30CB859623EA0E660084EAA0 /* local_video_track_interop.h in Headers */,
 				30CB859D23ECB4360084EAA0 /* audio_session.h in Headers */,
+				30CB85A624009A4E0084EAA0 /* external_video_track_source_interop.h in Headers */,
+				30CB85A724009A4E0084EAA0 /* interop_api.h in Headers */,
+				30CB85A924009A4E0084EAA0 /* local_video_track_interop.h in Headers */,
+				30CB85A824009A4E0084EAA0 /* peer_connection_interop.h in Headers */,
+				30CB85AA24009A4E0084EAA0 /* result.h in Headers */,
 				30CB853C23E230D50084EAA0 /* export.h in Headers */,
 				30CB853323E230D50084EAA0 /* audio_frame_observer.h in Headers */,
 				30CB851B23E230C40084EAA0 /* pch.h in Headers */,
@@ -325,7 +349,6 @@
 				30CB853623E230D50084EAA0 /* ref_counted_base.h in Headers */,
 				30CB853023E230D50084EAA0 /* peer_connection.h in Headers */,
 				30CB854723E23B080084EAA0 /* external_video_track_source_impl.h in Headers */,
-				30CB859B23EA0E7E0084EAA0 /* mrs_errors.h in Headers */,
 				30CB853923E230D50084EAA0 /* audio_frame.h in Headers */,
 				30CB853823E230D50084EAA0 /* external_video_track_source.h in Headers */,
 				30CB853423E230D50084EAA0 /* data_channel.h in Headers */,
@@ -466,6 +489,7 @@
 				30CB851823E230C40084EAA0 /* str.cpp in Sources */,
 				30CB851923E230C40084EAA0 /* sdp_utils.cpp in Sources */,
 				30CB855D23E23B160084EAA0 /* interop_api.cpp in Sources */,
+				30CB85AD24965D0D0084EAA0 /* video_capture_ios.mm in Sources */,
 				30CB855A23E23B160084EAA0 /* global_factory.cpp in Sources */,
 				30CB851C23E230C40084EAA0 /* audio_frame_observer.cpp in Sources */,
 				30CB854823E23B080084EAA0 /* external_video_track_source.cpp in Sources */,
