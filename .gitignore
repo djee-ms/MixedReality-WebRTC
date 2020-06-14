@@ -4,6 +4,8 @@
 /build
 /obj
 /tools/build/userdef.py
+/tools/build/android/CMakeFiles
+/tools/build/android/CMakeCache.txt
 # TODO - Fix location with directory.build
 examples/*/bin
 tests/Microsoft.MixedReality.WebRTC.Tests/bin
