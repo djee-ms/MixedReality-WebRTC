@@ -119,6 +119,9 @@ using mrsExternalVideoTrackSourceHandle = mrsVideoTrackSourceHandle;
 /// Opaque handle to a native DeviceVideoTrackSource interop object.
 using mrsDeviceVideoTrackSourceHandle = mrsVideoTrackSourceHandle;
 
+/// Opaque handle to a native ExternalAudioTrackSource interop object.
+using mrsExternalAudioTrackSourceHandle = mrsAudioTrackSourceHandle;
+
 /// Opaque handle to a native DeviceAudioTrackSource interop object.
 using mrsDeviceAudioTrackSourceHandle = mrsAudioTrackSourceHandle;
 
@@ -604,6 +607,12 @@ using mrsRequestExternalI420AVideoFrameCallback =
 using mrsRequestExternalArgb32VideoFrameCallback =
     mrsResult(MRS_CALL*)(void* user_data,
                          mrsExternalVideoTrackSourceHandle source_handle,
+                         uint32_t request_id,
+                         int64_t timestamp_ms);
+
+using mrsRequestExternalAudioFrameCallback =
+    mrsResult(MRS_CALL*)(void* user_data,
+                         mrsExternalAudioTrackSourceHandle source_handle,
                          uint32_t request_id,
                          int64_t timestamp_ms);
 

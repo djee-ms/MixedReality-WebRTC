@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\src\interop\external_video_track_source_interop.cpp">
@@ -113,6 +113,12 @@
       <Filter>src\interop</Filter>
     </ClCompile>
     <ClCompile Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\src\media\device_audio_track_source.cpp">
+      <Filter>src\media</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\src\interop\external_audio_track_source_interop.cpp">
+      <Filter>src\interop</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\src\media\external_audio_track_source.cpp">
       <Filter>src\media</Filter>
     </ClCompile>
   </ItemGroup>
@@ -253,6 +259,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\src\media\device_audio_track_source.h">
+      <Filter>src\media</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\include\external_audio_track_source_interop.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MRWebRTCProjectRoot)libs\mrwebrtc\src\media\external_audio_track_source.h">
       <Filter>src\media</Filter>
     </ClInclude>
   </ItemGroup>

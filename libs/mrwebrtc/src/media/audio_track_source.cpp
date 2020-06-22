@@ -42,7 +42,8 @@ AudioTrackSource::AudioTrackSource(
     : TrackedObject(std::move(global_factory), audio_track_source_type),
       source_(std::move(source)) {
   RTC_CHECK(source_);
-  RTC_CHECK(audio_track_source_type == ObjectType::kDeviceAudioTrackSource);
+  RTC_CHECK(audio_track_source_type == ObjectType::kDeviceAudioTrackSource) ||
+            (audio_track_source_type == ObjectType::kExternalAudioTrackSource));
 }
 
 AudioTrackSource::~AudioTrackSource() {

@@ -29,6 +29,7 @@ enum class ObjectType : int {
   kAudioTransceiver,
   kVideoTransceiver,
   kDeviceAudioTrackSource,
+  kExternalAudioTrackSource,
   kDeviceVideoTrackSource,
   kExternalVideoTrackSource,
 };

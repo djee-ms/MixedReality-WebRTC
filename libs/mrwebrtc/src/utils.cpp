@@ -124,6 +124,8 @@ absl::string_view ObjectTypeToString(ObjectType type) {
       return "VideoTransceiver";
     case ObjectType::kDeviceAudioTrackSource:
       return "DeviceAudioTrackSource";
+    case ObjectType::kExternalAudioTrackSource:
+      return "ExternalAudioTrackSource";
     case ObjectType::kDeviceVideoTrackSource:
       return "DeviceVideoTrackSource";
     case ObjectType::kExternalVideoTrackSource:
