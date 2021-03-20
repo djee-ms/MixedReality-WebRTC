@@ -87,6 +87,14 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             RequestExternalArgb32VideoFrameCallback callback, IntPtr userData, out ExternalVideoTrackSourceHandle sourceHandle);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsExternalVideoTrackSourceSetFramerate")]
+        public static unsafe extern uint ExternalVideoTrackSource_SetFramerate(ExternalVideoTrackSourceHandle sourceHandle, float framerate);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsExternalVideoTrackSourceGetFramerate")]
+        public static unsafe extern uint ExternalVideoTrackSource_GetFramerate(ExternalVideoTrackSourceHandle sourceHandle, ref float framerate);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsExternalVideoTrackSourceFinishCreation")]
         public static unsafe extern uint ExternalVideoTrackSource_FinishCreation(ExternalVideoTrackSourceHandle sourceHandle);
 
@@ -99,6 +107,11 @@ namespace Microsoft.MixedReality.WebRTC.Interop
             EntryPoint = "mrsExternalVideoTrackSourceCompleteArgb32FrameRequest")]
         public static unsafe extern uint ExternalVideoTrackSource_CompleteFrameRequest(ExternalVideoTrackSourceHandle handle,
             uint requestId, long timestampMs, in Argb32VideoFrame frame);
+
+        [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
+            EntryPoint = "mrsExternalVideoTrackSourceGetStats")]
+        public static unsafe extern uint ExternalVideoTrackSource_GetStats(ExternalVideoTrackSourceHandle handle,
+            ref ExternalVideoTrackSource.ExternalVideoTrackSourceStats stats);
 
         [DllImport(Utils.dllPath, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi,
             EntryPoint = "mrsExternalVideoTrackSourceShutdown")]

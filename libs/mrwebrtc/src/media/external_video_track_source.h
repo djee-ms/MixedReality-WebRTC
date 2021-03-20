@@ -151,6 +151,9 @@ class ExternalVideoTrackSource : public VideoTrackSource,
   /// calling the video frame callback.
   void StartCapture();
 
+  void SetFramerate(float framerate) noexcept;
+  float GetFramerate() const noexcept;
+
   /// Complete a given video frame request with the provided I420A frame.
   /// The caller must know the source expects an I420A frame; there is no check
   /// to confirm the source is I420A-based or ARGB32-based.
@@ -164,6 +167,9 @@ class ExternalVideoTrackSource : public VideoTrackSource,
   Result CompleteRequest(uint32_t request_id,
                          int64_t timestamp_ms,
                          const Argb32VideoFrame& frame);
+
+  /// Get some statistics about the external video track source.
+  Result GetStats(mrsExternalVideoTrackSourceStats& stats) const noexcept;
 
   /// Stop the video capture. This will stop producing video frames.
   void StopCapture();
@@ -190,10 +196,25 @@ class ExternalVideoTrackSource : public VideoTrackSource,
       RTC_GUARDED_BY(request_lock_);  //< TODO : circular buffer to avoid alloc
 
   /// Next available ID for a frame request.
-  uint32_t next_request_id_ RTC_GUARDED_BY(request_lock_){};
+  uint32_t next_request_id_ RTC_GUARDED_BY(request_lock_){0};
+
+  /// Delta, in microseconds, between two frame requests.
+  int64_t delta_frames_us_{33333}; // 30 FPS
+
+  /// Time at which the next frame request is expected to be made, in microseconds.
+  int64_t next_request_time_us_{0};
 
   /// Lock for frame requests.
   rtc::CriticalSection request_lock_;
+
+  /// Statistics.
+  mrsExternalVideoTrackSourceStats stats_{};
+
+  /// Track the rate at which frames are produced.
+  rtc::RateTracker frame_produced_rate_;
+
+  /// Lock for statistics.
+  rtc::CriticalSection stats_lock_;
 };
 
 namespace detail {

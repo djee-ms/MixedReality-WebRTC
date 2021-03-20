@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using Microsoft.MixedReality.WebRTC.Interop;
 
 namespace Microsoft.MixedReality.WebRTC
@@ -83,6 +84,40 @@ namespace Microsoft.MixedReality.WebRTC
         public override VideoEncoding FrameEncoding { get; }
 
         /// <summary>
+        /// Target capture framerate of the video track source, determining the frequency at which
+        /// the frame callback is invoked. Valid values range from >0 FPS to 240 FPS.
+        /// </summary>
+        public float Framerate
+        {
+            get
+            {
+                float framerate = 0.0f;
+                uint res = ExternalVideoTrackSourceInterop.ExternalVideoTrackSource_GetFramerate((ExternalVideoTrackSourceHandle)_nativeHandle, ref framerate);
+                Utils.ThrowOnErrorCode(res);
+                return framerate;
+            }
+            set
+            {
+                uint res = ExternalVideoTrackSourceInterop.ExternalVideoTrackSource_SetFramerate((ExternalVideoTrackSourceHandle)_nativeHandle, value);
+                Utils.ThrowOnErrorCode(res);
+            }
+        }
+
+        /// <summary>
+        /// Statistics about an external video track source.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Size = 20)]
+        public struct ExternalVideoTrackSourceStats
+        {
+            /// <summary>Number of frames produced since the source started capture.</summary>
+            public ulong NumFramesProduced;
+            /// <summary>Number of frames skipped since the source started capture.</summary>
+            public ulong NumFramesSkipped;
+            /// <summary>Average framerate of produced frames over the past second.</summary>
+            public float AvgFramerate;
+        }
+
+        /// <summary>
         /// GC handle to frame request callback args keeping the delegate alive
         /// while the callback is registered with the native implementation.
         /// </summary>
@@ -138,6 +173,16 @@ namespace Microsoft.MixedReality.WebRTC
         public void CompleteFrameRequest(uint requestId, long timestampMs, in Argb32VideoFrame frame)
         {
             ExternalVideoTrackSourceInterop.CompleteFrameRequest((ExternalVideoTrackSourceHandle)_nativeHandle, requestId, timestampMs, frame);
+        }
+
+        /// <summary>
+        /// Get statistics about the external video track source.
+        /// </summary>
+        /// <param name="stats">Storage where statistics are written.</param>
+        public void GetStats(ref ExternalVideoTrackSourceStats stats)
+        {
+            uint res = ExternalVideoTrackSourceInterop.ExternalVideoTrackSource_GetStats((ExternalVideoTrackSourceHandle)_nativeHandle, ref stats);
+            Utils.ThrowOnErrorCode(res);
         }
 
         /// <inheritdoc/>

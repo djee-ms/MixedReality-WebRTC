@@ -156,6 +156,23 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
             mrsExternalVideoTrackSourceCreateFromArgb32Callback(
                 &GenerateQuadTestFrame, nullptr, &source_handle1));
   ASSERT_NE(nullptr, source_handle1);
+
+  // Set its target framerate to 15 FPS
+  constexpr float TargetFps = 15.0f;
+  float fps1{-1.0f};
+  ASSERT_EQ(mrsResult::kSuccess,mrsExternalVideoTrackSourceGetFramerate(source_handle1, &fps1));
+  ASSERT_GT(fps1, 0.0f);
+  ASSERT_EQ(mrsResult::kInvalidParameter,
+            mrsExternalVideoTrackSourceSetFramerate(source_handle1, -1.0f));
+  ASSERT_EQ(mrsResult::kInvalidParameter,
+            mrsExternalVideoTrackSourceSetFramerate(source_handle1, 1.0e6f));
+  ASSERT_EQ(mrsResult::kSuccess,
+            mrsExternalVideoTrackSourceSetFramerate(source_handle1, TargetFps));
+  ASSERT_EQ(mrsResult::kSuccess,
+            mrsExternalVideoTrackSourceGetFramerate(source_handle1, &fps1));
+  ASSERT_LT(std::fabs(fps1 - TargetFps), 1.0e-3f);
+
+  // Start the track source
   mrsExternalVideoTrackSourceFinishCreation(source_handle1);
 
   // Create the local track itself for #1
@@ -210,7 +227,9 @@ TEST_P(ExternalVideoTrackSourceTests, Simple) {
   // Wait 3 seconds and check the frame callback is called
   Event ev;
   ev.WaitFor(3s);
-  ASSERT_LT(30u, frame_count) << "Expected at least 10 FPS";
+  const uint32_t expected_frame_count = (uint32_t)(TargetFps * 2); // at least 2/3
+  ASSERT_LT(expected_frame_count, frame_count)
+      << "Expected at least " << (int)(TargetFps * 2.0f / 3.0f) << " FPS";
 
   // Clean-up
   mrsRemoteVideoTrackRegisterArgb32FrameCallback(track_handle2, nullptr,

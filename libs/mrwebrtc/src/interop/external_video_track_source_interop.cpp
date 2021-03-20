@@ -48,6 +48,33 @@ mrsResult MRS_CALL mrsExternalVideoTrackSourceCreateFromArgb32Callback(
   return Result::kSuccess;
 }
 
+MRS_API mrsResult MRS_CALL mrsExternalVideoTrackSourceSetFramerate(
+    mrsExternalVideoTrackSourceHandle handle,
+    float framerate) noexcept
+{
+  if ((framerate <= 0.0f) || (framerate > 240.0f)) {
+    return mrsResult::kInvalidParameter;
+  }
+  if (auto track = static_cast<ExternalVideoTrackSource*>(handle)) {
+    track->SetFramerate(framerate);
+    return mrsResult::kSuccess;
+  }
+  return mrsResult::kInvalidNativeHandle;
+}
+
+MRS_API mrsResult MRS_CALL mrsExternalVideoTrackSourceGetFramerate(
+    mrsExternalVideoTrackSourceHandle handle,
+    float* framerate) noexcept {
+  if (!framerate) {
+    return mrsResult::kInvalidParameter;
+  }
+  if (auto track = static_cast<ExternalVideoTrackSource*>(handle)) {
+    *framerate = track->GetFramerate();
+    return mrsResult::kSuccess;
+  }
+  return mrsResult::kInvalidNativeHandle;
+}
+
 void MRS_CALL mrsExternalVideoTrackSourceFinishCreation(
     mrsExternalVideoTrackSourceHandle source_handle) noexcept {
   if (auto source = static_cast<ExternalVideoTrackSource*>(source_handle)) {
@@ -79,6 +106,18 @@ mrsResult MRS_CALL mrsExternalVideoTrackSourceCompleteArgb32FrameRequest(
   }
   if (auto track = static_cast<ExternalVideoTrackSource*>(handle)) {
     return track->CompleteRequest(request_id, timestamp_ms, *frame_view);
+  }
+  return mrsResult::kInvalidNativeHandle;
+}
+
+mrsResult MRS_CALL mrsExternalVideoTrackSourceGetStats(
+    mrsExternalVideoTrackSourceHandle handle,
+    mrsExternalVideoTrackSourceStats* stats) noexcept {
+  if (!stats) {
+    return Result::kInvalidParameter;
+  }
+  if (auto track = static_cast<ExternalVideoTrackSource*>(handle)) {
+    return track->GetStats(*stats);
   }
   return mrsResult::kInvalidNativeHandle;
 }

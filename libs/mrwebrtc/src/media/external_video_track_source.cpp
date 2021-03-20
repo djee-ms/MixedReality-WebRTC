@@ -137,7 +137,8 @@ ExternalVideoTrackSource::ExternalVideoTrackSource(
                        ObjectType::kExternalVideoTrackSource,
                        source),
       adapter_(std::forward<std::unique_ptr<detail::BufferAdapter>>(adapter)),
-      capture_thread_(rtc::Thread::Create()) {
+      capture_thread_(rtc::Thread::Create()),
+      frame_produced_rate_(100, 10u) /* 100ms * 10 buckets = 1 second avg */ {
   capture_thread_->SetName("ExternalVideoTrackSource capture thread", this);
 }
 
@@ -158,14 +159,26 @@ void ExternalVideoTrackSource::StartCapture() {
   RTC_LOG(LS_INFO) << "Starting capture for external video track source "
                    << GetName().c_str();
 
+  // Reset stats
+  stats_ = {};
+
   // Start capture thread
   GetSourceImpl()->state_ = SourceState::kLive;
   pending_requests_.clear();
   capture_thread_->Start();
 
-  // Schedule first frame request for 10ms from now
-  int64_t now = rtc::TimeMillis();
-  capture_thread_->PostAt(RTC_FROM_HERE, now + 10, this, MSG_REQUEST_FRAME);
+  // Schedule first frame request
+  next_request_time_us_ = rtc::TimeMicros() + delta_frames_us_;
+  capture_thread_->Post(RTC_FROM_HERE, this, MSG_REQUEST_FRAME);
+}
+
+void ExternalVideoTrackSource::SetFramerate(float framerate) noexcept {
+  RTC_DCHECK(framerate > 0.0f);
+  delta_frames_us_ = (int64_t)(1'000'000.0f / framerate);
+}
+
+float ExternalVideoTrackSource::GetFramerate() const noexcept {
+  return (1'000'000.0f / delta_frames_us_);
 }
 
 Result ExternalVideoTrackSource::CompleteRequest(
@@ -244,6 +257,18 @@ Result ExternalVideoTrackSource::CompleteRequest(
   return Result::kSuccess;
 }
 
+Result ExternalVideoTrackSource::GetStats(
+    mrsExternalVideoTrackSourceStats& stats) const noexcept {
+  try {
+    rtc::CritScope lock(&stats_lock_);
+    stats = stats_;
+    stats.avg_framerate_ = (float)frame_produced_rate_.ComputeRate();
+    return Result::kSuccess;
+  } catch (...) {
+    return Result::kUnknownError;
+  }
+}
+
 void ExternalVideoTrackSource::StopCapture() {
   detail::CustomTrackSourceAdapter* const src = GetSourceImpl();
   if (src->state_ != SourceState::kEnded) {
@@ -264,9 +289,11 @@ void ExternalVideoTrackSource::Shutdown() noexcept {
 void ExternalVideoTrackSource::OnMessage(rtc::Message* message) {
   switch (message->message_id) {
     case MSG_REQUEST_FRAME:
-      const int64_t now = rtc::TimeMillis();
+      const int64_t delta_frames_ms = delta_frames_us_ / 1000;
 
-      // Request a frame from the external video source
+      // Prepare the request
+      const int64_t request_time_us = rtc::TimeMicros();
+      const int64_t request_time_ms = request_time_us / 1000;
       uint32_t request_id = 0;
       {
         rtc::CritScope lock(&request_lock_);
@@ -278,14 +305,50 @@ void ExternalVideoTrackSource::OnMessage(rtc::Message* message) {
           pending_requests_.erase(pending_requests_.begin());
         }
         request_id = next_request_id_++;
-        pending_requests_.emplace_back(request_id, now);
+        pending_requests_.emplace_back(request_id, request_time_ms);
       }
-      adapter_->RequestFrame(*this, request_id, now);
 
-      // Schedule a new request for 30ms from now
-      //< TODO - this is unreliable and prone to drifting; figure out something
-      // better
-      capture_thread_->PostAt(RTC_FROM_HERE, now + 30, this, MSG_REQUEST_FRAME);
+      // Request a frame from the external video source
+      adapter_->RequestFrame(*this, request_id, request_time_ms);
+
+      // Check that the callback didn't block the thread for too long
+      const int64_t response_time_us = rtc::TimeMicros();
+      if (response_time_us > request_time_us + delta_frames_us_) {
+        RTC_LOG(LS_WARNING)
+            << "Frame request for external video track source '" << name_
+            << "' is taking too long ("
+            << ((response_time_us - request_time_us) / 1000)
+            << "ms; expected less than " << delta_frames_ms << "ms).";
+      }
+
+      // Schedule a new request
+      next_request_time_us_ += delta_frames_us_;
+      int64_t num_skipped_frames = 0;
+      if (next_request_time_us_ < response_time_us) {
+        // Next request time is in the past; skip some frames to get it back
+        // into the future.
+        num_skipped_frames =
+            (response_time_us + delta_frames_us_ - 1 - next_request_time_us_) /
+            delta_frames_us_;
+        RTC_LOG(LS_WARNING)
+            << "Skipping " << num_skipped_frames
+            << " frames for external video track source '" << name_ << "'.";
+        next_request_time_us_ += num_skipped_frames * delta_frames_us_;
+        RTC_DCHECK(next_request_time_us_ >= response_time_us);
+      }
+      const int delay_ms =
+          (int)((next_request_time_us_ - response_time_us) / 1000);
+      capture_thread_->PostDelayed(RTC_FROM_HERE, delay_ms, this,
+                                   MSG_REQUEST_FRAME);
+
+      // Update stats
+      {
+        rtc::CritScope lock(&stats_lock_);
+        frame_produced_rate_.AddSamples(1);
+        stats_.num_frames_produced_ += 1;
+        stats_.num_frames_skipped_ += num_skipped_frames;
+      }
+
       break;
   }
 }
