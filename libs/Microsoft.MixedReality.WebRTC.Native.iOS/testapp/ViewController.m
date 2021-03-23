@@ -6,11 +6,16 @@
 //  Copyright © 2020 Microsoft. All rights reserved.
 //
 
+#import "SessionModel.h"
 #import "ViewController.h"
 
-@interface ViewController ()
+@interface ViewController()
+
 @property (strong, nonatomic) IBOutlet UILabel *titleLabel;
+@property (strong, nonatomic) IBOutlet UIButton *connectButton;
 @property (strong, nonatomic) IBOutlet UITextField *serverTextField;
+@property (strong, nonatomic) IBOutlet UITextField *localPeerTextField;
+@property (strong, nonatomic) IBOutlet UITextField *remotePeerTextField;
 
 @end
 
@@ -18,7 +23,8 @@
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
+  // Change text of button when it is disabled (while polling)
+  [_connectButton setTitle:@"Connecting..." forState:UIControlStateDisabled];
 }
 
 //- (IBAction)OnConnectButton:(id)sender {
@@ -27,8 +33,15 @@
 //}
 
 - (IBAction)OnConnectButtonClicked:(UIButton *)sender {
-	_titleLabel.text = @"test!";
-	_serverTextField.text = @"test2!";
+  // IDEALLY YES, BUT DONT DISABLE FOR DEBUGGING
+  //_connectButton.enabled = FALSE;
+  
+  // Start polling
+  // TODO - Abstract signaler
+  NSURL *serverURL = [NSURL URLWithString:_serverTextField.text];
+  [self.sessionModel startPollingSignaler:serverURL
+                          withLocalPeerId:_localPeerTextField.text
+                         withRemotePeerId:_remotePeerTextField.text];
 }
 
 @end

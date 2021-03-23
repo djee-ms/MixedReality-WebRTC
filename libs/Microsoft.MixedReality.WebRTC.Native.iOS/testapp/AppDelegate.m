@@ -7,8 +7,12 @@
 //
 
 #import "AppDelegate.h"
+#import "SessionModel.h"
+#import "ViewController.h"
 
 @interface AppDelegate ()
+
+- (SessionModel *)sessionModel;
 
 @end
 
@@ -16,8 +20,15 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-	// Override point for customization after application launch.
-	return YES;
+  // Create the session model
+  self.sessionModel = [[SessionModel alloc] init];
+  
+  // Assign the model to the root view
+  ViewController *viewController = (ViewController *)self.window.rootViewController;
+  viewController.sessionModel = self.sessionModel;
+
+  // Accept to handle launch request
+  return YES;
 }
 
 

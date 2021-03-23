@@ -8,8 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
+@class SessionModel;
+
 @interface ViewController : UIViewController
 
+@property (strong, nonatomic) SessionModel *sessionModel;
 
 @end
-

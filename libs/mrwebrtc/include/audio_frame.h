@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 namespace Microsoft {
 namespace MixedReality {
@@ -18,17 +18,17 @@ struct AudioFrame {
   const void* data_;
 
   /// Number of bits per sample, often 8 or 16, for a single channel.
-  std::uint32_t bits_per_sample_;
+  uint32_t bits_per_sample_;
 
   /// Sampling rate, in Hertz (number of samples per second).
-  std::uint32_t sampling_rate_hz_;
+  uint32_t sampling_rate_hz_;
 
   /// Number of interleaved channels in a single audio sample.
-  std::uint32_t channel_count_;
+  uint32_t channel_count_;
 
   /// Number of consecutive samples. The frame duration is given by the ratio
   /// |sample_count_| / |sampling_rate_hz_|.
-  std::uint32_t sample_count_;
+  uint32_t sample_count_;
 };
 
 }  // namespace WebRTC

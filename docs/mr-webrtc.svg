@@ -5,18 +5,19 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    viewBox="0 0 256 256"
    id="svg2"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.48.5 r10040"
    sodipodi:docname="mr-webrtc.svg"
    width="256"
    height="256"
-   inkscape:export-filename="H:\mrtk\mr-webrtc\docs\mr-webrtc_icon.png"
-   inkscape:export-xdpi="16.879999"
-   inkscape:export-ydpi="16.879999">
+   inkscape:export-filename="/Users/djee/Documents/dev/mr-webrtc/libs/Microsoft.MixedReality.WebRTC.Native.iOS/icons/mr-webrtc-83.5@2x.png"
+   inkscape:export-xdpi="58.710938"
+   inkscape:export-ydpi="58.710938">
   <metadata
      id="metadata76">
     <rdf:RDF>
@@ -38,15 +39,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="2560"
-     inkscape:window-height="1377"
+     inkscape:window-width="1399"
+     inkscape:window-height="855"
      id="namedview74"
      showgrid="false"
      inkscape:zoom="2"
      inkscape:cx="97.43162"
-     inkscape:cy="150.03506"
-     inkscape:window-x="2552"
-     inkscape:window-y="-8"
+     inkscape:cy="124.68222"
+     inkscape:window-x="41"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2"
      inkscape:snap-center="true"
@@ -62,6 +63,18 @@
   </sodipodi:namedview>
   <defs
      id="defs4">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient3139">
+      <stop
+         style="stop-color:#b3defd;stop-opacity:1"
+         offset="0"
+         id="stop3141" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1"
+         offset="1"
+         id="stop3143" />
+    </linearGradient>
     <style
        id="style6">.cls-1{fill:none;}.cls-2{opacity:0.85;}.cls-3{fill:#1a1a1a;}.cls-4{font-size:90px;font-family:SegoeUI-Bold, Segoe UI;letter-spacing:0.44em;}.cls-20,.cls-4{fill:#fff;}.cls-4,.cls-7{font-weight:700;}.cls-5{letter-spacing:0.46em;}.cls-6{letter-spacing:0.48em;}.cls-7{font-size:44.53px;fill:#fff69f;font-family:SegoeUI-BoldItalic, Segoe UI;font-style:italic;letter-spacing:0.32em;}.cls-8{letter-spacing:0.34em;}.cls-9{letter-spacing:0.32em;}.cls-10{letter-spacing:0.3em;}.cls-11{letter-spacing:0.28em;}.cls-12{letter-spacing:0.29em;}.cls-13{letter-spacing:0.26em;}.cls-14{letter-spacing:0.28em;}.cls-15{letter-spacing:0.28em;}.cls-16{letter-spacing:0.25em;}.cls-17{letter-spacing:0.24em;}.cls-18{letter-spacing:0.3em;}.cls-19{clip-path:url(#clip-path);}.cls-21{fill:url(#linear-gradient);}</style>
     <clipPath
@@ -168,9 +181,25 @@
          offset="1"
          style="stop-opacity:1;stop-color:#daff94" />
     </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3139"
+       id="linearGradient3145"
+       x1="-13"
+       y1="324"
+       x2="218"
+       y2="18"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <title
      id="title16">MRTK_Logo_WhiteOnBlack</title>
+  <rect
+     style="color:#000000;fill:url(#linearGradient3145);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+     id="rect3137"
+     width="263.5"
+     height="262.5"
+     x="-2.5"
+     y="-2.5" />
   <g
      id="g4176">
     <g
